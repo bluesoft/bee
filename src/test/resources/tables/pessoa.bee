@@ -1,0 +1,181 @@
+{
+  name : "pessoa",
+  columns : {
+    pessoa_key : {
+      name : "pessoa_key",
+      type : "number",
+      size : 6
+    },
+    data_cadastro : {
+      name : "data_cadastro",
+      type : "date",
+      size : 7,
+      nullable : true
+    },
+    cpf_cnpj : {
+      name : "cpf_cnpj",
+      type : "number",
+      size : 15,
+      nullable : true
+    },
+    sexo : {
+      name : "sexo",
+      type : "char",
+      size : 1,
+      nullable : true
+    },
+    nome_razao : {
+      name : "nome_razao",
+      type : "varchar",
+      size : 50,
+      nullable : true
+    },
+    rg : {
+      name : "rg",
+      type : "varchar",
+      size : 20,
+      nullable : true
+    },
+    cargo : {
+      name : "cargo",
+      type : "varchar",
+      size : 30,
+      nullable : true
+    },
+    data_nascimento : {
+      name : "data_nascimento",
+      type : "date",
+      size : 7,
+      nullable : true
+    },
+    insc : {
+      name : "insc",
+      type : "varchar",
+      size : 15,
+      nullable : true
+    },
+    nome_abreviado : {
+      name : "nome_abreviado",
+      type : "varchar",
+      size : 20,
+      nullable : true
+    },
+    insc_municipal : {
+      name : "insc_municipal",
+      type : "varchar",
+      size : 20,
+      nullable : true
+    },
+    junta_comercial : {
+      name : "junta_comercial",
+      type : "varchar",
+      size : 20,
+      nullable : true
+    },
+    fundacao : {
+      name : "fundacao",
+      type : "date",
+      size : 7,
+      nullable : true
+    },
+    ean : {
+      name : "ean",
+      type : "number",
+      size : 13,
+      nullable : true
+    },
+    fisica : {
+      name : "fisica",
+      type : "varchar",
+      size : 1,
+      nullable : true
+    },
+    orgao_expedidor_rg : {
+      name : "orgao_expedidor_rg",
+      type : "varchar",
+      size : 20,
+      nullable : true
+    },
+    data_expedicao_rg : {
+      name : "data_expedicao_rg",
+      type : "date",
+      size : 7,
+      nullable : true
+    },
+    estado_civil_key : {
+      name : "estado_civil_key",
+      type : "number",
+      size : 2,
+      nullable : true
+    },
+    cpf_cnpj_numero : {
+      name : "cpf_cnpj_numero",
+      type : "number",
+      size : 15,
+      nullable : true
+    },
+    conta_contabil_key : {
+      name : "conta_contabil_key",
+      type : "number",
+      size : 9,
+      nullable : true
+    },
+    conjuge : {
+      name : "conjuge",
+      type : "varchar",
+      size : 20,
+      nullable : true
+    },
+    ultima_alteracao : {
+      name : "ultima_alteracao",
+      type : "date",
+      size : 7,
+      nullable : true
+    }
+  },
+  indexes : {
+    pessoa_nome_abreviado : {
+      name : "pessoa_nome_abreviado",
+      type : "f",
+      columns : [ {
+        name : "UPPER(\"NOME_ABREVIADO\")"
+      } ]
+    },
+    pessoa_nome_razao : {
+      name : "pessoa_nome_razao",
+      type : "f",
+      columns : [ {
+        name : "UPPER(\"NOME_RAZAO\")"
+      } ]
+    }
+  },
+  constraints : {
+    pk_pessoa : {
+      name : "pk_pessoa",
+      type : "P",
+      columns : [ "pessoa_key" ]
+    },
+    fk_pessoa_conta_contabil : {
+      name : "fk_pessoa_conta_contabil",
+      type : "R",
+      columns : [ "conta_contabil_key" ],
+      refTable : "conta_contabil"
+    },
+    fk_pessoa_estado_civil : {
+      name : "fk_pessoa_estado_civil",
+      type : "R",
+      columns : [ "estado_civil_key" ],
+      refTable : "estado_civil"
+    },
+    uk_pessoa : {
+      name : "uk_pessoa",
+      type : "U",
+      columns : [ "cpf_cnpj" ]
+    },
+    uk_pessoa_cnpj_ean : {
+      name : "uk_pessoa_cnpj_ean",
+      type : "U",
+      columns : [ "cpf_cnpj", "ean" ]
+    }
+  }
+}

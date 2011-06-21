@@ -1,0 +1,4 @@
+{
+    name : "proc_a",
+    text : "procedure proc_a begin end"
+}

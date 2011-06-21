@@ -1,0 +1,467 @@
+package br.com.bluesoft.bee.dbchange
+
+import groovy.sql.Sql
+
+import java.sql.SQLException
+
+import spock.lang.Specification
+import br.com.bluesoft.bee.database.ConnectionInfo
+import br.com.bluesoft.bee.service.BeeWriter
+
+class DbChangeManagerTest extends Specification {
+
+	final static def RESULT = [
+		[ARQUIVO_NOME: "65564564-test.dbchange"]
+	]
+
+	def "deve retornar uma lista com os arquivos a serem executados"() {
+		given:
+		def mensagens = []
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def sql = [execute: { instrucao -> []}, rows: { instrucao -> RESULT}, close: {} ]
+		def directoryFile = [list: {
+				[
+					"abc",
+					"65564564-test.dbchange",
+					"989898-test.dbchange"
+				]
+			} ]
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger)
+
+		when: "listar dbchanges"
+		def lista = manager.listar()
+
+		then: "deve conter somente as instrucoes que nao foram executadas"
+		lista.size() == 1
+	}
+
+	def "deve retornar false quando a lista de arquivos ja executados for nula"() {
+		given:
+		def mensagens = []
+		def directoryFile = [list: {
+				[
+					"abc",
+					"65564564-test.dbchange",
+					"989898-test.dbchange"
+				]
+			} ]
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def manager = new DbChangeManager(directoryFile: directoryFile, logger: logger)
+		ConnectionInfo.metaClass.static.createDatabaseConnection = { def a, def b -> return null }
+
+		when: "listar dbchanges a lista do banco retorna null"
+		def lista = manager.listar()
+
+		then: "deve retornar null e conter a mensagem"
+		lista == null
+		mensagens.size() == 1
+		mensagens[0] == DbChangeManager.MESSAGE_COULD_NOT_GET_CONNECTION
+	}
+
+	def "deve listar as instrucoes ja executadas no banco"() {
+		given:
+		def sql = [execute: { instrucao -> []}, rows: { instrucao -> RESULT}, close: {} ]
+		def manager = new DbChangeManager(sql: sql)
+
+		when: "listar instrucoes ja executadas"
+		def listaBanco = manager.listarInstrucoesJaExecutadas()
+
+		then:
+		listaBanco == RESULT
+	}
+
+	def "deve listar os arquivos"() {
+		given:
+		def directoryFile = [list: { [ "abc", "65564564-test.dbchange"
+				] } ]
+		def manager = new DbChangeManager(directoryFile: directoryFile)
+
+		when: "listar arquivos de dbchanges"
+		def listaArquivos = manager.listarArquivos()
+
+		then:
+		listaArquivos == RESULT
+	}
+
+	def "deve criar a tabela dbchanges caso nao exista"() {
+
+		given:
+		def manager = new DbChangeManager()
+		def sql = Mock(Sql)
+		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
+		1 * sql.execute(DbChangeManager.CREATE_TABLE)
+
+		when: "criar tabela caso nao exista"
+		def retorno = manager.criarTabelaDbchangesSeNaoExistir(sql)
+
+		then: "e retorna true"
+		retorno == true
+	}
+
+	def "deve retornar false caso nao consiga criar a tabela dbchanges"() {
+
+		given:
+		def sql = Mock(Sql)
+		def logger = Mock(BeeWriter)
+		def manager = new DbChangeManager(logger: logger)
+
+		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
+		1 * sql.execute(DbChangeManager.CREATE_TABLE) >> { throw new SQLException() }
+		1 * logger.log(_)
+
+		when: "Ocorrer um erro ao criar a tabela"
+		def retorno = manager.criarTabelaDbchangesSeNaoExistir(sql)
+
+		then: "Retorna false e loga o erro"
+		!retorno
+	}
+
+	def "deve retornar false caso nao consiga obter a conexao com o banco"() {
+
+		given:
+		def mensagens = []
+		def sql = Mock(Sql)
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def manager = new DbChangeManager(logger: logger)
+
+		when: "passar a sql null"
+		def retorno = manager.criarTabelaDbchangesSeNaoExistir(null)
+
+		then: "Retorna false e loga o erro"
+		retorno == false
+		mensagens.size() == 1
+		mensagens[0] == DbChangeManager.MESSAGE_COULD_NOT_GET_CONNECTION
+	}
+
+	def "deve inserir uma execucao de dbchange quando o parametro UpDown for igual a UP"() {
+		given:
+		def sql = Mock(Sql)
+		def manager = new DbChangeManager()
+		def arquivo = "989898-test.dbchange"
+
+		2 * sql.commit()
+		1 * sql.execute(DbChangeManager.INSERT_INTO_DBCHANGES, _)
+
+		when: "salvar execucao de dbchange"
+		manager.salvarExecucao(sql, arquivo, UpDown.UP)
+
+		then: "deve inserir execucao e commitar"
+	}
+
+	def "deve excluir uma execucao de dbchange quando o parametro UpDown for igual a DOWN"() {
+		given:
+		def sql = Mock(Sql)
+		def manager = new DbChangeManager()
+		def arquivo = "989898-test.dbchange"
+
+		2 * sql.commit()
+		1 * sql.execute(DbChangeManager.DELETE_FROM_DBCHANGES, _)
+
+		when: "excluir execucao de dbchange"
+		manager.salvarExecucao(sql, arquivo, UpDown.DOWN)
+
+		then: "deve excluir execucao e commitar"
+	}
+
+
+	def "deve parsear, executar e gravar varias dbchanges"() {
+
+		given:
+		def mensagens = []
+		def sql = Mock(Sql)
+		def parser = Mock(SQLFileParser)
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: { ["abc", "xyz"]} ]
+		def lista = [
+			"989898-test.dbchange",
+			"65564564-test.dbchange"
+		]
+		def dbchange = [
+			[ header:"carneiro", up:["z", "x"], down:[]],
+			[ header:"ismels", up:["w", "e"], down:[]]
+		]
+
+		2 * parser.parseFile(_) >>> dbchange
+		2 * sql.rows(_,_) >> []
+
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		manager.metaClass.getFile = { def a, def b -> return []}
+
+		when:
+		def resultado = manager.executarVariasDbChanges(lista, UpDown.UP)
+
+		then:
+		resultado == true
+		mensagens.size() == 12
+		mensagens[0] == "Executing dbchange: 989898-test.dbchange -- carneiro"
+		mensagens[4].startsWith("Time elapsed")
+		mensagens[5].startsWith("Execution time:")
+		mensagens[6] == "Executing dbchange: 65564564-test.dbchange -- ismels"
+	}
+
+	def "deve parsear, executar e gravar uma dbchange"() {
+
+		given:
+		def mensagens = []
+		def sql = Mock(Sql)
+		def parser = Mock(SQLFileParser)
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: { ["abc", "xyz"]} ]
+		def arquivo = "989898-test.dbchange"
+		def dbchange = [ header:"carneiro", up:["z", "x"], down:[]]
+
+		1 * parser.parseFile(_) >> dbchange
+		1 * sql.rows(_,_) >> []
+
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		manager.metaClass.getFile = { def a, def b -> return []}
+
+		when:
+		def resultado = manager.executarDbChange(arquivo, UpDown.UP)
+
+		then:
+		resultado == true
+		mensagens.size() == 6
+		mensagens[0] == "Executing dbchange: 989898-test.dbchange -- carneiro"
+		mensagens[4].startsWith("Time elapsed")
+		mensagens[5].startsWith("Execution time:")
+	}
+
+	def "deve parsear, executar e gravar uma dbchange quando o parametro UpDown = DOWN"() {
+
+		given:
+		def mensagens = []
+		def sql = Mock(Sql)
+		def parser = Mock(SQLFileParser)
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: { ["abc", "xyz"]} ]
+		def arquivo = "989898-test.dbchange"
+		def dbchange = [ header:"carneiro", up:[], down:["z", "x"]]
+
+		1 * parser.parseFile(_) >> dbchange
+		1 * sql.rows(_,_) >> ["select bla"]
+
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		manager.metaClass.getFile = { def a, def b -> return []}
+
+		when:
+		def resultado = manager.executarDbChange(arquivo, UpDown.DOWN)
+
+		then:
+		resultado == true
+		mensagens.size() == 6
+		mensagens[0] == "Executing dbchange: 989898-test.dbchange -- carneiro"
+		mensagens[4].startsWith("Time elapsed")
+		mensagens[5].startsWith("Execution time:")
+	}
+
+	def "deve retornar mensagem quando nao houver comandos no arquivo" () {
+
+		given:
+		def mensagens = []
+		def sql = Mock(Sql)
+		def parser = Mock(SQLFileParser)
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: { ["abc", "xyz"]} ]
+		def arquivo = "989898-test.dbchange"
+		def dbchange = [ header:"carneiro", up:[], down:[]]
+
+		1 * parser.parseFile(_) >> dbchange
+
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		manager.metaClass.getFile = { def a, def b -> return []}
+
+		when:
+		def resultado = manager.executarDbChange(arquivo, UpDown.UP)
+
+		then:
+		resultado == true
+		mensagens.size() == 2
+		mensagens[0] == "Executing dbchange: 989898-test.dbchange -- carneiro"
+		mensagens[1] == DbChangeManager.MESSAGE_NO_COMMANDS_IN_FILE
+	}
+
+	def "deve retornar false quando ocorrer um erro de sql" () {
+
+		given:
+		def mensagens = []
+		def sql = Mock(Sql)
+		def parser = Mock(SQLFileParser)
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: { ["abc", "xyz"]} ]
+		def arquivo = "989898-test.dbchange"
+		def dbchange = [ header:"carneiro", up:["x"], down:[]]
+
+		1 * parser.parseFile(_) >> dbchange
+		1 * sql.rows(_,_) >> []
+		1 * sql.executeUpdate(_) >> { throw new SQLException("Erro") }
+
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		manager.metaClass.getFile = { def a, def b -> return []}
+		manager.metaClass.salvarExecucao = { def a, def b, def c -> assert false }
+
+		when: "executar dbchange com erro"
+		def resultado = manager.executarDbChange(arquivo, UpDown.UP)
+
+		then: "retorna false e nao pode salvar a execucao da dbchange"
+		resultado == false
+		mensagens.size() == 4
+		mensagens[0] == "Executing dbchange: 989898-test.dbchange -- carneiro"
+		mensagens[2] == "!!!Error: Erro"
+	}
+
+	def "deve retornar mensagem de erro quando a lista de instrucoes nao existir" () {
+
+		given:
+		def mensagens = []
+		def sql = Mock(Sql)
+		def parser = Mock(SQLFileParser)
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: { ["abc", "xyz"]} ]
+		def arquivo = "989898-test.dbchange"
+		def dbchange = [ header:"carneiro", up:null, down:[]]
+
+		1 * parser.parseFile(_) >> dbchange
+
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		manager.metaClass.getFile = { def a, def b -> return []}
+
+		when:
+		def resultado = manager.executarDbChange(arquivo, UpDown.UP)
+
+		then:
+		resultado == false
+		mensagens.size() == 2
+		mensagens[0] == "Executing dbchange: 989898-test.dbchange -- carneiro"
+		mensagens[1] == DbChangeManager.MESSAGE_THERE_IS_NO_INSTRUCTIONS
+	}
+
+	def "deve retornar false quando nao existir um execucao anterior e parametro UpDown = DOWN"() {
+
+		given:
+		def mensagens = []
+		def sql = Mock(Sql)
+		def parser = Mock(SQLFileParser)
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: { ["abc", "xyz"]} ]
+		def arquivo = "989898-test.dbchange"
+		def dbchange = [ header:"carneiro", up:[], down:["z", "x"]]
+
+		1 * parser.parseFile(_) >> dbchange
+		1 * sql.rows(_,_) >> []
+
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force: true)
+		manager.metaClass.getFile = { def a, def b -> return []}
+
+		when:
+		def resultado = manager.executarDbChange(arquivo, UpDown.DOWN)
+
+		then:
+		resultado == false
+		mensagens.size() == 2
+		mensagens[0] == "Executing dbchange: 989898-test.dbchange -- carneiro"
+		mensagens[1] == DbChangeManager.MESSAGE_DBCHANGE_NOT_EXECUTED
+	}
+
+	def "deve retornar false quando ja existir um execucao anterior e parametro UpDown = UP"() {
+
+		given:
+		def mensagens = []
+		def sql = Mock(Sql)
+		def parser = Mock(SQLFileParser)
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: { ["abc", "xyz"]} ]
+		def arquivo = "989898-test.dbchange"
+		def dbchange = [ header:"carneiro", up:["z", "x"], down:["z", "x"]]
+
+		1 * parser.parseFile(_) >> dbchange
+		1 * sql.rows(_,_) >> ["xxx"]
+
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force: false)
+		manager.metaClass.getFile = { def a, def b -> return []}
+
+		when:
+		def resultado = manager.executarDbChange(arquivo, UpDown.UP)
+
+		then:
+		resultado == false
+		mensagens.size() == 2
+		mensagens[0] == "Executing dbchange: 989898-test.dbchange -- carneiro"
+		mensagens[1] == DbChangeManager.MESSAGE_DBCHANGE_ALREADY_EXECUTED
+	}
+
+	def "deve retornar true mesmo quando ja existir um execucao anterior caso seja for�ado 'force=true' "() {
+
+		given:
+		def mensagens = []
+		def sql = Mock(Sql)
+		def parser = Mock(SQLFileParser)
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: { ["abc", "xyz"]} ]
+		def arquivo = "989898-test.dbchange"
+		def dbchange = [ header:"carneiro", up:["z", "x"], down:["z", "x"]]
+
+		1 * parser.parseFile(_) >> dbchange
+		1 * sql.rows(_,_) >> ["xxx"]
+
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force:true)
+		manager.metaClass.getFile = { def a, def b -> return []}
+
+		when:
+		def resultado = manager.executarDbChange(arquivo, UpDown.UP)
+
+		then:
+		resultado == true
+		mensagens.size() == 6
+		mensagens[0] == "Executing dbchange: 989898-test.dbchange -- carneiro"
+		mensagens[5].startsWith("Execution time:")
+	}
+
+	def "deve retornar false quando o nome do arquivo for inv�lido"() {
+
+		given: "arquivo com nome errado"
+		def mensagens = []
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def arquivo = "989898-test.dbchang"
+		def manager = new DbChangeManager(logger: logger)
+
+		when:
+		def resultado = manager.executarDbChange(arquivo, UpDown.UP)
+
+		then: "Retorna mensagem de nome do arquivo invalido"
+		resultado == false
+		mensagens.size() == 1
+		mensagens[0] == DbChangeManager.MESSAGE_INVALID_FILE_NAME
+	}
+
+	def "deve retornar false quando nao conseguir obter a conexao com o banco"() {
+
+		given: "arquivo com nome do banco errado"
+		def mensagens = []
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def arquivo = "989898-test.dbchange"
+		def manager = new DbChangeManager(logger: logger)
+		ConnectionInfo.metaClass.static.createDatabaseConnection = { def a, def b -> return null }
+
+		when: "o metodo createDatabaseConnection retornar null"
+		def resultado = manager.executarDbChange(arquivo, UpDown.UP)
+
+		then: "retorna false e a mensagem que nao conseguiu obter conexao"
+		resultado == false
+		mensagens.size() == 1
+		mensagens[0] == DbChangeManager.MESSAGE_COULD_NOT_GET_CONNECTION
+	}
+
+	def "deve retornar o timestamp do nome de arquivo"() {
+
+		given:
+		def manager = new DbChangeManager()
+		expect:
+		manager.obterTimestamp(arquivo) == timestamp
+		where:
+		timestamp | arquivo
+		"989898"  | "989898-test.dbchange"
+		"132123"  | "132123-x.dbchange"
+		"0"       | "789987-teste"
+	}
+}

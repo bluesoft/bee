@@ -1,0 +1,29 @@
+{
+  seq_banco_pagamento : {
+    name : "seq_banco_pagamento"
+  },
+  seq_banco_pagamento_titulos : {
+    name : "seq_banco_pagamento_titulos"
+  },
+  seq_bandeira : {
+    name : "seq_bandeira"
+  },
+  seq_bandeira_desconhecida : {
+    name : "seq_bandeira_desconhecida"
+  },
+  seq_bin_cartao : {
+    name : "seq_bin_cartao"
+  },
+  seq_boleto_bancario : {
+    name : "seq_boleto_bancario"
+  },
+  seq_bordero_caixa : {
+    name : "seq_bordero_caixa"
+  },
+  seq_bordero_caixa_item : {
+    name : "seq_bordero_caixa_item"
+  },
+  seq_cadastro_caixa : {
+    name : "seq_cadastro_caixa"
+  }
+}

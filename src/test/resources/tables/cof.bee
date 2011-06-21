@@ -1,0 +1,113 @@
+{
+  name : "cof",
+  columns : {
+    codigo_operacao_fiscal : {
+      name : "codigo_operacao_fiscal",
+      type : "number",
+      size : 6
+    },
+    descricao : {
+      name : "descricao",
+      type : "varchar",
+      size : 100,
+      nullable : true
+    },
+    tipo : {
+      name : "tipo",
+      type : "char",
+      size : 1,
+      nullable : true
+    },
+    tipo_movimento_key : {
+      name : "tipo_movimento_key",
+      type : "number",
+      size : 3,
+      nullable : true
+    },
+    cof_nf : {
+      name : "cof_nf",
+      type : "varchar",
+      size : 10,
+      nullable : true
+    },
+    codigo_complementar : {
+      name : "codigo_complementar",
+      type : "number",
+      size : 6,
+      nullable : true
+    },
+    grupo : {
+      name : "grupo",
+      type : "varchar",
+      size : 1,
+      nullable : true
+    },
+    basico : {
+      name : "basico",
+      type : "number",
+      size : 1,
+      nullable : true
+    },
+    status : {
+      name : "status",
+      type : "number",
+      size : 1
+    },
+    cof_nf_str : {
+      name : "cof_nf_str",
+      type : "varchar",
+      size : 4,
+      nullable : true
+    },
+    substituicao_tributaria : {
+      name : "substituicao_tributaria",
+      type : "number",
+      defaultValue : "0",
+      size : 1,
+      nullable : true
+    },
+    fora_estado : {
+      name : "fora_estado",
+      type : "number",
+      defaultValue : "0 ",
+      size : 1
+    },
+    tributar : {
+      name : "tributar",
+      type : "number",
+      defaultValue : "1 ",
+      size : 1
+    },
+    descricao_abreviada : {
+      name : "descricao_abreviada",
+      type : "varchar",
+      size : 50,
+      nullable : true
+    },
+    apurar_imposto : {
+      name : "apurar_imposto",
+      type : "number",
+      size : 1,
+      nullable : true
+    }
+  },
+  constraints : {
+    pk_cof : {
+      name : "pk_cof",
+      type : "P",
+      columns : [ "codigo_operacao_fiscal" ]
+    },
+    fk_cof_cof : {
+      name : "fk_cof_cof",
+      type : "R",
+      columns : [ "codigo_complementar" ],
+      refTable : "cof"
+    },
+    fk_cof_tipo_mov : {
+      name : "fk_cof_tipo_mov",
+      type : "R",
+      columns : [ "tipo_movimento_key" ],
+      refTable : "tipo_movimento"
+    }
+  }
+}
