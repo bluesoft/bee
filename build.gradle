@@ -8,6 +8,8 @@ group = 'br.com.bluesoft.bee'
 artifact = 'bee'
 version = '1.18'
 
+startScriptsDir = new File("$buildDir/scripts")
+
 repositories {
 	mavenCentral()
 	mavenLocal()
@@ -20,4 +22,14 @@ dependencies {
 	testCompile "org.spockframework:spock-core:0.4-groovy-1.7"
 	testCompile group: 'cglib', name: 'cglib-nodep', version: '2.2'	
 	testCompile group: 'org.mockito', name: 'mockito-core', version: '1.8.5'	
+}
+
+startScripts.doLast {
+	scriptsDir = new File("${startScriptsDir}")
+	scriptsDir.eachFile {
+		script = it
+		scriptText = script.text
+		scriptText = scriptText.replaceAll('CLASSPATH=.*:', 'for i in \\$APP_HOME/lib/*;do CLASSPATH=\\$CLASSPATH:\\$i; done')
+ 		script.write scriptText
+	}
 }
