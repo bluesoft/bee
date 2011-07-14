@@ -45,6 +45,15 @@ class CsvUtil {
 			else
 				result << campo
 		}
+		
+		// add null values at the end of array, because split function remove last delimiters
+		def m = line =~ /,*$/
+		if(m.size() > 1) {
+			for(n in 1..m[0].size()) {
+				result << null
+			}
+		}
+		
 		return result
 	}
 

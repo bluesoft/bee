@@ -1,6 +1,6 @@
 package br.com.bluesoft.bee.util
 
-import spock.lang.Specification
+import spock.lang.*
 
 
 class CsvUtilTest extends Specification {
@@ -23,5 +23,6 @@ class CsvUtilTest extends Specification {
 		'xx,yy\nyy'				|	[['xx', 'yy'], ['yy']]
 		'xx\\,yy,zz\nyy'		|	[['xx,yy', 'zz'], ['yy']]
 		'xx,,zz\nyy'			|	[['xx', null , 'zz'], ['yy']]
+		'xx,yy,'				|	[['xx','yy',null]]
 	}
 }
