@@ -37,23 +37,23 @@ import br.com.bluesoft.bee.service.BeeSchemaValidator
 import br.com.bluesoft.bee.service.BeeWriter
 
 public class BeeSchemaRunner implements BeeWriter {
-
+	
 	def usage() {
 		println "usage: bee.sh <options> schema:action <options>"
 		println "Actions:"
 		println "         schema:generate connection [object] - generate a entire schema or single object, if specified"
 		println "         schema:validate connection [object] - validate a entire schema or single object, if specified"
 	}
-
+	
 	def parseOptions(options) {
 		def arguments = options.arguments()
 		if(arguments.size < 2 || !arguments[0].contains(":")) {
 			usage()
 			System.exit 0
 		}
-
+		
 		def action = arguments[0].split(":")[1]
-
+		
 		def actionRunner = null
 		def parameters = [ clientName: arguments[1], configName: 'bee.properties', path: "bee", out: this ]
 		switch(action) {
@@ -64,28 +64,29 @@ public class BeeSchemaRunner implements BeeWriter {
 				actionRunner = new BeeSchemaValidator(parameters)
 				break;
 		}
-
+		
 		if(options.c) {
 			actionRunner.configName = options.c
 		}
-
+		
 		if(options.d) {
 			actionRunner.path = options.d
 		}
-
+		
 		if(arguments.size > 2) {
 			actionRunner.objectName = arguments[2]
 		}
-
+		
 		return actionRunner
 	}
-
+	
 	def run(options) {
 		def actionRunner = parseOptions(options)
 		if(actionRunner)
-			actionRunner.run()
+			if(!actionRunner.run())
+				System.exit(1)
 	}
-
+	
 	void log(String msg) {
 		println msg
 	}
