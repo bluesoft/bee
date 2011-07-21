@@ -84,7 +84,7 @@ class Schema {
 		databaseMissingObjects.each {
 			def object = databaseObjects[it]
 			def objectType = ObjectType.getType(object)
-			def messageText = "The ${objectType.description} ${it} exists in the database but doesnt exists in the reference metadata.";
+			def messageText = "The ${objectType.description} ${it} exists in the database but does not exist in the reference metadata.";
 			def message = new Message(objectName:it, level:MessageLevel.WARNING, objectType:objectType, messageType:MessageType.PRESENCE, message:messageText)
 			messages << message
 		}

@@ -40,8 +40,8 @@ public class BeeDataRunner implements BeeWriter {
 	def usage() {
 		println "usage: bee.sh <options> data:action <options>"
 		println "Actions:"
-		println "         data:generate connection [object] - generate a entire schema data or single object, if specified"
-		println "         data:validate connection [object] - validate a entire schema data or single object, if specified"
+		println "         data:generate connection [object] - generates an entire schema data or single object, if specified"
+		println "         data:validate connection [object] - validates an entire schema data or single object, if specified"
 	}
 	
 	def parseOptions(options) {

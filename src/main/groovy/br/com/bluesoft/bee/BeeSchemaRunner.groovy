@@ -41,8 +41,8 @@ public class BeeSchemaRunner implements BeeWriter {
 	def usage() {
 		println "usage: bee.sh <options> schema:action <options>"
 		println "Actions:"
-		println "         schema:generate connection [object] - generate a entire schema or single object, if specified"
-		println "         schema:validate connection [object] - validate a entire schema or single object, if specified"
+		println "         schema:generate connection [object] - generates an entire schema or single object, if specified"
+		println "         schema:validate connection [object] - validates an entire schema or single object, if specified"
 	}
 	
 	def parseOptions(options) {

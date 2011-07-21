@@ -41,10 +41,10 @@ public class BeeDbChangeRunner implements BeeWriter {
 	def usage() {
 		println "usage: bee.sh <options> dbchange:action <options>"
 		println "Actions:"
-		println "         dbchange:create description - create a dbchange file"
-		println "         dbchange:status connection - list dbchanges to run"
-		println "         dbchange:up connection <file> - run all pending dbchange files, or one if specified"
-		println "         dbchange:down connection file - run a dbchange rollback action"
+		println "         dbchange:create description - creates a dbchange file"
+		println "         dbchange:status connection - lists dbchanges to run"
+		println "         dbchange:up connection <file> - runs all pending dbchange files, or one if specified"
+		println "         dbchange:down connection file - runs a dbchange rollback action"
 	}
 
 	def createAction(action, options) {

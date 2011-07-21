@@ -66,7 +66,7 @@ class BeeSchemaValidator {
 		MessagePrinter messagePrinter = new MessagePrinter()
 
 		def importer = getImporter()
-		out.log("connectiong to " + configName);
+		out.log("connecting to " + configName);
 		this.databaseReader = new OracleDatabaseReader(getDatabaseConnection())
 
 		out.log('importing schema metadata from the reference files')
@@ -86,10 +86,10 @@ class BeeSchemaValidator {
 		def warnings = messages.findAll { it.level == MessageLevel.WARNING }
 		def errors = messages.findAll { it.level == MessageLevel.ERROR }
 
-		out.log("--- bee found ${warnings.size()} warnings" )
+		out.log("--- bee found ${warnings.size()} warning(s)" )
 		messagePrinter.print(out, warnings)
 
-		out.log("--- bee found ${errors.size()} errors" )
+		out.log("--- bee found ${errors.size()} error(s)" )
 		messagePrinter.print(out, errors)
 
 		return errors.size() == 0
