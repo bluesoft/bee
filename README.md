@@ -64,13 +64,13 @@ The module checks the schema structure of the database, comparing with existing 
 
 ### Commands
 
- To create a file .bee
-   bee.sh schema:generate `<configuration>`
-   bee.sh schema:generate `<configuration>` `<object>`
+      To create a file .bee
+         bee.sh schema:generate <configuration>
+         bee.sh schema:generate <configuration> <object>
 
- To validate a file .bee
-   bee.sh schema:validate `<configuration>`
-   bee.sh schema:validate `<configuration>` `<object>`
+      To validate a file .bee
+         bee.sh schema:validate <configuration>
+         bee.sh schema:validate <configuration> <object>
 
 
 ## Data
@@ -96,14 +96,14 @@ Data files are in the directory bee/data, and are in CSV format.
 The Dbchange module performs the task of changing the database, following the concepts of ruby migrations. At the time of execution of the update module should check which scripts will be executed and then execute them in chronological order.
 
 
-*Each file represents a file dbchange or more changes in the database and the file name follows the format:
+Each file represents a file dbchange or more changes in the database and the file name follows the format:
 
-    **codigo timestamp + description + .dbchange
+      codigo timestamp + description + .dbchange
 
 
-*The contents of the file consists of comments, update script and rollback script. example:
+The contents of the file consists of comments, update script and rollback script. example:
 
-    **-- comment script
+    -- comment script
 
     ::up
 
