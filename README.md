@@ -1,15 +1,14 @@
 # Bee
 
 A tool for managing database changes.
-Today is embedded deployment tasks, along with validation tests.
 
-Note: deprecated code is used by ANT, should be operated only version of MAVEN.
+Note: the use with ANT is deprecated, the most recent version uses MAVEN.
 
 ## Modules
 
 * Schema - Validation of the structures of the tables, indexes, packages, etc.
 * Data - Validation of core data tables.
-* Dbchange - Making the change tables in the style of ruby migrations.
+* Dbchange - Execute some change on tables, like "ruby migrations".
 
 ## How to Install
 
@@ -19,9 +18,9 @@ Put your jdbc jar into the `lib` folder.
 
 ## Configuration
 
-All modules used by the bee bee.properties default host the file containing the settings for connecting to the database. There may be various configurations of the same database file.
+All modules use by the file "bee.properties" by default. This file contains the database connection settings. There may be several database configurations inside this file.
 
-You can also specify an alternate configuration file using the-DdatabaseConfig = `<file>`.
+You can also specify an alternate configuration file using the -DdatabaseConfig = `<file>`.
 
      The file structure is as follows: 
 
@@ -40,72 +39,67 @@ You can also specify an alternate configuration file using the-DdatabaseConfig =
           <password> - connection password.
 
       Example:
-            Configuring a delta.
-                  delta.driver=oracle.jdbc.OracleDriver.
-                  delta.url=jdbc:oracle:thin:@server:1111:delta.
-                  delta.user=delta123.
-                  delta.password=delta123.
-
-    Legend
-
-        <configuration> -> name of the database.
-        <object> -> name of the table.
+            Configuring a database called 'delta'.
+                  delta.driver=oracle.jdbc.OracleDriver
+                  delta.url=jdbc:oracle:thin:@server:1111:delta
+                  delta.user=delta123
+                  delta.password=delta123
 
 ## Schema
 
 The module checks the schema structure of the database, comparing with existing files in the project. These files are in the bee project, inside specific subdirectories for each type of structure.
 
-   * tables  -  structure of tables, indexes and constraints.
-   * triggers  -  code of triggers.
-   * packages  -  code packages and packages bodies.
-   * procedures  -  procedures and functions.
+   * tables - structure of tables, indexes and constraints.
+   * triggers
+   * packages
+   * procedures - procedures and functions.
    * views
-   * sequences.bee  -  file containing all sequences.
+   * sequences.bee - file containing all sequences
 
 ### Commands
 
-      To create one file .bee
-         bee.sh schema:generate <configuration> <object>
+      To create a file
+         bee.sh schema:generate <database> <object>
 
-      To create all file .bee
-         bee.sh schema:generate <configuration>
+      To create all files from a specific schema
+         bee.sh schema:generate <database>
 
-      To validate one file .bee
-         bee.sh schema:validate <configuration> <object>
+      To validate one file
+         bee.sh schema:validate <database> <object>
 
-      To validate all file .bee
-         bee.sh schema:validate <configuration>
+      To validate all files
+         bee.sh schema:validate <database>
 
 
 ## Data
 
-The module checks the date the table core from database. The tables core are those reference and are not changed by the user.
+This module checks the 'core' data from the database.
 
-Data files are in the directory bee/data, and are in CSV format.
+Core data files are in the directory bee/data, and use a CSV format.
 
 ### Commands
 
-        To create a file data.
-            bee.sh data:generate <configuration> <object>
+        To create a data file
+            bee.sh data:generate <database> <object>
 
-        To validate all tables core of database.
-            bee.sh data:validate <configuration>
+        To validate all core tables
+            bee.sh data:validate <database>
 
-        To validate one table core.
-            bee.sh data:validate <configuration> <object>
+        To validate one core table
+            bee.sh data:validate <database> <object>
 
 
 ## Dbchange
 
-The Dbchange module performs the task of changing the database, following the concepts of ruby migrations. At the time of execution of the update module should check which scripts will be executed and then execute them in chronological order.
+The Dbchange module performs the task of changing the database, following the concepts of ruby migrations. The update module will check which scripts to be executed and then execute them in chronological order.
 
 
-Each file represents a file dbchange or more changes in the database and the file name follows the format:
+Each file represents one or more changes in the database and the file name follows the format:
 
       codigo timestamp + description + .dbchange
 
 
-The contents of the file consists of comments, update script and rollback script. example:
+The contents of the file consists of comments, update scripts and rollback scripts. Example:
 
     -- comment script
 
@@ -123,24 +117,24 @@ The contents of the file consists of comments, update script and rollback script
         command to reverse the database;
 
 
-Note:  when there is no rollback commands section: down should be removed, including its header. This will indicate to the bee there is no way to reverse the script.
+Note:  when there is no rollback commands section: down should be removed, including its header. This will indicate there is no way to reverse the script.
 
 ### Commands
 
-        To create dbchange.
+        To create a dbchange
             bee.sh dbchange:create <description of file>
 
-        To verify status of dbchanges in database(dbchanges implemented and not implemented).
-            bee.sh dbchange:status <configuration>
+        To verify the status of dbchanges in database (dbchanges implemented and not implemented).
+            bee.sh dbchange:status <database>
 
-        To implement all dbchanges.  
-            bee.sh dbchange:up <configuration>
+        To apply all dbchanges
+            bee.sh dbchange:up <database>
 
-        To implement one dbchanges(up)
-            bee.sh dbchange:up <configuration> <name of file> Example: 1311201110120100-easter_egg.dbchange
+        To apply one dbchange (up)
+            bee.sh dbchange:up <database> <name of file> Example: 1311201110120100-easter_egg.dbchange
 
-        To implement one dbchanges(down)
-            bee.sh dbchange:down <configuration> <name of file>
+        To apply one dbchange (down)
+            bee.sh dbchange:down <database> <name of file>
 
 
 ## Known Issues
