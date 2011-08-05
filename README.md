@@ -46,10 +46,10 @@ You can also specify an alternate configuration file using the-DdatabaseConfig =
                   delta.user=delta123.
                   delta.password=delta123.
 
-Legend
+    Legend
 
-  `<configuration>` -> name of the database.
-  `<object>` -> name of the table.
+        <configuration> -> name of the database.
+        <object> -> name of the table.
 
 ## Schema
 
@@ -64,13 +64,17 @@ The module checks the schema structure of the database, comparing with existing 
 
 ### Commands
 
-      To create a file .bee
-         bee.sh schema:generate <configuration>
+      To create one file .bee
          bee.sh schema:generate <configuration> <object>
 
-      To validate a file .bee
-         bee.sh schema:validate <configuration>
+      To create all file .bee
+         bee.sh schema:generate <configuration>
+
+      To validate one file .bee
          bee.sh schema:validate <configuration> <object>
+
+      To validate all file .bee
+         bee.sh schema:validate <configuration>
 
 
 ## Data
