@@ -25,26 +25,26 @@ You can also specify an alternate configuration file using the-DdatabaseConfig =
 
      The file structure is as follows: 
 
-          `<conf>`.driver=`<driver>`
+          <conf>.driver=<driver>
 
-          `<conf>`.url=`<url>`
+          <conf>.url=<url>
 
-          `<conf>`.user=`<user>`
+          <conf>.user=<user>
 
-          `<conf>`.password=`<password>`
+          <conf>.password=<password>
 
-          `<conf>` - configuration name to be used;
-          `<driver>` - jdbc driver class;
-          `<url>` - url of the database connection;
-          `<user>` - user connection;
-          `<password>` - connection password;
+          <conf> - configuration name to be used.
+          <driver> - jdbc driver class.
+          <url> - url of the database connection.
+          <user> - user connection.
+          <password> - connection password.
 
-      * Example:
-             Configuring a delta.
-                   delta.driver=oracle.jdbc.OracleDriver;
-                   delta.url=jdbc:oracle:thin:@server:1111:delta;
-                   delta.user=delta123;
-                   delta.password=delta123;
+      Example:
+            Configuring a delta.
+                  delta.driver=oracle.jdbc.OracleDriver.
+                  delta.url=jdbc:oracle:thin:@server:1111:delta.
+                  delta.user=delta123.
+                  delta.password=delta123.
 
 Legend
 
