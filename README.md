@@ -65,12 +65,12 @@ The module checks the schema structure of the database, comparing with existing 
 ### Commands
 
  To create a file .bee
-   bee.sh schema:generate <configuration>
-   bee.sh schema:generate <configuration> <object>
+   bee.sh schema:generate `<configuration>`
+   bee.sh schema:generate `<configuration>` `<object>`
 
  To validate a file .bee
-   bee.sh schema:validate <configuration>
-   bee.sh schema:validate <configuration> <object>
+   bee.sh schema:validate `<configuration>`
+   bee.sh schema:validate `<configuration>` `<object>`
 
 
 ## Data
@@ -81,14 +81,14 @@ Data files are in the directory bee/data, and are in CSV format.
 
 ### Commands
 
-  To create a file data.
-     bee.sh data:generate <configuration> <object>
+        To create a file data.
+            bee.sh data:generate <configuration> <object>
 
-  To validate all tables core of database.
-     bee.sh data:validate <configuration>
+        To validate all tables core of database.
+            bee.sh data:validate <configuration>
 
-  To validate one table core.
-     bee.sh data:validate <configuration> <object>
+        To validate one table core.
+            bee.sh data:validate <configuration> <object>
 
 
 ## Dbchange
@@ -96,14 +96,14 @@ Data files are in the directory bee/data, and are in CSV format.
 The Dbchange module performs the task of changing the database, following the concepts of ruby migrations. At the time of execution of the update module should check which scripts will be executed and then execute them in chronological order.
 
 
-* Each file represents a file dbchange or more changes in the database and the file name follows the format:
+*Each file represents a file dbchange or more changes in the database and the file name follows the format:
 
-    codigo timestamp + description + .dbchange
+    **codigo timestamp + description + .dbchange
 
 
-* The contents of the file consists of comments, update script and rollback script. example:
+*The contents of the file consists of comments, update script and rollback script. example:
 
-    -- comment script
+    **-- comment script
 
     ::up
 
@@ -123,20 +123,20 @@ Note:  when there is no rollback commands section: down should be removed, inclu
 
 ### Commands
 
-  To create dbchange.
-     bee.sh dbchange:create <description of file>
+        To create dbchange.
+            bee.sh dbchange:create <description of file>
 
-  To verify status of dbchanges in database(dbchanges implemented and not implemented).
-     bee.sh dbchange:status <configuration>
+        To verify status of dbchanges in database(dbchanges implemented and not implemented).
+            bee.sh dbchange:status <configuration>
 
-  To implement all dbchanges.  
-     bee.sh dbchange:up <configuration>
+        To implement all dbchanges.  
+            bee.sh dbchange:up <configuration>
 
-  To implement one dbchanges(up)
-     bee.sh dbchange:up <configuration> <name of file> Example: 1311201110120100-easter_egg.dbchange
+        To implement one dbchanges(up)
+            bee.sh dbchange:up <configuration> <name of file> Example: 1311201110120100-easter_egg.dbchange
 
-  To implement one dbchanges(down)
-     bee.sh dbchange:down <configuration> <name of file>
+        To implement one dbchanges(down)
+            bee.sh dbchange:down <configuration> <name of file>
 
 
 ## Known Issues
