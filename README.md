@@ -21,20 +21,23 @@ Put your jdbc jar into the `lib` folder.
 
 All modules used by the bee bee.properties default host the file containing the settings for connecting to the database. There may be various configurations of the same database file.
 
-You can also specify an alternate configuration file using the-DdatabaseConfig = <file>.
+You can also specify an alternate configuration file using the-DdatabaseConfig = `<file>`.
 
 The file structure is as follows: 
 
-  <conf>.driver=<driver>
-  <conf>.url=<url>
-  <conf>.user=<user>
-  <conf>.password=<password>
+  `<conf>`.driver=`<driver>`
 
-  <conf> - configuration name to be used.
-  <driver> - jdbc driver class.
-  <url> - url of the database connection.
-  <user> - user connection.
-  <password> - connection password.
+  `<conf>`.url=`<url>`
+
+  `<conf>`.user=`<user>`
+
+  `<conf>`.password=`<password>`
+
+  `<conf>` - configuration name to be used.
+  `<driver>` - jdbc driver class.
+  `<url>` - url of the database connection.
+  `<user>` - user connection.
+  `<password>` - connection password.
 
 * Example:
     Configuring a delta.
