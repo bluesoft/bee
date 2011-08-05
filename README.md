@@ -96,7 +96,7 @@ The Dbchange module performs the task of changing the database, following the co
 
 Each file represents one or more changes in the database and the file name follows the format:
 
-      codigo timestamp + description + .dbchange
+      code timestamp + description + .dbchange
 
 
 The contents of the file consists of comments, update scripts and rollback scripts. Example:
