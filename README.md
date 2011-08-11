@@ -59,16 +59,16 @@ The module checks the schema structure of the database, comparing with existing 
 ### Commands
 
       To create a file
-         bee.sh schema:generate <database> <object>
+         bee schema:generate <database> <object>
 
       To create all files from a specific schema
-         bee.sh schema:generate <database>
+         bee schema:generate <database>
 
       To validate one file
-         bee.sh schema:validate <database> <object>
+         bee schema:validate <database> <object>
 
       To validate all files
-         bee.sh schema:validate <database>
+         bee schema:validate <database>
 
 
 ## Data
@@ -80,13 +80,13 @@ Core data files are in the directory bee/data, and use a CSV format.
 ### Commands
 
         To create a data file
-            bee.sh data:generate <database> <object>
+            bee data:generate <database> <object>
 
         To validate all core tables
-            bee.sh data:validate <database>
+            bee data:validate <database>
 
         To validate one core table
-            bee.sh data:validate <database> <object>
+            bee data:validate <database> <object>
 
 
 ## Dbchange
@@ -122,19 +122,19 @@ Note:  when there is no rollback commands section: down should be removed, inclu
 ### Commands
 
         To create a dbchange
-            bee.sh dbchange:create <description of file>
+            bee dbchange:create <description of file>
 
         To verify the status of dbchanges in database (dbchanges implemented and not implemented).
-            bee.sh dbchange:status <database>
+            bee dbchange:status <database>
 
         To apply all dbchanges
-            bee.sh dbchange:up <database>
+            bee dbchange:up <database>
 
         To apply one dbchange (up)
-            bee.sh dbchange:up <database> <name of file> Example: 1311201110120100-easter_egg.dbchange
+            bee dbchange:up <database> <name of file> Example: 1311201110120100-easter_egg.dbchange
 
         To apply one dbchange (down)
-            bee.sh dbchange:down <database> <name of file>
+            bee dbchange:down <database> <name of file>
 
 
 ## Known Issues

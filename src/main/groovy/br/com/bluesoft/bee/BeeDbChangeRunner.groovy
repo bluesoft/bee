@@ -39,7 +39,7 @@ import br.com.bluesoft.bee.service.BeeWriter
 
 public class BeeDbChangeRunner implements BeeWriter {
 	def usage() {
-		println "usage: bee.sh <options> dbchange:action <options>"
+		println "usage: bee <options> dbchange:action <parameters>"
 		println "Actions:"
 		println "         dbchange:create description - creates a dbchange file"
 		println "         dbchange:status connection - lists dbchanges to run"

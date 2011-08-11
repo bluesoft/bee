@@ -47,7 +47,7 @@ class Bee {
 	}
 
 	static parseArgs(args) {
-		cliBuilder = new CliBuilder(usage: 'bee.sh <options> module:action <parameters>', header: 'Options:')
+		cliBuilder = new CliBuilder(usage: 'bee <options> module:action <parameters>', header: 'Options:')
 		cliBuilder.c(args: 1, argName: 'file', 'config file')
 		cliBuilder.d(args: 1, argName: 'dir', 'bee files directory')
 		def options = cliBuilder.parse(args)
