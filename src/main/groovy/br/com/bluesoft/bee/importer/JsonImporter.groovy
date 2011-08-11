@@ -79,7 +79,7 @@ class JsonImporter implements Importer {
 	private def importTables() {
 		def tables = [:]
 		tablesFolder.eachFile {
-			if it.name.endsWith(".bee") {
+			if (it.name.endsWith(".bee")) {
 				def table = mapper.readValue(it, Table.class)
 				tables[table.name] = table
 			}
@@ -90,7 +90,7 @@ class JsonImporter implements Importer {
 	private def importViews() {
 		def views = [:]
 		viewsFolder.eachFile {
-			if it.name.endsWith(".bee") {
+			if (it.name.endsWith(".bee")) {
 				def view = mapper.readValue(it, View.class)
 				views[view.name] = view
 			}
@@ -111,7 +111,7 @@ class JsonImporter implements Importer {
 	private def importProcedures() {
 		def procedures = [:]
 		proceduresFolder.eachFile {
-			if it.name.endsWith(".bee") {
+			if (it.name.endsWith(".bee")) {
 				def procedure = mapper.readValue(it, Procedure.class)
 				procedures[procedure.name] = procedure
 			}
@@ -123,7 +123,7 @@ class JsonImporter implements Importer {
 	private def importPackages() {
 		def packages = [:]
 		packagesFolder.eachFile {
-			if it.name.endsWith(".bee") {
+			if (it.name.endsWith(".bee")) {
 				def pack = mapper.readValue(it, Package.class)
 				packages[pack.name] = pack
 			}
@@ -134,7 +134,7 @@ class JsonImporter implements Importer {
 	private def importTriggers() {
 		def triggers = [:]
 		triggersFolder.eachFile {
-			if it.name.endsWith(".bee") {
+			if (it.name.endsWith(".bee")) {
 				def trigger = mapper.readValue(it, Trigger.class)
 				triggers[trigger.name] = trigger
 			}
