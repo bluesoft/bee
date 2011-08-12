@@ -14,7 +14,7 @@ class DbChangeManagerTest extends Specification {
 		[ARQUIVO_NOME: "65564564-test.dbchange"]
 	]
 
-	def "deve retornar uma lista com os arquivos a serem executados"() {
+	def "deve retornar uma lista com os arquivos a serem executados e na ordem"() {
 		given:
 		def mensagens = []
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
@@ -23,6 +23,7 @@ class DbChangeManagerTest extends Specification {
 				[
 					"abc",
 					"65564564-test.dbchange",
+					"989899-test.dbchange",
 					"989898-test.dbchange"
 				]
 			} ]
@@ -32,7 +33,9 @@ class DbChangeManagerTest extends Specification {
 		def lista = manager.listar()
 
 		then: "deve conter somente as instrucoes que nao foram executadas"
-		lista.size() == 1
+		lista.size() == 2
+		
+		lista == [ "989898-test.dbchange", "989899-test.dbchange"]
 	}
 
 	def "deve retornar false quando a lista de arquivos ja executados for nula"() {
@@ -72,8 +75,7 @@ class DbChangeManagerTest extends Specification {
 
 	def "deve listar os arquivos"() {
 		given:
-		def directoryFile = [list: { [ "abc", "65564564-test.dbchange"
-				] } ]
+		def directoryFile = [list: { [ "abc", "65564564-test.dbchange" ] } ]
 		def manager = new DbChangeManager(directoryFile: directoryFile)
 
 		when: "listar arquivos de dbchanges"

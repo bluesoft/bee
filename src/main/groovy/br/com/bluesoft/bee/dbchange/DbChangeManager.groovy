@@ -181,7 +181,8 @@ class DbChangeManager {
 			return null
 		}
 
-		def listaParaExecutar = listaArquivo - listaBanco
+		def listaParaExecutar = (listaArquivo - listaBanco)
+		listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
 
 		logger.log "Found ${listaParaExecutar.size} file(s)"
 		listaParaExecutar.each { logger.log "${it.ARQUIVO_NOME}" }
