@@ -48,8 +48,8 @@ class SchemaPresenceValidationTest  extends spock.lang.Specification {
 		
 		then: "it should return an additional table message for each additional table"
 		messages.size() == 2
-		messages.find { it.objectName == 'produto' }.message == 'The table produto exists in the database but doesnt exists in the reference metadata.'
-		messages.find { it.objectName == 'pedido' }.message == 'The table pedido exists in the database but doesnt exists in the reference metadata.'
+		messages.find { it.objectName == 'produto' }.message == 'The table produto exists in the database but does not exist in the reference metadata.'
+		messages.find { it.objectName == 'pedido' }.message == 'The table pedido exists in the database but does not exist in the reference metadata.'
 		
 		and: "the messages should have warning level"
 		messages.findAll { it.level == MessageLevel.WARNING }.size() == 2
@@ -89,7 +89,7 @@ class SchemaPresenceValidationTest  extends spock.lang.Specification {
 		
 		then: "it should return an aditional view message for the view view_carneiro"
 		def aditionalMessage = messages.find { it.objectName == 'view_carneiro' }
-		aditionalMessage.message == 'The view view_carneiro exists in the database but doesnt exists in the reference metadata.'
+		aditionalMessage.message == 'The view view_carneiro exists in the database but does not exist in the reference metadata.'
 		
 		and: "the messages should have warning level"
 		aditionalMessage.level == MessageLevel.WARNING
@@ -129,7 +129,7 @@ class SchemaPresenceValidationTest  extends spock.lang.Specification {
 		
 		then: "it should return an aditional sequence message for the sequence seq_item"
 		def aditionalMessage = messages.find { it.objectName == 'seq_item' }
-		aditionalMessage.message == 'The sequence seq_item exists in the database but doesnt exists in the reference metadata.'
+		aditionalMessage.message == 'The sequence seq_item exists in the database but does not exist in the reference metadata.'
 		
 		and: "the messages should have warning level"
 		aditionalMessage.level == MessageLevel.WARNING
@@ -169,7 +169,7 @@ class SchemaPresenceValidationTest  extends spock.lang.Specification {
 		
 		then: "it should return an aditional view message for the view view_carneiro"
 		def aditionalMessage = messages.find { it.objectName == 'proc2' }
-		aditionalMessage.message == 'The procedure proc2 exists in the database but doesnt exists in the reference metadata.'
+		aditionalMessage.message == 'The procedure proc2 exists in the database but does not exist in the reference metadata.'
 		
 		and: "the messages should have warning level"
 		aditionalMessage.level == MessageLevel.WARNING
@@ -209,7 +209,7 @@ class SchemaPresenceValidationTest  extends spock.lang.Specification {
 		
 		then: "it should return an aditional view message for the view view_carneiro"
 		def aditionalMessage = messages.find { it.objectName == 'pack2' }
-		aditionalMessage.message == 'The package pack2 exists in the database but doesnt exists in the reference metadata.'
+		aditionalMessage.message == 'The package pack2 exists in the database but does not exist in the reference metadata.'
 		
 		and: "the messages should have warning level"
 		aditionalMessage.level == MessageLevel.WARNING
@@ -249,7 +249,7 @@ class SchemaPresenceValidationTest  extends spock.lang.Specification {
 		
 		then: "it should return an aditional view message for the view view_carneiro"
 		def aditionalMessage = messages.find { it.objectName == 'trig2' }
-		aditionalMessage.message == 'The trigger trig2 exists in the database but doesnt exists in the reference metadata.'
+		aditionalMessage.message == 'The trigger trig2 exists in the database but does not exist in the reference metadata.'
 		
 		and: "the messages should have warning level"
 		aditionalMessage.level == MessageLevel.WARNING
