@@ -32,9 +32,8 @@
  */
 package br.com.bluesoft.bee.model
 
-import br.com.bluesoft.bee.model.message.Message
-import br.com.bluesoft.bee.model.message.MessageLevel
-import br.com.bluesoft.bee.model.message.MessageType
+import br.com.bluesoft.bee.model.message.*
+import br.com.bluesoft.bee.util.StringUtil
 
 
 class Package implements Validator {
@@ -48,12 +47,12 @@ class Package implements Validator {
 
 		def messages = []
 
-		if (metadataPackage.text != this.text) {
+		if (!StringUtil.compare(metadataPackage.text, this.text)) {
 			def message = new Message(objectName:name, level:MessageLevel.ERROR, objectType:ObjectType.PACKAGE, messageType:MessageType.PACKAGE_HEADER, message:"The header of the package ${this.name} differs from metadata.")
 			messages << message
 		}
 
-		if (metadataPackage.body != this.body) {
+		if (!StringUtil.compare(metadataPackage.body, this.body)) {
 			def message = new Message(objectName:name, level:MessageLevel.ERROR, objectType:ObjectType.PACKAGE, messageType:MessageType.PACKAGE_BODY, message:"The body of the package ${this.name} differs from metadata.")
 			messages << message
 		}

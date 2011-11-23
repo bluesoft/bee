@@ -30,29 +30,33 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.model
+package br.com.bluesoft.bee.util;
 
-import java.util.List
+import spock.lang.Specification
 
-import br.com.bluesoft.bee.model.message.*
-import br.com.bluesoft.bee.util.StringUtil
+public class StringUtilTest extends Specification {
 
+	void 'it should split strings'() {
 
-class Procedure implements Validator {
-	def name
-	def text
+		expect:
+		arr == StringUtil.splitString(str)
 
-	List validateWithMetadata(metadataProcedure) {
-		if (!metadataProcedure instanceof View)
-			return []
+		where:
+		str                   |  arr
+		"abc\nabc\nabc"       |  ['abc', 'abc', 'abc']
+		"abc \n abc\n abc"    |  ['abc', 'abc', 'abc']
+		"abc \n\n abc\n abc"  |  ['abc', 'abc', 'abc']
+	}
 
-		def messages = []
+	void 'it should compare 2 strings' () {
 
-		if (!StringUtil.compare(metadataProcedure.text, this.text)) {
-			def message = new Message(objectName:name, level:MessageLevel.ERROR, objectType:ObjectType.PROCEDURE, messageType:MessageType.PROCEDURE_BODY, message:"The body of the procedure/function ${this.name} differs from metadata.")
-			messages << message
-		}
+		expect:
+		StringUtil.compare(str1, str2) == true
 
-		return messages
+		where:
+		str1                     |  str2
+		"abc\nabc"               |  "abc\n abc "
+		"abc\n\nabc"             |  "abc\n abc "
+		"abc\n \n abc"           |  "abc\n abc "
 	}
 }

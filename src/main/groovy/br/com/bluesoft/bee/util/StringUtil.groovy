@@ -30,29 +30,26 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.model
-
-import java.util.List
-
-import br.com.bluesoft.bee.model.message.*
-import br.com.bluesoft.bee.util.StringUtil
+package br.com.bluesoft.bee.util;
 
 
-class Procedure implements Validator {
-	def name
-	def text
+public class StringUtil {
 
-	List validateWithMetadata(metadataProcedure) {
-		if (!metadataProcedure instanceof View)
-			return []
-
-		def messages = []
-
-		if (!StringUtil.compare(metadataProcedure.text, this.text)) {
-			def message = new Message(objectName:name, level:MessageLevel.ERROR, objectType:ObjectType.PROCEDURE, messageType:MessageType.PROCEDURE_BODY, message:"The body of the procedure/function ${this.name} differs from metadata.")
-			messages << message
+	static def splitString(str) {
+		def arr = []
+		str.eachLine {
+			def line = it.trim()
+			if(line != "")
+				arr << line
 		}
 
-		return messages
+		return arr
+	}
+
+	static boolean compare(String str1, String str2) {
+		def arr1 = splitString("$str1")
+		def arr2 = splitString("$str2")
+
+		return arr1 == arr2
 	}
 }
