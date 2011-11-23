@@ -45,6 +45,8 @@ public class BeeDbChangeRunner implements BeeWriter {
 		println "         dbchange:status connection - lists dbchanges to run"
 		println "         dbchange:up connection <file> - runs all pending dbchange files, or one if specified"
 		println "         dbchange:down connection file - runs a dbchange rollback action"
+		println "         dbchange:mark connection file - mark a file as executed"
+		println "         dbchange:unmark connection file - unmark a file as executed"
 	}
 
 	def createAction(action, options) {
@@ -107,6 +109,34 @@ public class BeeDbChangeRunner implements BeeWriter {
 		action.executarDbChange(migrationId, UpDown.DOWN)
 	}
 
+	def markAction(action, options) {
+		def arguments = options.arguments()
+
+		if(arguments.size != 3) {
+			usage()
+			System.exit 0
+		}
+
+		action.clientName = arguments[1]
+		def migrationId = arguments[2]
+
+		action.mark(migrationId)
+	}
+
+	def unmarkAction(action, options) {
+		def arguments = options.arguments()
+
+		if(arguments.size != 3) {
+			usage()
+			System.exit 0
+		}
+
+		action.clientName = arguments[1]
+		def migrationId = arguments[2]
+
+		action.unmark(migrationId)
+	}
+
 	def run(options) {
 		def arguments = options.arguments()
 		if(arguments.size < 2 || !arguments[0].contains(":")) {
@@ -142,6 +172,12 @@ public class BeeDbChangeRunner implements BeeWriter {
 				break;
 			case "down":
 				downAction(action, options)
+				break;
+			case "mark":
+				markAction(action, options)
+				break;
+			case "unmark":
+				unmarkAction(action, options)
 				break;
 		}
 	}

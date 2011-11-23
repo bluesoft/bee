@@ -255,6 +255,17 @@ class DbChangeManager {
 		}
 	}
 
+	def mark(def arquivo) {
+		def sql = getDatabaseConnection()
+		if(podeExecutar(arquivo, sql, UpDown.UP))
+			salvarExecucao(sql, arquivo, UpDown.UP)
+	}
+
+	def unmark(def arquivo) {
+		def sql = getDatabaseConnection()
+		salvarExecucao(sql, arquivo, UpDown.DOWN)
+	}
+
 	def obterTimestamp(def arquivo) {
 		if(!(arquivo ==~ /^([0-9]+)\-(.+)\.dbchange$/)) {
 			return "0"
