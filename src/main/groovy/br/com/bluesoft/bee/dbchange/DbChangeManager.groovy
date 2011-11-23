@@ -245,6 +245,14 @@ class DbChangeManager {
 """
 
 		file << str
+		logger.log("Criado " + file.path)
+
+		def env = System.getenv()
+		if(env['EDITOR']) {
+			println "Opening editor ${env['EDITOR']}"
+			def cmd = [env['EDITOR'], file.path]
+			new ProcessBuilder(env['EDITOR'], file.path).start()
+		}
 	}
 
 	def obterTimestamp(def arquivo) {
