@@ -32,6 +32,8 @@
  */
 package br.com.bluesoft.bee
 
+import java.util.jar.*
+
 import org.apache.commons.cli.*
 
 class Bee {
@@ -82,7 +84,23 @@ class Bee {
 		return runner
 	}
 
+	static getVersion() {
+		def resources = Thread.currentThread().getContextClassLoader().getResources(JarFile.MANIFEST_NAME)
+		def version = "test"
+
+		resources.each {
+			Manifest manifest = new Manifest(it.openStream())
+			if(manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_TITLE] == 'bee') {
+				version = manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_VERSION]
+			}
+		}
+
+		return version
+	}
+
 	static main(args) {
+		def version = getVersion()
+		println "Bee - v. ${version} - Bluesoft (2011) - GPL - All rights reserved"
 		def options = parseArgs(args)
 		def runner = getRunner(options)
 		if(runner == null) {

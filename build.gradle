@@ -33,3 +33,9 @@ startScripts.doLast {
  		script.write scriptText
 	}
 }
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': "${artifact}", 'Implementation-Version': "${version}"
+    }
+}
