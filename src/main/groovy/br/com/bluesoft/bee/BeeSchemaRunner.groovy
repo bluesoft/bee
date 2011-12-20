@@ -30,30 +30,39 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
+
 package br.com.bluesoft.bee;
 
+import br.com.bluesoft.bee.service.BeeSchemaCreator
 import br.com.bluesoft.bee.service.BeeSchemaGenerator
 import br.com.bluesoft.bee.service.BeeSchemaValidator
 import br.com.bluesoft.bee.service.BeeWriter
 
 public class BeeSchemaRunner implements BeeWriter {
-	
+
 	def usage() {
 		println "usage: bee <options> schema:action <parameters>"
 		println "Actions:"
 		println "         schema:generate connection [object] - generates an entire schema or single object, if specified"
 		println "         schema:validate connection [object] - validates an entire schema or single object, if specified"
+		println "         schema:recreate [object] - build a DDL script"
 	}
-	
+
 	def parseOptions(options) {
 		def arguments = options.arguments()
-		if(arguments.size < 2 || !arguments[0].contains(":")) {
+
+		if(arguments[0].contains(":")) {
+			def action = arguments[0].split(":")[1]
+			if((action in ['generate', 'validate'])&& arguments.size < 2) {
+				usage()
+				System.exit 0
+			}
+		} else {
 			usage()
 			System.exit 0
 		}
-		
+
 		def action = arguments[0].split(":")[1]
-		
 		def actionRunner = null
 		def parameters = [ clientName: arguments[1], configName: 'bee.properties', path: "bee", out: this ]
 		switch(action) {
@@ -63,30 +72,42 @@ public class BeeSchemaRunner implements BeeWriter {
 			case "validate":
 				actionRunner = new BeeSchemaValidator(parameters)
 				break;
+			case "recreate":
+				actionRunner = new BeeSchemaCreator(parameters)
+				break;
+			default:
+				usage();
+				System.exit 0
 		}
-		
+
 		if(options.c) {
 			actionRunner.configName = options.c
 		}
-		
+
 		if(options.d) {
 			actionRunner.path = options.d
 		}
-		
-		if(arguments.size > 2) {
-			actionRunner.objectName = arguments[2]
+
+		if(action in ['generate', 'validate']) {
+			if(arguments.size > 2) {
+				actionRunner.objectName = arguments[2]
+			}
+		} else {
+			if(arguments.size > 1) {
+				actionRunner.objectName = arguments[1]
+			}
 		}
-		
+
 		return actionRunner
 	}
-	
+
 	def run(options) {
 		def actionRunner = parseOptions(options)
 		if(actionRunner)
 			if(!actionRunner.run())
 				System.exit(1)
 	}
-	
+
 	void log(String msg) {
 		println msg
 	}
