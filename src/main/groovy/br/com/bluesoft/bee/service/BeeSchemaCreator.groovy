@@ -207,7 +207,7 @@ public class BeeSchemaCreator {
 	}
 
 	void createViews(def file, def schema) {
-		schema.views*.value.sort().each { file << "create view ${it.name} as ${it.text};\n\n" }
+		schema.views*.value.sort().each { file << "create or replace view ${it.name} as ${it.text};\n\n" }
 	}
 
 	void createPackages(def file, def schema) {
@@ -222,7 +222,7 @@ public class BeeSchemaCreator {
 			def text = []
 			it.text.eachLine { text << it }
 			def text2 = text[1..text.size()-1].join("\n")
-			file << "create ${text2}\n/\n\n"
+			file << "create or replace ${text2}\n/\n\n"
 		}
 	}
 
