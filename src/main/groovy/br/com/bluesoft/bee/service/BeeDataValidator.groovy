@@ -88,7 +88,7 @@ public class BeeDataValidator {
 			messages << new Message(messageType: MessageType.DATA_MISMATCH, level: MessageLevel.ERROR, objectName: objectName, message: "There are ${fileData.size} (file) and ${databaseData.size} (database) lines in table $objectName")
 		}
 
-		messages.addAll(validateTableFromSource(databaseData, fileData, MessageLevel.WARNING, objectName, "This line wsa found in the database table [${objectName}] but was not found in the schema:"))
+		messages.addAll(validateTableFromSource(databaseData, fileData, MessageLevel.WARNING, objectName, "This line was found in the database table [${objectName}] but was not found in the schema:"))
 		messages.addAll(validateTableFromSource(fileData, databaseData, MessageLevel.ERROR, objectName, "This line was found in the schema [${objectName}] but was not found in the database:"))
 
 		return messages

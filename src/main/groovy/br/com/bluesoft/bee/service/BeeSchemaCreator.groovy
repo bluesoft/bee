@@ -36,7 +36,7 @@ public class BeeSchemaCreator {
 		if(file.exists())
 			file.delete()
 
-		out.println("generation sequences...")
+		out.println("generating sequences...")
 		createSequences(file, schema)
 
 		out.println("generating tables...")
@@ -63,6 +63,13 @@ public class BeeSchemaCreator {
 
 		out.println("generating triggers...")
 		createTriggers(file, schema)
+		
+		def env = System.getenv()
+		if(env['EDITOR']) {
+			println "Opening editor ${env['EDITOR']}"
+			def cmd = [env['EDITOR'], file.path]
+			new ProcessBuilder(env['EDITOR'], file.path).start()
+		}
 	}
 
 	void createSequences(def file, def schema) {
