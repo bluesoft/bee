@@ -70,6 +70,8 @@ The module checks the schema structure of the database, comparing with existing 
       To validate all files
          bee schema:validate <database>
 
+      To create a DDL script from local structure files. Will create a file named `bee.sql`
+         bee schema:recreate <object>
 
 ## Data
 
@@ -135,6 +137,12 @@ Note:  when there is no rollback commands section: down should be removed, inclu
 
         To apply one dbchange (down)
             bee dbchange:down <database> <name of file>
+            
+        To mark a dbchange as implemented
+        	bee dbchange:mark <database> <name of file>
+        	
+        To unmark a dbchange as implemented (or mark as not implemented)
+        	bee dbchange:mark <database> <name of file>
 
 
 ## Known Issues
