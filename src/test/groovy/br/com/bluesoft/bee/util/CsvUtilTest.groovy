@@ -9,13 +9,13 @@ class CsvUtilTest extends Specification {
 		given:
 		def msg
 		def file = [
-							eachLine: { enc, closure ->
-								txt.split("\n").each(closure)
-							}
-						]
+					eachLine: { enc, closure ->
+						txt.split("\n").each(closure)
+					}
+				]
 
-		expect:
 		msg = CsvUtil.read(file)
+		expect:
 		msg == dados
 
 		where:
@@ -23,6 +23,6 @@ class CsvUtilTest extends Specification {
 		'xx,yy\nyy'				|	[['xx', 'yy'], ['yy']]
 		'xx\\,yy,zz\nyy'		|	[['xx,yy', 'zz'], ['yy']]
 		'xx,,zz\nyy'			|	[['xx', null , 'zz'], ['yy']]
-		'xx,yy,'				|	[['xx','yy',null]]
+		'xx,yy,'				|	[['xx', 'yy', null]]
 	}
 }
