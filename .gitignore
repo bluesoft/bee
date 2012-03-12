@@ -8,3 +8,4 @@ build
 .project
 lib
 .DS_Store
+.groovy

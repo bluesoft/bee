@@ -63,10 +63,13 @@ public class BeeDataValidator {
 	private def validateTableFromSource(def source, def dest, def level, def objectName, def message) {
 		def messages = []
 
-		source.each {
+		def sourceSet = source as Set
+		def destSet = dest as Set
+
+		sourceSet.each {
 			def row = it
 
-			if (dest.findIndexOf {it == row} < 0) {
+			if (!row in destSet) {
 				messages << new Message(messageType: MessageType.DATA_MISMATCH, level: level, objectName: objectName, message: message + "${row}")
 			}
 		}

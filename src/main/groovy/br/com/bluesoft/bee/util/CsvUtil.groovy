@@ -45,7 +45,7 @@ class CsvUtil {
 			else
 				result << campo
 		}
-		
+
 		// add null values at the end of array, because split function remove last delimiters
 		def m = line =~ /,*$/
 		if(m.size() > 1) {
@@ -53,7 +53,7 @@ class CsvUtil {
 				result << null
 			}
 		}
-		
+
 		return result
 	}
 
@@ -66,17 +66,22 @@ class CsvUtil {
 	static void write(def file, Collection dados) {
 		def writer = file.newPrintWriter("utf-8")
 		dados.each {
-			def linha = new StringBuffer()
-			it.each {
-				if(it != null)
-					linha << ("${it}".replace(",", "\\,")) + ",";
-				else {
-					linha << ","
-				}
-			}
-			linha = linha[0..-2]
+			def linha = writeLine(it)
 			writer.println(linha)
 		}
 		writer.close()
+	}
+
+	static String writeLine(row) {
+		def linha = new StringBuffer()
+		row.each {
+			if(it != null)
+				linha << ("${it}".replace(",", "\\,")) + ",";
+			else {
+				linha << ","
+			}
+		}
+		linha = linha[0..-2]
+		return linha
 	}
 }
