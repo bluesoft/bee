@@ -35,7 +35,7 @@ package br.com.bluesoft.bee.util
 
 class PropertiesUtil {
 
-	static private readFile(def file) {
+	static private readFile(File file) {
 		def properties = new Properties()
 		file.withInputStream { stream ->
 			properties.load(stream)
@@ -43,7 +43,7 @@ class PropertiesUtil {
 		return properties
 	}
 
-	static def readDatabaseConfig(def configFile, def key) {
+	static def readDatabaseConfig(File configFile, def key) {
 		def properties = readFile(configFile)
 
 		def config = null

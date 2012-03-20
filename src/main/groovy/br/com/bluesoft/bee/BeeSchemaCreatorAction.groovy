@@ -1,31 +1,28 @@
-package br.com.bluesoft.bee.service;
+package br.com.bluesoft.bee;
 
-import br.com.bluesoft.bee.importer.Importer
 import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.model.Options
+import br.com.bluesoft.bee.service.BeeWriter
 
 
-public class BeeSchemaCreator {
+public class BeeSchemaCreatorAction {
 
-	Importer importer
-
+	Options options
 	BeeWriter out
-	String objectName
-	String path
-	String configName
-	String clientName
+
+	def importer
 
 	//TODO types, outputfile
 
 
-	BeeSchemaCreator(String objectName) {
-		this.objectName = objectName
-	}
-
-	BeeSchemaCreator() {
-		this(null)
+	public boolean validateParameters() {
+		return true
 	}
 
 	public void run() {
+
+		def objectName = options.arguments[0]
+
 		out.log('importing schema metadata from the reference files')
 		def schema = getImporter().importMetaData()
 
@@ -63,7 +60,7 @@ public class BeeSchemaCreator {
 
 		out.println("generating triggers...")
 		createTriggers(file, schema)
-		
+
 		def env = System.getenv()
 		if(env['EDITOR']) {
 			println "Opening editor ${env['EDITOR']}"
@@ -239,7 +236,7 @@ public class BeeSchemaCreator {
 
 	private def getImporter() {
 		if(importer == null)
-			return new JsonImporter(path)
+			return new JsonImporter(options.dataDir.canonicalPath)
 		return importer
 	}
 }

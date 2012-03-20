@@ -36,56 +36,47 @@ import br.com.bluesoft.bee.service.*
 
 
 public class BeeDataRunner implements BeeWriter {
-	
+
 	def usage() {
 		println "usage: bee <options> data:action <options>"
 		println "Actions:"
-		println "         data:generate connection [object] - generates an entire schema data or single object, if specified"
+		println "         data:generate connection object - generates an entire schema data or single object, if specified"
 		println "         data:validate connection [object] - validates an entire schema data or single object, if specified"
 	}
-	
+
 	def parseOptions(options) {
-		def arguments = options.arguments()
-		if(arguments.size < 2 || !arguments[0].contains(":")) {
+		def arguments = options.arguments
+		if(arguments.size < 1) {
 			usage()
 			System.exit 0
 		}
-		
-		def action = arguments[0].split(":")[1]
-		
+
+		def action = options.actionName
+
 		def actionRunner = null
-		def parameters = [ clientName: arguments[1], configName: 'bee.properties', path: "bee", out: this ]
 		switch(action) {
 			case "generate":
-				actionRunner = new BeeDataGenerator(parameters)
+				if(arguments.size < 2) {
+					usage()
+					System.exit 0
+				}
+				actionRunner = new BeeDataGeneratorAction(options: options, out: this)
 				break
 			case "validate":
-				actionRunner = new BeeDataValidator(parameters)
+				actionRunner = new BeeDataValidatorAction(options: options, out: this)
 				break;
 		}
-		
-		if(options.c) {
-			actionRunner.configName = options.c
-		}
-		
-		if(options.d) {
-			actionRunner.path = options.d
-		}
-		
-		if(arguments.size > 2) {
-			actionRunner.objectName = arguments[2]
-		}
-		
+
 		return actionRunner
 	}
-	
+
 	def run(options) {
 		def actionRunner = parseOptions(options)
 		if(actionRunner)
 			if(!actionRunner.run())
 				System.exit(1)
 	}
-	
+
 	void log(String msg) {
 		println msg
 	}

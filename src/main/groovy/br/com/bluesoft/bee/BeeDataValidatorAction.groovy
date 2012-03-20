@@ -30,35 +30,26 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.service;
+package br.com.bluesoft.bee;
 
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.database.reader.*
 import br.com.bluesoft.bee.importer.*
 import br.com.bluesoft.bee.model.message.*
+import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.service.MessagePrinter
 import br.com.bluesoft.bee.util.CsvUtil
 
 
-public class BeeDataValidator {
+public class BeeDataValidatorAction {
 	DatabaseReader databaseReader
 	Importer importer
 
 	BeeWriter out
-	String objectName
-	String path
-	String configName
-	String clientName
+	def options
 
 	def sql
 	def dataPath
-
-	BeeDataValidator(final String objectName) {
-		this.objectName = objectName
-	}
-
-	BeeDataValidator() {
-		this(null)
-	}
 
 	private def validateTableFromSource(def source, def dest, def level, def objectName, def message) {
 		def messages = []
@@ -82,7 +73,7 @@ public class BeeDataValidator {
 		def table = schema.tables[objectName]
 		def databaseData = new TableDataReader(sql).getData(table)
 
-		def file = new File(getDataPath(), objectName + ".csv")
+		def file = new File(new File(options.dataDir, 'data'), objectName + ".csv")
 		def fileData = CsvUtil.read(file)
 
 		def messages = []
@@ -99,13 +90,14 @@ public class BeeDataValidator {
 
 	private def listFiles(def objectName, def schema) {
 		def files = []
+		def dataPath = new File(options.dataDir, 'data')
 
 		if(objectName) {
-			def file = new File(getDataPath(), objectName + ".csv")
+			def file = new File(dataPath, objectName + ".csv")
 			if(file.exists() && schema.tables[objectName])
 				files = [objectName]
 		} else {
-			def listFiles = getDataPath().listFiles()
+			def listFiles = dataPath.listFiles()
 			listFiles.each {
 				if(it.name.endsWith(".csv")) {
 					def tableName = it.name[0..-5]
@@ -120,15 +112,18 @@ public class BeeDataValidator {
 
 	public boolean run() {
 		def sql
+		def path = options.dataDir.canonicalPath
+		def clientName = options.arguments[0]
+		def objectName = options.arguments[1]
 
 		MessagePrinter messagePrinter = new MessagePrinter()
 
 		out.log('importing schema metadata from the reference files')
-		def schema = getImporter().importMetaData()
+		def schema = getImporter(path).importMetaData()
 
 		try {
 			out.log "Connecting to the database..."
-			sql = getDatabaseConnection()
+			sql = getDatabaseConnection(clientName)
 		} catch (e){
 			throw new Exception("It was not possible to connect to the database.",e)
 		}
@@ -152,22 +147,16 @@ public class BeeDataValidator {
 		return messages.size() == 0
 	}
 
-	def getDatabaseConnection() {
+	def getDatabaseConnection(clientName) {
 		if(sql != null) {
 			return sql
 		}
-		return ConnectionInfo.createDatabaseConnection(configName, clientName)
+		return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
 	}
 
-	private def getImporter() {
+	private def getImporter(path) {
 		if(importer == null)
 			return new JsonImporter(path)
 		return importer
-	}
-
-	private def getDataPath() {
-		if(dataPath == null)
-			return new File(path, "data")
-		return dataPath
 	}
 }

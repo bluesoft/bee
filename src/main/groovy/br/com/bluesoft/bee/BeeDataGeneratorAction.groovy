@@ -30,39 +30,32 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.service;
+package br.com.bluesoft.bee;
 
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.database.reader.*
 import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.CsvUtil
 
 
-public class BeeDataGenerator {
+public class BeeDataGeneratorAction {
 	DatabaseReader databaseReader
 
 	BeeWriter out
-	String objectName
-	String path
-	String configName
-	String clientName
+	def options
 
 	def sql
 
-	BeeDataGenerator(String objectName) {
-		this.objectName = objectName
-	}
-
-	BeeDataGenerator() {
-		this(null)
-	}
-
 	public void run() {
-		def sql
+		def clientName = options.arguments[0]
+		def objectName = options.arguments[1]
+		def path = options.dataDir.canonicalPath
 
+		def sql
 		try {
 			out.log "Connecting to the database..."
-			sql = getDatabaseConnection()
+			sql = getDatabaseConnection(clientName)
 		} catch (e){
 			throw new Exception("It was not possible to connect to the database.",e)
 		}
@@ -84,16 +77,15 @@ public class BeeDataGenerator {
 
 			CsvUtil.write file, data
 		} catch(e) {
-			out.log e
-			e.printStackTrace()
+			out.log e.toString()
 			throw new Exception("Error importing database metadata.",e)
 		}
 	}
 
-	def getDatabaseConnection() {
+	def getDatabaseConnection(clientName) {
 		if(sql != null) {
 			return sql
 		}
-		return ConnectionInfo.createDatabaseConnection(configName, clientName)
+		return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
 	}
 }

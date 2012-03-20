@@ -30,57 +30,66 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
+package br.com.bluesoft.bee.model;
 
-package br.com.bluesoft.bee;
+import java.io.File
 
-import br.com.bluesoft.bee.service.BeeWriter
+public class Options {
+	File configFile
+	File dataDir
+	List<String> arguments = []
+	String moduleName
+	String actionName
 
-public class BeeSchemaRunner implements BeeWriter {
-
-	def usage() {
-		println "usage: bee <options> schema:action <parameters>"
-		println "Actions:"
-		println "         schema:generate connection [object] - generates an entire schema or single object, if specified"
-		println "         schema:validate connection [object] - validates an entire schema or single object, if specified"
-		println "         schema:recreate [object] - build a DDL script"
+	void usage(def cliBuilder) {
+		cliBuilder.usage()
+		println "Modules: "
+		println "         schema"
+		println "         data"
+		println "         dbchange"
 	}
 
-	def parseOptions(options) {
-		def arguments = options.arguments
-		def action = options.actionName
-		def actionRunner = null
+	boolean parse(def args) {
+		def cliBuilder = new CliBuilder(usage: 'bee <options> module:action <parameters>', header: 'Options:')
+		cliBuilder.c(args: 1, argName: 'file', 'config file')
+		cliBuilder.d(args: 1, argName: 'dir', 'bee files directory')
+		cliBuilder.stopAtNonOption  = false
+		def cli = cliBuilder.parse(args)
 
-		switch(action) {
-			case "generate":
-				actionRunner = new BeeSchemaGeneratorAction(options: options, out: this)
-				break
-			case "validate":
-				actionRunner = new BeeSchemaValidatorAction(options: options, out: this)
-				break;
-			case "recreate":
-				actionRunner = new BeeSchemaCreatorAction(options: options, out: this)
-				break;
-			default:
-				usage();
-				System.exit 0
+		if(cli == null || cli == false || cli.arguments().size < 1) {
+			return false;
 		}
 
-		if(!actionRunner.validateParameters()) {
-			usage();
-			System.exit 0
+		def module = cli.arguments()[0]
+		if(!parseModule(module)) {
+			return false;
 		}
 
-		return actionRunner
+		if(cli.c)
+			configFile = new File(cli.c)
+		else
+			configFile = new File("bee.properties")
+
+		if(cli.d)
+			dataDir = new File(cli.d)
+		else
+			dataDir = new File("bee")
+
+		arguments = cli.arguments()
+		arguments.remove(0)
+
+		return validate()
 	}
 
-	def run(options) {
-		def actionRunner = parseOptions(options)
-		if(actionRunner)
-			if(!actionRunner.run())
-				System.exit(1)
+	private boolean parseModule(def module) {
+		if(!module.contains(":"))
+			return false
+
+		moduleName = module.split(":")[0]
+		actionName = module.split(":")[1]
 	}
 
-	void log(String msg) {
-		println msg
+	private boolean validate() {
+		return configFile.isFile() && dataDir.isDirectory()
 	}
 }

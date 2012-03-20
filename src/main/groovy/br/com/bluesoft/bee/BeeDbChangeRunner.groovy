@@ -76,7 +76,7 @@ public class BeeDbChangeRunner implements BeeWriter {
 	}
 
 	def upAction(action, options) {
-		def arguments = options.arguments()
+		def arguments = options.arguments
 
 		if(arguments.size > 3 || arguments.size < 2) {
 			usage()
@@ -96,7 +96,7 @@ public class BeeDbChangeRunner implements BeeWriter {
 	}
 
 	def downAction(action, options) {
-		def arguments = options.arguments()
+		def arguments = options.arguments
 
 		if(arguments.size != 3) {
 			usage()
@@ -110,7 +110,7 @@ public class BeeDbChangeRunner implements BeeWriter {
 	}
 
 	def markAction(action, options) {
-		def arguments = options.arguments()
+		def arguments = options.arguments
 
 		if(arguments.size != 3) {
 			usage()
@@ -124,7 +124,7 @@ public class BeeDbChangeRunner implements BeeWriter {
 	}
 
 	def unmarkAction(action, options) {
-		def arguments = options.arguments()
+		def arguments = options.arguments
 
 		if(arguments.size != 3) {
 			usage()
@@ -138,27 +138,19 @@ public class BeeDbChangeRunner implements BeeWriter {
 	}
 
 	def run(options) {
-		def arguments = options.arguments()
+		def arguments = options.arguments
 		if(arguments.size < 2 || !arguments[0].contains(":")) {
 			usage()
 			System.exit 0
 		}
 
-		def actionName = arguments[0].split(":")[1]
+		def actionName = options.actionName
 
 		def action = new DbChangeManager(logger: this)
 
-		if(options.c) {
-			action.configName = options.c
-		} else {
-			action.configName = "bee.properties"
-		}
+		action.configName = options.configFile
 
-		if(options.d) {
-			action.path = options.d
-		} else {
-			action.path = "bee"
-		}
+		action.path = options.dataDir
 
 		switch(actionName) {
 			case "create":

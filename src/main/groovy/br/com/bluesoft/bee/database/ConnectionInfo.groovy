@@ -48,8 +48,7 @@ class ConnectionInfo {
 		Sql.newInstance("jdbc:oracle:thin:@${host}:${port}:${serviceName}", username, password, "oracle.jdbc.driver.OracleDriver")
 	}
 
-	static def createDatabaseConnection(def configName, def key) {
-		def configFile = new File(configName)
+	static def createDatabaseConnection(def configFile, def key) {
 		def config = PropertiesUtil.readDatabaseConfig(configFile, key)
 		if (config != null) {
 			return Sql.newInstance(config.url, config.user, config.password, config.driver)

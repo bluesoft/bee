@@ -34,39 +34,16 @@ package br.com.bluesoft.bee
 
 import java.util.jar.*
 
-import org.apache.commons.cli.*
+import br.com.bluesoft.bee.model.Options
 
 class Bee {
 
 	static def cliBuilder
 
-	static usage() {
-		cliBuilder.usage()
-		println "Modules: "
-		println "         schema"
-		println "         data"
-		println "         dbchange"
-	}
-
-	static parseArgs(args) {
-		cliBuilder = new CliBuilder(usage: 'bee <options> module:action <parameters>', header: 'Options:')
-		cliBuilder.c(args: 1, argName: 'file', 'config file')
-		cliBuilder.d(args: 1, argName: 'dir', 'bee files directory')
-		def options = cliBuilder.parse(args)
-
-		if(options == null || options == false || options.arguments().size < 1) {
-			usage()
-			System.exit(0)
-		}
-
-		return options
-	}
-
 	static getRunner(options) {
-		def moduleName = options.arguments()[0].split(":")[0]
 		def runner = null
 
-		switch(moduleName) {
+		switch(options.moduleName) {
 			case "dbchange":
 				runner = new BeeDbChangeRunner()
 				break;
@@ -101,7 +78,11 @@ class Bee {
 	static main(args) {
 		def version = getVersion()
 		println "Bee - v. ${version} - Bluesoft (2011) - GPL - All rights reserved"
-		def options = parseArgs(args)
+		def options = new Options()
+		if(!options.parse(args)) {
+			options.usage()
+			System.exit(1)
+		}
 		def runner = getRunner(options)
 		if(runner == null) {
 			usage()
