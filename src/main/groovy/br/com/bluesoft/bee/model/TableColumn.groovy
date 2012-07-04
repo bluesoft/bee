@@ -79,4 +79,13 @@ class TableColumn {
 		def messageText = MessageFormat.format(messageTemplate, info, name, tableName, metadataColumn[info], this[info])
 		new Message(objectName:"${name}", level:MessageLevel.ERROR, objectType:ObjectType.TABLE_COLUMN, messageType:messageType, message:messageText)
 	}
+
+	def compareType(def col) {
+		if(!col instanceof TableColumn)
+			return false;
+
+		if(col.type != type || col.size != size || col.scale != scale)
+			return false
+		return true
+	}
 }

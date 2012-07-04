@@ -45,16 +45,16 @@ class Bee {
 
 		switch(options.moduleName) {
 			case "dbchange":
-				runner = new BeeDbChangeRunner()
+				runner = new BeeDbChangeModule()
 				break;
 			case "schema":
-				runner = new BeeSchemaRunner()
+				runner = new BeeSchemaModule()
 				break;
 			case "data":
-				runner = new BeeDataRunner()
+				runner = new BeeDataModule()
 				break;
 			default:
-				usage()
+				options.usage()
 				System.exit(0)
 		}
 
@@ -78,7 +78,7 @@ class Bee {
 	static main(args) {
 		def version = getVersion()
 		println "Bee - v. ${version} - Bluesoft (2011) - GPL - All rights reserved"
-		def options = new Options()
+		Options options = Options.instance
 		if(!options.parse(args)) {
 			options.usage()
 			System.exit(1)

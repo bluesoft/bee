@@ -35,7 +35,7 @@ package br.com.bluesoft.bee;
 import br.com.bluesoft.bee.service.*
 
 
-public class BeeDataRunner implements BeeWriter {
+public class BeeDataModule implements BeeWriter {
 
 	def usage() {
 		println "usage: bee <options> data:action <options>"

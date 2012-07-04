@@ -30,47 +30,72 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-
 package br.com.bluesoft.bee;
 
 import br.com.bluesoft.bee.service.BeeWriter
 
-public class BeeSchemaRunner implements BeeWriter {
+
+public class BeeDbChangeModule implements BeeWriter {
+
+	def parameterCount = [
+		"create": [2, 2],
+		"status": [1, 1],
+		"up": [2, 3],
+		"down": [3, 3],
+		"mark": [3, 3],
+		"unmark": [3, 3]]
 
 	def usage() {
-		println "usage: bee <options> schema:action <parameters>"
+		println "usage: bee <options> dbchange:action <parameters>"
 		println "Actions:"
-		println "         schema:generate connection [object] - generates an entire schema or single object, if specified"
-		println "         schema:validate connection [object] - validates an entire schema or single object, if specified"
-		println "         schema:recreate [object] - build a DDL script"
+		println "         dbchange:create description - creates a dbchange file"
+		println "         dbchange:status connection - lists dbchanges to run"
+		println "         dbchange:up connection <file> - runs all pending dbchange files, or one if specified"
+		println "         dbchange:down connection file - runs a dbchange rollback action"
+		println "         dbchange:mark connection file - mark a file as executed"
+		println "         dbchange:unmark connection file - unmark a file as executed"
 	}
 
 	def parseOptions(options) {
-		def arguments = options.arguments
 		def action = options.actionName
-		def actionRunner = null
+		def arguments = options.arguments
 
-		switch(action) {
-			case "generate":
-				actionRunner = new BeeSchemaGeneratorAction(options: options, out: this)
-				break
-			case "validate":
-				actionRunner = new BeeSchemaValidatorAction(options: options, out: this)
-				break;
-			case "recreate":
-				actionRunner = new BeeSchemaCreatorAction(options: options, out: this)
-				break;
-			default:
-				usage();
-				System.exit 0
-		}
-
-		if(!actionRunner.validateParameters()) {
-			usage();
+		if(parameterCount[action] == null) {
+			usage()
 			System.exit 0
 		}
 
-		return actionRunner
+		def min = parameterCount[action][0]
+		def max = parameterCount[action][1]
+
+		if(arguments.size > max || arguments.size < min) {
+			usage()
+			System.exit 0
+		}
+
+		def actionRunner = null
+		switch(action) {
+			case "create":
+				actionRunner = new BeeDbChangeCreateAction(options: options, out: this)
+				break;
+			case "status":
+				actionRunner = new BeeDbChangeStatusAction(options: options, out: this)
+				break;
+			case "up":
+				actionRunner = new BeeDbChangeUpAction(options: options, out: this)
+				break;
+			case "down":
+				actionRunner = new BeeDbChangeDownAction(options: options, out: this)
+				break;
+			case "mark":
+				actionRunner = new BeeDbChangeMarkAction(options: options, out: this)
+				break;
+			case "unmark":
+				actionRunner = new BeeDbChangeUnmarkAction(options: options, out: this)
+				break;
+		}
+
+		return actionRunner;
 	}
 
 	def run(options) {

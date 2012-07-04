@@ -30,29 +30,61 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.database
 
-import groovy.sql.Sql
-import br.com.bluesoft.bee.util.PropertiesUtil
+package br.com.bluesoft.bee;
 
+import br.com.bluesoft.bee.service.BeeWriter
 
-class ConnectionInfo {
+public class BeeSchemaModule implements BeeWriter {
 
-	String host
-	String username
-	String password
-	String port = 1521
-	String serviceName = "serverdb"
-
-	Sql getSqlInstanceForOracle() {
-		Sql.newInstance("jdbc:oracle:thin:@${host}:${port}:${serviceName}", username, password, "oracle.jdbc.driver.OracleDriver")
+	def usage() {
+		println "usage: bee <options> schema:action <parameters>"
+		println "Actions:"
+		println "         schema:generate connection [object] - generates an entire schema or single object, if specified"
+		println "         schema:validate connection [object] - validates an entire schema or single object, if specified"
+		println "         schema:recreate [object] - build a DDL script"
+		println "         schema:check - validate structure correctness"
 	}
 
-	static def createDatabaseConnection(File configFile, def key) {
-		def config = PropertiesUtil.readDatabaseConfig(configFile, key)
-		if (config != null) {
-			return Sql.newInstance(config.url, config.user, config.password, config.driver)
+	def parseOptions(options) {
+		def arguments = options.arguments
+		def action = options.actionName
+		def actionRunner = null
+
+		switch(action) {
+			case "generate":
+				actionRunner = new BeeSchemaGeneratorAction(options: options, out: this)
+				break
+			case "validate":
+				actionRunner = new BeeSchemaValidatorAction(options: options, out: this)
+				break;
+			case "recreate":
+				actionRunner = new BeeSchemaCreatorAction(options: options, out: this)
+				break;
+			case "check":
+				actionRunner = new BeeSchemaCheckerAction(options: options, out: this)
+				break;
+			default:
+				usage();
+				System.exit 0
 		}
-		return null
+
+		if(!actionRunner.validateParameters()) {
+			usage();
+			System.exit 0
+		}
+
+		return actionRunner
+	}
+
+	def run(options) {
+		def actionRunner = parseOptions(options)
+		if(actionRunner)
+			if(!actionRunner.run())
+				System.exit(1)
+	}
+
+	void log(String msg) {
+		println msg
 	}
 }

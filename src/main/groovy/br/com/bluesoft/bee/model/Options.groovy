@@ -40,8 +40,27 @@ public class Options {
 	List<String> arguments = []
 	String moduleName
 	String actionName
+	CliBuilder cliBuilder
 
-	void usage(def cliBuilder) {
+	private static final INSTANCE = new Options()
+
+	static getInstance() {
+		return INSTANCE
+	}
+
+	private Options() {
+		cliBuilder = getCliBuilder()
+	}
+
+	private def getCliBuilder() {
+		def cliBuilder = new CliBuilder(usage: 'bee <options> module:action <parameters>', header: 'Options:')
+		cliBuilder.c(args: 1, argName: 'file', 'config file')
+		cliBuilder.d(args: 1, argName: 'dir', 'bee files directory')
+		cliBuilder.stopAtNonOption  = false
+		return cliBuilder
+	}
+
+	void usage() {
 		cliBuilder.usage()
 		println "Modules: "
 		println "         schema"
@@ -50,10 +69,6 @@ public class Options {
 	}
 
 	boolean parse(def args) {
-		def cliBuilder = new CliBuilder(usage: 'bee <options> module:action <parameters>', header: 'Options:')
-		cliBuilder.c(args: 1, argName: 'file', 'config file')
-		cliBuilder.d(args: 1, argName: 'dir', 'bee files directory')
-		cliBuilder.stopAtNonOption  = false
 		def cli = cliBuilder.parse(args)
 
 		if(cli == null || cli == false || cli.arguments().size < 1) {

@@ -56,7 +56,7 @@ class DbChangeManager {
 	def directoryFile
 	def parser
 
-	String configName
+	File configFile
 	String path
 	String clientName
 	boolean force
@@ -235,8 +235,7 @@ class DbChangeManager {
 		def filename = String.valueOf(System.currentTimeMillis()) + "-" + description +".dbchange";
 		def file = new File(getDirectoryFile(), filename)
 
-		def str = """
--- ${description}
+		def str = """-- ${description}
 
 ::up
 
@@ -298,6 +297,6 @@ class DbChangeManager {
 		if(sql != null) {
 			return sql
 		}
-		return ConnectionInfo.createDatabaseConnection(configName, clientName)
+		return ConnectionInfo.createDatabaseConnection(configFile.absoluteFile, clientName)
 	}
 }
