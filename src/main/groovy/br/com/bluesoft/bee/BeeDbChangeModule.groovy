@@ -40,10 +40,10 @@ public class BeeDbChangeModule implements BeeWriter {
 	def parameterCount = [
 		"create": [2, 2],
 		"status": [1, 1],
-		"up": [2, 3],
-		"down": [3, 3],
-		"mark": [3, 3],
-		"unmark": [3, 3]]
+		"up": [1, 2],
+		"down": [2, 2],
+		"mark": [2, 2],
+		"unmark": [2, 2]]
 
 	def usage() {
 		println "usage: bee <options> dbchange:action <parameters>"
