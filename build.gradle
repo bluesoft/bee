@@ -6,7 +6,7 @@ mainClassName = "br.com.bluesoft.bee.Bee"
 
 group = 'br.com.bluesoft.bee'
 artifact = 'bee'
-version = '1.28'
+version = '1.29'
 
 startScriptsDir = new File("$buildDir/scripts")
 

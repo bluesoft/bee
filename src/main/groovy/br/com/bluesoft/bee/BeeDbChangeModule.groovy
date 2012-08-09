@@ -38,7 +38,7 @@ import br.com.bluesoft.bee.service.BeeWriter
 public class BeeDbChangeModule implements BeeWriter {
 
 	def parameterCount = [
-		"create": [2, 2],
+		"create": [1, 1],
 		"status": [1, 1],
 		"up": [1, 2],
 		"down": [2, 2],
