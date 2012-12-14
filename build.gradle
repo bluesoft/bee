@@ -5,10 +5,10 @@ apply plugin:'application'
 mainClassName = "br.com.bluesoft.bee.Bee"
 
 group = 'br.com.bluesoft.bee'
-artifact = 'bee'
+def artifact = 'bee'
 version = '1.30'
 
-startScriptsDir = new File("$buildDir/scripts")
+def startScriptsDir = new File("$buildDir/scripts")
 
 repositories {
 	mavenCentral()
@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-	groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.8.8'
+	groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.8.6'
 	compile group: 'org.codehaus.jackson', name: 'jackson-mapper-lgpl', version: '1.5.6'
 	compile group: 'commons-cli', name: 'commons-cli', version: '1.2'
 	testCompile "org.spockframework:spock-core:0.6-groovy-1.8"
@@ -25,11 +25,11 @@ dependencies {
 }
 
 startScripts.doLast {
-	scriptsDir = new File("${startScriptsDir}")
+	def scriptsDir = new File("${startScriptsDir}")
 	scriptsDir.eachFile {
-		script = it
-		scriptText = script.text
-		scriptText = scriptText.replaceAll('CLASSPATH=.*:', 'for i in \\$APP_HOME/lib/*;do CLASSPATH=\\$CLASSPATH:\\$i; done')
+		def script = it
+		def scriptText = script.text
+		scriptText = scriptText.replaceAll('CLASSPATH=.*', 'for i in \\$APP_HOME/lib/*;do CLASSPATH=\\$CLASSPATH:\\$i; done')
  		script.write scriptText
 	}
 }
