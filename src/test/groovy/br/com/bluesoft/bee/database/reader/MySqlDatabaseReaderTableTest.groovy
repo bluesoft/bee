@@ -138,12 +138,6 @@ class MySqlDatabaseReaderTableTest {
 	}
 
 	@Test
-	void 'it should fill the index column name with the default data when its a functional index'() {
-		def index = reader.getTables()['PESSOA'].indexes['IDX_NOME_RAZAO_UPPER']
-		assertEquals 'UPPER("NOME_RAZAO")', index.columns[0].name
-	}
-
-	@Test
 	void 'it should fill the index column descend attribute'() {
 		def index = reader.getTables()['PESSOA'].indexes['IDX_VALOR']
 		assertFalse index.columns[0].descend
@@ -269,8 +263,8 @@ class MySqlDatabaseReaderTableTest {
 		def idx_nome_razao = [
 					table_name: 'PESSOA',
 					index_name: 'IDX_NOME_RAZAO_UPPER',
-					column_name:'SYS_NC00064$',
-					data_default:'UPPER("NOME_RAZAO")',
+					column_name:'NOME_RAZAO',
+					data_default:'NOME_RAZAO',
 					descend:"ASC"]
 
 		return [
