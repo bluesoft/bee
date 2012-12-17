@@ -405,51 +405,18 @@ class MySqlDatabaseReader implements DatabaseReader {
 			procedure.text = body
 	}
 
-	final static def PACKAGES_QUERY = '''
-		select name, type, text
-		from user_source
-		where type in ('PACKAGE', 'PACKAGE BODY')
-		order by name, type, line
-	'''
-	final static def PACKAGES_QUERY_BY_NAME = '''
-		select name, type, text
-		from user_source
-		where type in ('PACKAGE', 'PACKAGE BODY')
-		  and name = upper(?)
-		order by name, type, line
-	'''
 	def getPackages(objectName) {
 		def packages = [:]
-		def rows
-
-		if(objectName) {
-			rows = sql.rows(PACKAGES_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(PACKAGES_QUERY)
-		}
-
-		rows.each({
-			def packageName = it.name
-			def pack = packages[packageName] ?: new Package()
-			pack.name = packageName
-			if (it.type == 'PACKAGE') {
-				pack.text += it.text
-			} else {
-				pack.body += it.text
-			}
-			packages[pack.name] = pack
-		})
-
 		return packages
 	}
 
 	final static def TRIGGERS_QUERY = '''
-		select trigger_name, action_statement
+		select trigger_name as name, action_statement as text
 		from `information_schema`.`triggers`
 		order by trigger_name;
 	'''
 	final static def TRIGGERS_QUERY_BY_NAME = '''
-		select trigger_name, action_statement
+		select trigger_name as name, action_statement as text
 		from `information_schema`.`triggers`
 		where trigger_name = ?
 		order by trigger_name;
