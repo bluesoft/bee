@@ -73,7 +73,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 		select ut.table_name , 'N' as temporary, ut.table_comment AS 'comments' 
 		from information_schema.tables ut
 		where ut.table_schema not in ('mysql', 'information_schema', 'performance_schema')
-		and ut.table_name = upper(?)
+		and ut.table_name = ?
 		order by table_name;
 	'''
 	private def fillTables(objectName) {
@@ -86,7 +86,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 		}
 
 		rows.each({
-			def name = it.table_name.toLowerCase()
+			def name = it.table_name
 			def temporary = it.temporary == 'Y' ? true : false
 			def comment = it.comments
 			tables[name] = new Table(name:name, temporary:temporary, comment:comment)
@@ -106,7 +106,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 		coalesce(uc.numeric_scale, 0) data_scale, uc. column_default as data_default, uc.ordinal_position as column_id
 		from information_schema.columns uc
 		where uc.table_schema not in ('mysql', 'information_schema', 'performance_schema')
-		and uc.table_name = upper(?)
+		and uc.table_name = ?
 		order by table_name, column_id;
 	'''
 	private def fillColumns(tables, objectName) {
@@ -117,10 +117,10 @@ class MySqlDatabaseReader implements DatabaseReader {
 			rows = sql.rows(TABLES_COLUMNS_QUERY)
 		}
 		rows.each({
-			def table = tables[it.table_name.toLowerCase()]
+			def table = tables[it.table_name]
 			def column = new TableColumn()
-			column.name = it.column_name.toLowerCase()
-			column.type = getColumnType(it.data_type)
+			column.name = it.column_name
+			column.type = it.data_type
 			column.size = it.data_size
 			column.scale = it.data_scale
 			column.nullable = it.nullable == 'NO' ? false : true
@@ -132,31 +132,22 @@ class MySqlDatabaseReader implements DatabaseReader {
 		})
 	}
 
-	private def getColumnType(String oracleColumnType){
-		switch (oracleColumnType.toLowerCase()) {
-			case "varchar2":
-				return "varchar"
-				break
-			default:
-				return oracleColumnType.toLowerCase()
-		}
-	}
-
-
 	final static def INDEXES_QUERY = '''
 		select ui.table_name, ui.index_name, ui.index_type, ui.non_unique as uniqueness FROM information_schema.statistics ui 
 		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
 		where ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
-		and tc.constraint_type is null
-		order by table_name, index_name
+		and (tc.constraint_type is null or tc.constraint_type = 'UNIQUE')
+		group by ui.table_name, ui.index_name, ui.index_type, ui.non_unique
+		order by ui.table_name, ui.index_name;
 	'''
 	final static def INDEXES_QUERY_BY_NAME = '''
 		select ui.table_name, ui.index_name, ui.index_type, ui.non_unique as uniqueness FROM information_schema.statistics ui 
 		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
 		where ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
 		and tc.constraint_type is null
-		and  ui.table_name = upper(?)
-		order by table_name, index_name
+		and  ui.table_name = ?
+		group by ui.table_name, ui.index_name, ui.index_type, ui.non_unique
+		order by ui.table_name, ui.index_name;
 	'''
 
 	private def fillIndexes(tables, objectName) {
@@ -168,36 +159,34 @@ class MySqlDatabaseReader implements DatabaseReader {
 		}
 
 		rows.each({
-			def tableName = it.table_name.toLowerCase()
+			def tableName = it.table_name
 			def table = tables[tableName]
 			def index = new Index()
-			index.name = it.index_name.toLowerCase()
-			index.type = it.index_type[0].toLowerCase()
-			index.unique = it.uniqueness == '0' ? true : false
+			index.name = it.index_name
+			index.type = it.index_type[0]
+			index.unique = it.uniqueness == '1' ? true : false
 			table.indexes[index.name] = index
 		})
 	}
 
 	final static def INDEXES_COLUMNS_QUERY = '''
-		select uic.table_name, uic.index_name, uic.column_name column_name, utc.data_default,
-			   uic.descend
-		from   user_ind_columns uic
-			   join user_indexes ui on ui.index_name = uic.index_name
-			   left join user_constraints uc on uic.index_name = uc.index_name
-			   join user_tab_cols utc on (uic.column_name = utc.column_name and uic.table_name = utc.table_name)
-		where  uc.index_name is null
-		order  by uic.index_name, uic.column_position
+		select ui.table_name, ui.index_name, ui.column_name, c.column_default as data_default, 'asc' as descend FROM information_schema.statistics ui 
+		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
+		inner join information_schema.columns c on c.column_name = ui.column_name
+		where ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
+		and (tc.constraint_type is null or tc.constraint_type = 'UNIQUE')
+		group by ui.index_name, ui.column_name
+		order by ui.index_name, ui.seq_in_index
 	'''
 	final static def INDEXES_COLUMNS_QUERY_BY_NAME = '''
-		select uic.table_name, uic.index_name, uic.column_name column_name, utc.data_default,
-			   uic.descend
-		from   user_ind_columns uic
-			   join user_indexes ui on ui.index_name = uic.index_name
-			   left join user_constraints uc on uic.index_name = uc.index_name
-			   join user_tab_cols utc on (uic.column_name = utc.column_name and uic.table_name = utc.table_name)
-		where  uc.index_name is null
-		  and  ui.table_name = upper(?)
-		order  by uic.index_name, uic.column_position
+		select ui.table_name, ui.index_name, ui.column_name, c.column_default as data_default, 'asc' as descend FROM information_schema.statistics ui 
+		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
+		inner join information_schema.columns c on c.column_name = ui.column_name
+		where ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
+		and (tc.constraint_type is null or tc.constraint_type = 'UNIQUE')
+		and ui.table_name = ?
+		group by ui.index_name, ui.column_name
+		order by ui.index_name, ui.seq_in_index
 	'''
 	private def fillIndexColumns(tables, objectName) {
 		def rows
@@ -209,11 +198,11 @@ class MySqlDatabaseReader implements DatabaseReader {
 
 		rows.each({
 
-			def table = tables[it.table_name.toLowerCase()]
-			def index = table.indexes[it.index_name.toLowerCase()]
+			def table = tables[it.table_name]
+			def index = table.indexes[it.index_name]
 
 			def indexColumn = new IndexColumn()
-			indexColumn.name = it.column_name?.startsWith('SYS_NC') ? it.data_default?.trim() : it.column_name.toLowerCase()
+			indexColumn.name = it.column_name
 			indexColumn.descend = it.descend.toLowerCase() == 'asc' ? false : true
 
 			index.columns << indexColumn
@@ -221,23 +210,25 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	final static def CONSTRAINTS_QUERY = '''
-		select uc.table_name, uc.constraint_name, uc.constraint_type, uc2.table_name ref_table,
-		   uc.index_name, uc.delete_rule
-		from   user_constraints uc
-			   left join user_constraints uc2 on uc.r_constraint_name = uc2.constraint_name
-			   join user_tables ut on uc.table_name = ut.table_name
-		where  uc.constraint_type <> 'C'
-		order  by uc.table_name, uc.constraint_type, uc.constraint_name
+		select ui.table_name, ui.index_name as constraint_name, tc.constraint_type, rc.referenced_table_name as ref_table ,ui.index_name, rc.delete_rule FROM information_schema.statistics ui 
+		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
+		inner join information_schema.columns c on c.column_name = ui.column_name
+		left join information_schema.referential_constraints rc on rc.constraint_name = ui.index_name
+		where ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
+		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
+		group by ui.table_name, ui.index_name
+		order by ui.index_name, ui.seq_in_index;
 	'''
 	final static def CONSTRAINTS_QUERY_BY_NAME = '''
-		select uc.table_name, uc.constraint_name, uc.constraint_type, uc2.table_name ref_table,
-		   uc.index_name, uc.delete_rule
-		from   user_constraints uc
-			   left join user_constraints uc2 on uc.r_constraint_name = uc2.constraint_name
-			   join user_tables ut on uc.table_name = ut.table_name
-		where  uc.constraint_type <> 'C'
-		  and  uc.table_name = upper(?)
-		order  by uc.table_name, uc.constraint_type, uc.constraint_name
+		select ui.table_name, ui.index_name as constraint_name, tc.constraint_type, rc.referenced_table_name as ref_table ,ui.index_name, rc.delete_rule FROM information_schema.statistics ui 
+		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
+		inner join information_schema.columns c on c.column_name = ui.column_name
+		left join information_schema.referential_constraints rc on rc.constraint_name = ui.index_name
+		where ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
+		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
+		and ui.table_name = ?
+		group by ui.table_name, ui.index_name
+		order by ui.index_name, ui.seq_in_index;
 	'''
 	private def fillCostraints(tables, objectName) {
 		def rows
@@ -248,35 +239,37 @@ class MySqlDatabaseReader implements DatabaseReader {
 		}
 
 		rows.each({
-			def tableName = it.table_name.toLowerCase()
+			def tableName = it.table_name
 			def table = tables[tableName]
 
 			def constraint = new Constraint()
-			constraint.name = it.constraint_name.toLowerCase()
-			constraint.refTable = it.ref_table?.toLowerCase()
+			constraint.name = it.constraint_name
+			constraint.refTable = it.ref_table
 			constraint.type = it.constraint_type
-			def onDelete = it.delete_rule?.toLowerCase()
-			constraint.onDelete = onDelete == 'no action' ? null : onDelete
+			def onDelete = it.delete_rule
+			constraint.onDelete = onDelete == null ? null : onDelete
 			table.constraints[constraint.name] = constraint
 		})
 	}
 
 	final static def CONSTRAINTS_COLUMNS_QUERY = '''
-		select ucc.table_name, ucc.constraint_name, ucc.column_name
-		from   user_cons_columns ucc
-			   join user_constraints uc on ucc.constraint_name = uc.constraint_name
-			   join user_tables ut on uc.table_name = ut.table_name
-		where  uc.constraint_type <> 'C'
-		order  by ucc.table_name, ucc.constraint_name, ucc.position
+		select ui.table_name, ui.index_name as constraint_name, ui.column_name FROM information_schema.statistics ui 
+		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
+		inner join information_schema.columns c on c.column_name = ui.column_name
+		where ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
+		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
+		group by ui.index_name, ui.column_name
+		order by ui.index_name, ui.seq_in_index;		
 	'''
 	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
-		select ucc.table_name, ucc.constraint_name, ucc.column_name
-		from   user_cons_columns ucc
-			   join user_constraints uc on ucc.constraint_name = uc.constraint_name
-			   join user_tables ut on uc.table_name = ut.table_name
-		where  uc.constraint_type <> 'C'
-		  and  uc.table_name = upper(?)
-		order  by ucc.table_name, ucc.constraint_name, ucc.position
+		select ui.table_name, ui.index_name as constraint_name, ui.column_name FROM information_schema.statistics ui 
+		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
+		inner join information_schema.columns c on c.column_name = ui.column_name
+		where ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
+		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
+		and ui.table_name = ?
+		group by ui.index_name, ui.column_name
+		order by ui.index_name, ui.seq_in_index;
 	'''
 	private def fillCostraintsColumns(tables, objectName) {
 		def rows
@@ -286,10 +279,10 @@ class MySqlDatabaseReader implements DatabaseReader {
 			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY)
 		}
 		rows.each({
-			def tableName = it.table_name.toLowerCase()
+			def tableName = it.table_name
 			def table = tables[tableName]
-			def constraint = table.constraints[it.constraint_name.toLowerCase()]
-			constraint.columns << it.column_name.toLowerCase()
+			def constraint = table.constraints[it.constraint_name]
+			constraint.columns << it.column_name
 		})
 	}
 
@@ -305,32 +298,21 @@ class MySqlDatabaseReader implements DatabaseReader {
 			order  by sequence_name
 		'''
 	def getSequences(objectName){
+		// Not exists in mysql
 		def sequences = [:]
-		def rows
-		if(objectName) {
-			rows = sql.rows(SEQUENCES_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(SEQUENCES_QUERY)
-		}
-		rows.each({
-			def sequence = new Sequence()
-			sequence.name = it.sequence_name.toLowerCase()
-			sequence.minValue = it.min_value
-			sequences[sequence.name] = sequence
-		})
 		return sequences
 	}
 
 	final static def VIEWS_QUERY = '''
-		select view_name, text
-		from   user_views
-		order  by view_name
+		select table_name as view_name, view_definition as text
+		from views
+		order  by table_name;
 	'''
 	final static def VIEWS_QUERY_BY_NAME = '''
-		select view_name, text
-		from   user_views
-		where  view_name = upper(?)
-		order  by view_name
+		select table_name as view_name, view_definition as text
+		from views
+		where table_name = ?
+		order  by table_name;
 	'''
 	def getViews(objectName){
 		def views = [:]
@@ -343,7 +325,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 
 		rows.each({
 			def view = new View()
-			view.name = it.view_name.toLowerCase()
+			view.name = it.view_name
 			view.text = it.text
 			views[view.name] = view
 		})
@@ -351,15 +333,17 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	final static def PROCEDURES_NAME_QUERY = '''
-		select distinct name
-		from user_source
-		where type in ('PROCEDURE', 'FUNCTION')
+		select distinct routine_name 
+		from `information_schema`.`routines` 
+		where routine_type in ('FUNCTION' ,'PROCEDURE')
+		order by routine_name;
 	'''
 	final static def PROCEDURES_NAME_QUERY_BY_NAME = '''
-		select distinct name
-		from user_source
-		where type in ('PROCEDURE', 'FUNCTION')
-		  and name = upper(?)
+		select distinct routine_name 
+		from `information_schema`.`routines` 
+		where routine_type in ('FUNCTION' ,'PROCEDURE')
+		and routine_name = ?  
+		order by routine_name;
 	'''
 	def getProcedures(objectName) {
 		def procedures = [:]
@@ -371,7 +355,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 		}
 
 		rows.each({
-			def procedure = new Procedure(name: it.name.toLowerCase())
+			def procedure = new Procedure(name: it.name)
 			procedures[procedure.name] = procedure
 		})
 
@@ -381,17 +365,17 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	final static def PROCEDURES_BODY_QUERY = '''
-		select name, text
-		from user_source
-		where type in ('PROCEDURE', 'FUNCTION')
-		order by name, line	
+		select routine_name, routine_definition
+		from `information_schema`.`routines` 
+		where routine_type in ('FUNCTION' ,'PROCEDURE')
+		order by routine_name;
 	'''
 	final static def PROCEDURES_BODY_QUERY_BY_NAME = '''
-		select name, text
-		from user_source
-		where type in ('PROCEDURE', 'FUNCTION')
-		  and name = upper(?)
-		order by name, line	
+		select routine_name, routine_definition
+		from `information_schema`.`routines` 
+		where routine_type in ('FUNCTION' ,'PROCEDURE')
+		and routine_name = ?
+		order by routine_name;
 	'''
 	def getProceduresBody(procedures, objectName) {
 		def body = ''
@@ -405,13 +389,13 @@ class MySqlDatabaseReader implements DatabaseReader {
 		}
 
 		rows.each({
-			if (it.name.toLowerCase() != name) {
+			if (it.name != name) {
 				if (name) {
 					def procedure = procedures[name]
 					if (procedure)
 						procedure.text = body
 				}
-				name = it.name.toLowerCase()
+				name = it.name
 				body = it.text
 			}
 			body += it.text
@@ -445,7 +429,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 		}
 
 		rows.each({
-			def packageName = it.name.toLowerCase()
+			def packageName = it.name
 			def pack = packages[packageName] ?: new Package()
 			pack.name = packageName
 			if (it.type == 'PACKAGE') {
@@ -460,17 +444,15 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	final static def TRIGGERS_QUERY = '''
-		select name, text
-		from user_source
-		where type in 'TRIGGER'
-		order by name, line
+		select trigger_name, action_statement
+		from `information_schema`.`triggers`
+		order by trigger_name;
 	'''
 	final static def TRIGGERS_QUERY_BY_NAME = '''
-		select name, text
-		from user_source
-		where type in 'TRIGGER'
-		and  name = upper(?)
-		order by name, line
+		select trigger_name, action_statement
+		from `information_schema`.`triggers`
+		where trigger_name = ?
+		order by trigger_name;
 	'''
 	def getTriggers(objectName) {
 		def triggers = [:]
@@ -483,7 +465,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 		}
 
 		rows.each({
-			def triggerName = it.name.toLowerCase()
+			def triggerName = it.name
 			def trigger = triggers[triggerName] ?: new Trigger()
 			trigger.name = triggerName
 			trigger.text += it.text
