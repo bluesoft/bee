@@ -33,6 +33,7 @@
 package br.com.bluesoft.bee
 
 import br.com.bluesoft.bee.database.ConnectionInfo
+import br.com.bluesoft.bee.database.reader.DatabaseReaderChanger;
 import br.com.bluesoft.bee.database.reader.OracleDatabaseReader
 import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options
@@ -62,7 +63,7 @@ class BeeSchemaValidatorAction {
 		def importer = getImporter()
 		out.log("connecting to " + clientName);
 		def sql = getDatabaseConnection(clientName)
-		def databaseReader = new OracleDatabaseReader(sql)
+		def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, clientName)
 
 		out.log('importing schema metadata from the reference files')
 		Schema metadataSchema = importer.importMetaData()

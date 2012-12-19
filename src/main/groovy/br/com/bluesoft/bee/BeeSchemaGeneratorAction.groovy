@@ -33,6 +33,7 @@
 package br.com.bluesoft.bee
 
 import br.com.bluesoft.bee.database.ConnectionInfo
+import br.com.bluesoft.bee.database.reader.DatabaseReaderChanger;
 import br.com.bluesoft.bee.database.reader.OracleDatabaseReader
 import br.com.bluesoft.bee.exporter.JsonExporter
 import br.com.bluesoft.bee.model.Options
@@ -65,7 +66,8 @@ class BeeSchemaGeneratorAction {
 
 		try {
 			out.log "Extracting the metadata..."
-			def databaseReader = new OracleDatabaseReader(sql)
+			def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, clientName)
+			DatabaseReaderChanger.getDatabaseReader(options, clientName)
 			def Schema schema = databaseReader.getSchema(objectName)
 			if(objectName)
 				schema = schema.filter(objectName)
