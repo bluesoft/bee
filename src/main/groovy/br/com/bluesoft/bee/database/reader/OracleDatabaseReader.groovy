@@ -270,13 +270,12 @@ class OracleDatabaseReader implements DatabaseReader {
 	}
 
 	final static def CONSTRAINTS_COLUMNS_QUERY = '''
-		select ui.table_name, ui.index_name as constraint_name, ui.column_name FROM information_schema.statistics ui 
-		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
-		inner join information_schema.columns c on c.column_name = ui.column_name
-		where ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
-		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
-		group by ui.index_name, ui.column_name
-		order by ui.index_name, ui.seq_in_index;	
+		select ucc.table_name, ucc.constraint_name, ucc.column_name
+		from   user_cons_columns ucc
+			   join user_constraints uc on ucc.constraint_name = uc.constraint_name
+			   join user_tables ut on uc.table_name = ut.table_name
+		where  uc.constraint_type <> 'C'
+		order  by ucc.table_name, ucc.constraint_name, ucc.position
 	'''
 	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
 		select ucc.table_name, ucc.constraint_name, ucc.column_name
