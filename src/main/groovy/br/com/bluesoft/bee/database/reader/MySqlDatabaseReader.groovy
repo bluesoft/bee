@@ -16,13 +16,21 @@ class MySqlDatabaseReader implements DatabaseReader {
 
 	Schema getSchema(objectName = null) {
 		def schema = new Schema()
+		System.out.println("1")
 		selectDatabase()
+		System.out.println("2")
 		schema.tables = getTables(objectName)
+		System.out.println("3")
 		schema.sequences = getSequences(objectName)
+		System.out.println("4")
 		schema.views = getViews(objectName)
+		System.out.println("5")
 		schema.procedures = getProcedures(objectName)
+		System.out.println("6")
 		schema.packages = getPackages(objectName)
+		System.out.println("7")
 		schema.triggers = getTriggers(objectName)
+		System.out.println("8")
 		return schema
 	}
 

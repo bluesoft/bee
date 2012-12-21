@@ -23,7 +23,7 @@ class MySqlDatabaseReaderProcedureTest {
 			[name: 'PROCEDURE_B', text: 'bbb1'],
 			[name: 'PROCEDURE_B', text: 'bbb2']
 		]
-		def sql = [ rows: { query ->
+		def sql = [ rows: { query, schema ->
 				switch (query) {
 					case MySqlDatabaseReader.PROCEDURES_NAME_QUERY: return procedures; break;
 					case MySqlDatabaseReader.PROCEDURES_BODY_QUERY: return bodies; break;

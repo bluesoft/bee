@@ -23,7 +23,7 @@ class MySqlDatabaseReaderTableTest {
 		def constraints = createConstraints()
 		def constraintsColumns = createConstraintsColumns()
 
-		def sql = [ rows: { query ->
+		def sql = [ rows: { query, schema ->
 				switch (query) {
 					case MySqlDatabaseReader.TABLES_QUERY: return tableRows; break;
 					case MySqlDatabaseReader.TABLES_COLUMNS_QUERY: return columns; break;

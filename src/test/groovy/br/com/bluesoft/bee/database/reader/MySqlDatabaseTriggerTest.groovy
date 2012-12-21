@@ -19,7 +19,7 @@ class MySqlDatabaseTriggerTest {
 			[name:'TRIGGER2', text:'line22\n'],
 			[name:'TRIGGER2', text:'line23\n']
 		]
-		final def sql = [ rows: { query -> return triggers } ]
+		final def sql = [ rows: { query, schema -> return triggers } ]
 		reader = new MySqlDatabaseReader(sql, 'test')
 	}
 
