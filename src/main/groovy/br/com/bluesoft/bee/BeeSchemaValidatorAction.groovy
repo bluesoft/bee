@@ -63,7 +63,7 @@ class BeeSchemaValidatorAction {
 		def importer = getImporter()
 		out.log("connecting to " + clientName);
 		def sql = getDatabaseConnection(clientName)
-		def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, clientName)
+		def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
 
 		out.log('importing schema metadata from the reference files')
 		Schema metadataSchema = importer.importMetaData()

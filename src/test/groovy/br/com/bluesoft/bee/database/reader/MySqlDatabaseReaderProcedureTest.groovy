@@ -29,7 +29,7 @@ class MySqlDatabaseReaderProcedureTest {
 					case MySqlDatabaseReader.PROCEDURES_BODY_QUERY: return bodies; break;
 				}
 			} ]
-		reader = new MySqlDatabaseReader(sql)
+		reader = new MySqlDatabaseReader(sql, 'test')
 	}
 
 	@Test

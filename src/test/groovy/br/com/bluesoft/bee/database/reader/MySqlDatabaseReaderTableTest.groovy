@@ -34,7 +34,7 @@ class MySqlDatabaseReaderTableTest {
 				}
 			} ]
 
-		reader = new MySqlDatabaseReader(sql)
+		reader = new MySqlDatabaseReader(sql, 'test')
 	}
 
 	@Test

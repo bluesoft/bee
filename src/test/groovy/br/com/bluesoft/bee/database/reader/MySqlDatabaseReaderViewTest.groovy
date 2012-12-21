@@ -18,7 +18,7 @@ class MySqlDatabaseReaderViewTest {
 			[view_name:'VIEW_USERS', text:'bbb']
 		]
 		def sql = [ rows: { query -> views  } ]
-		reader = new MySqlDatabaseReader(sql)
+		reader = new MySqlDatabaseReader(sql, 'test')
 	}
 
 	@Test
