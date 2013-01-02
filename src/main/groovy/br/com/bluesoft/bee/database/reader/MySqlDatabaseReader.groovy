@@ -42,20 +42,17 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	static final def TABLES_QUERY = ''' 
-		select t.table_name , 'N' as temporary, ut.auto_increment, ut.table_comment AS 'comments' 
+		select ut.table_name , 'N' as temporary, ut.auto_increment, ut.table_comment AS 'comments' 
 		from information_schema.tables ut
-		inner join information_schema.tables t on t.table_name = ut.table_name
 		where ut.table_schema = ?
-		and ut.table_schema not in ('mysql', 'information_schema', 'performance_schema')	
+		order by ut.table_name
 	'''
 	static final def TABLES_QUERY_BY_NAME = '''
-		select t.table_name , 'N' as temporary, ut.auto_increment, ut.table_comment AS 'comments' 
+		select ut.table_name , 'N' as temporary, ut.auto_increment, ut.table_comment AS 'comments' 
 		from information_schema.tables ut
-		inner join information_schema.tables t on t.table_name = ut.table_name
 		where ut.table_schema = ?
-		and ut.table_schema not in ('mysql', 'information_schema', 'performance_schema')
 		and ut.table_name = ?
-		order by table_name
+		order by ut.table_name
 	'''
 	private def fillTables(objectName) {
 		def tables = [:]
@@ -76,21 +73,17 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	static final def TABLES_COLUMNS_QUERY = '''
-		select t.table_name, uc.column_name, uc.data_type, uc.is_nullable as nullable, coalesce(uc.numeric_precision, uc.character_maximum_length) data_size, 
+		select uc.table_name, uc.column_name, uc.data_type, uc.is_nullable as nullable, coalesce(uc.numeric_precision, uc.character_maximum_length) data_size, 
 		coalesce(uc.numeric_scale, 0) data_scale, uc. column_default as data_default, uc.ordinal_position as column_id
 		from information_schema.columns uc
-		inner join information_schema.tables t on t.table_name = uc.table_name
-		where uc.table_schema = ?
-		and uc.table_schema not in ('mysql', 'information_schema', 'performance_schema')
+		where uc.table_schema = ?  
 		order by table_name, column_id
 	'''	
 	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
-		select t.table_name, uc.column_name, uc.data_type, uc.is_nullable as nullable, coalesce(uc.numeric_precision, uc.character_maximum_length) data_size, 
+		select uc.table_name, uc.column_name, uc.data_type, uc.is_nullable as nullable, coalesce(uc.numeric_precision, uc.character_maximum_length) data_size, 
 		coalesce(uc.numeric_scale, 0) data_scale, uc. column_default as data_default, uc.ordinal_position as column_id
 		from information_schema.columns uc
-		inner join information_schema.tables t on t.table_name = uc.table_name
 		where uc.table_schema = ?
-		and uc.table_schema not in ('mysql', 'information_schema', 'performance_schema')
 		and uc.table_name = ?
 		order by table_name, column_id
 	'''
@@ -118,21 +111,17 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	final static def INDEXES_QUERY = '''
-		select t.table_name, ui.index_name, ui.index_type, ui.non_unique as uniqueness FROM information_schema.statistics ui
-		inner join information_schema.tables t on t.table_name = ui.table_name 
+		select ui.table_name, ui.index_name, ui.index_type, ui.non_unique as uniqueness FROM information_schema.statistics ui
 		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name
 		where ui.table_schema = ? 
-		and ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
 		and (tc.constraint_type is null or tc.constraint_type = 'UNIQUE')
 		group by ui.table_name, ui.index_name, ui.index_type, ui.non_unique
 		order by ui.table_name, ui.index_name
 	'''
 	final static def INDEXES_QUERY_BY_NAME = '''
-		select t.table_name, ui.index_name, ui.index_type, ui.non_unique as uniqueness FROM information_schema.statistics ui
-		inner join information_schema.tables t on t.table_name = ui.table_name 
+		select ui.table_name, ui.index_name, ui.index_type, ui.non_unique as uniqueness FROM information_schema.statistics ui
 		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name
 		where ui.table_schema = ? 
-		and ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
 		and tc.constraint_type is null
 		and  ui.table_name = ?
 		group by ui.table_name, ui.index_name, ui.index_type, ui.non_unique
@@ -158,23 +147,21 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	final static def INDEXES_COLUMNS_QUERY = '''
-		select t.table_name, ui.index_name, ui.column_name, c.column_default as data_default, 'asc' as descend FROM information_schema.statistics ui
-		inner join information_schema.tables t on t.table_name = ui.table_name 
+		select ui.table_name, ui.index_name, ui.column_name, c.column_default as data_default, 'asc' as descend 
+		from information_schema.statistics ui
 		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
 		inner join information_schema.columns c on c.column_name = ui.column_name
 		where ui.table_schema = ? 
-		and ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
 		and (tc.constraint_type is null or tc.constraint_type = 'UNIQUE')
 		group by ui.index_name, ui.column_name
 		order by ui.index_name, ui.seq_in_index
 	'''
 	final static def INDEXES_COLUMNS_QUERY_BY_NAME = '''
-		select t.table_name, ui.index_name, ui.column_name, c.column_default as data_default, 'asc' as descend FROM information_schema.statistics ui
-		inner join information_schema.tables t on t.table_name = ui.table_name 
+		select ui.table_name, ui.index_name, ui.column_name, c.column_default as data_default, 'asc' as descend 
+		from information_schema.statistics ui
 		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
 		inner join information_schema.columns c on c.column_name = ui.column_name
-		where ui.table_schema = ?
-		and ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
+		where ui.table_schema = ? 
 		and (tc.constraint_type is null or tc.constraint_type = 'UNIQUE')
 		and ui.table_name = ?
 		group by ui.index_name, ui.column_name
@@ -202,25 +189,21 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	final static def CONSTRAINTS_QUERY = '''
-		select t.table_name, ui.index_name as constraint_name, tc.constraint_type, rc.referenced_table_name as ref_table ,ui.index_name, rc.delete_rule FROM information_schema.statistics ui
-		inner join information_schema.tables t on t.table_name = ui.table_name 
+		select ui.table_name, ui.index_name as constraint_name, tc.constraint_type, rc.referenced_table_name as ref_table ,ui.index_name, rc.delete_rule FROM information_schema.statistics ui
 		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
 		inner join information_schema.columns c on c.column_name = ui.column_name
 		left join information_schema.referential_constraints rc on rc.constraint_name = ui.index_name
 		where ui.table_schema = ?
-		and ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
 		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
 		group by ui.table_name, ui.index_name
 		order by ui.index_name, ui.seq_in_index
 	'''
 	final static def CONSTRAINTS_QUERY_BY_NAME = '''
-		select t.table_name, ui.index_name as constraint_name, tc.constraint_type, rc.referenced_table_name as ref_table ,ui.index_name, rc.delete_rule FROM information_schema.statistics ui
-		inner join information_schema.tables t on t.table_name = ui.table_name 
+		select ui.table_name, ui.index_name as constraint_name, tc.constraint_type, rc.referenced_table_name as ref_table ,ui.index_name, rc.delete_rule FROM information_schema.statistics ui
 		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
 		inner join information_schema.columns c on c.column_name = ui.column_name
 		left join information_schema.referential_constraints rc on rc.constraint_name = ui.index_name
 		where ui.table_schema = ?
-		and ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
 		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
 		and ui.table_name = ?
 		group by ui.table_name, ui.index_name
@@ -248,27 +231,23 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	final static def CONSTRAINTS_COLUMNS_QUERY = '''
-		select t.table_name, ui.index_name as constraint_name, ui.column_name FROM information_schema.statistics ui
-		inner join information_schema.tables t on t.table_name = ui.table_name 
+		select ui.table_name, ui.index_name as constraint_name, ui.column_name FROM information_schema.statistics ui
 		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
 		inner join information_schema.columns c on c.column_name = ui.column_name
 		where ui.table_schema = ?
-		and ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
 		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
 		group by ui.table_name, ui.index_name, ui.column_name
 		order by ui.index_name, ui.seq_in_index
 	'''
 	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
-		select t.table_name, ui.index_name as constraint_name, ui.column_name FROM information_schema.statistics ui
-		inner join information_schema.tables t on t.table_name = ui.table_name 
+		select ui.table_name, ui.index_name as constraint_name, ui.column_name FROM information_schema.statistics ui
 		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
 		inner join information_schema.columns c on c.column_name = ui.column_name
 		where ui.table_schema = ?
-		and ui.table_schema not in ('mysql', 'information_schema', 'performance_schema')
 		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
 		and ui.table_name = ?
 		group by ui.table_name, ui.index_name, ui.column_name
-		order by ui.index_name, ui.seq_in_index	
+		order by ui.index_name, ui.seq_in_index
 	'''
 	private def fillConstraintsColumns(tables, objectName) {
 		def rows

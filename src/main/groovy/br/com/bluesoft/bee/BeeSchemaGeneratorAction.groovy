@@ -67,7 +67,6 @@ class BeeSchemaGeneratorAction {
 		try {
 			out.log "Extracting the metadata..."
 			def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
-			DatabaseReaderChanger.getDatabaseReader(options, clientName)
 			def Schema schema = databaseReader.getSchema(objectName)
 			if(objectName)
 				schema = schema.filter(objectName)
