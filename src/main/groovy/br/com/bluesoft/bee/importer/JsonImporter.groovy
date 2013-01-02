@@ -100,10 +100,13 @@ class JsonImporter implements Importer {
 
 	private def importSequences() {
 		def sequences = [:]
-		def sequencesJSON = mapper.readTree(new File(mainFolder, 'sequences.bee').getText())
-		sequencesJSON.getElements().each {
-			def sequence = mapper.readValue(it.toString(), Sequence.class)
-			sequences[sequence.name] = sequence
+		File sequenceFile = new File(mainFolder, 'sequences.bee')
+		if (sequenceFile.exists()) {
+			def sequencesJSON = mapper.readTree(sequenceFile.getText())
+					sequencesJSON.getElements().each {
+				def sequence = mapper.readValue(it.toString(), Sequence.class)
+						sequences[sequence.name] = sequence
+			}
 		}
 		return sequences
 	}

@@ -16,21 +16,13 @@ class MySqlDatabaseReader implements DatabaseReader {
 
 	Schema getSchema(objectName = null) {
 		def schema = new Schema()
-		System.out.println("1")
 		selectDatabase()
-		System.out.println("2")
 		schema.tables = getTables(objectName)
-		System.out.println("3")
 		schema.sequences = getSequences(objectName)
-		System.out.println("4")
 		schema.views = getViews(objectName)
-		System.out.println("5")
 		schema.procedures = getProcedures(objectName)
-		System.out.println("6")
 		schema.packages = getPackages(objectName)
-		System.out.println("7")
 		schema.triggers = getTriggers(objectName)
-		System.out.println("8")
 		return schema
 	}
 
@@ -50,14 +42,14 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	static final def TABLES_QUERY = ''' 
-		select t.table_name , 'N' as temporary, ut.table_comment AS 'comments' 
+		select t.table_name , 'N' as temporary, ut.auto_increment, ut.table_comment AS 'comments' 
 		from information_schema.tables ut
 		inner join information_schema.tables t on t.table_name = ut.table_name
 		where ut.table_schema = ?
 		and ut.table_schema not in ('mysql', 'information_schema', 'performance_schema')	
 	'''
 	static final def TABLES_QUERY_BY_NAME = '''
-		select t.table_name , 'N' as temporary, ut.table_comment AS 'comments' 
+		select t.table_name , 'N' as temporary, ut.auto_increment, ut.table_comment AS 'comments' 
 		from information_schema.tables ut
 		inner join information_schema.tables t on t.table_name = ut.table_name
 		where ut.table_schema = ?
@@ -76,8 +68,9 @@ class MySqlDatabaseReader implements DatabaseReader {
 		rows.each({
 			def name = it.table_name
 			def temporary = it.temporary == 'Y' ? true : false
+			def autoIncrement = it.auto_increment
 			def comment = it.comments
-			tables[name] = new Table(name:name, temporary:temporary, comment:comment)
+			tables[name] = new Table(name:name, temporary:temporary, autoIncrement:autoIncrement, comment:comment)
 		})
 		return tables
 	}

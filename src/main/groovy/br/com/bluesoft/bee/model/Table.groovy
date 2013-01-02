@@ -46,6 +46,7 @@ class Table implements Validator {
 	String name
 	Boolean temporary = false
 	String comment
+	Integer autoIncrement
 
 	Map<String, TableColumn> columns = [:] as LinkedHashMap
 	Map<String, Index> indexes = [:]

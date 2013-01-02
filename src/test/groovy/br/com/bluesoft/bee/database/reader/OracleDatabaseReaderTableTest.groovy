@@ -67,6 +67,13 @@ public class OracleDatabaseReaderTableTest {
 		assertNull tables['keys'].comment
 		assertFalse tables['keys'].shouldImportTheData()
 	}
+	
+	@Test
+	void 'it shouldnt fill the table autoIncrement'(){
+		def tables = reader.getTables()
+		assertEquals null, tables['pessoa'].autoIncrement
+	}
+
 
 	@Test
 	void 'it should fill columns of the table according to the database metadata'() {

@@ -57,7 +57,7 @@ class BeeSchemaValidatorAction {
 
 		def clientName = options.arguments[0]
 		def objectName = options.arguments[1]
-
+		
 		MessagePrinter messagePrinter = new MessagePrinter()
 
 		def importer = getImporter()

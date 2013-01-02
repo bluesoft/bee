@@ -14,7 +14,7 @@ class MySqlDatabaseReaderTableTest {
 	void setup() {
 
 		def tableRows = [
-			[table_name:'PESSOA', temporary:'N', comments:'#Core'],
+			[table_name:'PESSOA', temporary:'N', auto_increment:4, comments:'#Core'],
 			[table_name:'KEYS', temporary:'N', comments:null]
 		]
 		def columns = createColumns()
@@ -60,6 +60,12 @@ class MySqlDatabaseReaderTableTest {
 
 		assertNull tables['KEYS'].comment
 		assertFalse tables['KEYS'].shouldImportTheData()
+	}
+	
+	@Test
+	void 'it should fill the table autoIncrement'(){
+		def tables = reader.getTables()
+		assertEquals 4, tables['PESSOA'].autoIncrement
 	}
 
 	@Test
