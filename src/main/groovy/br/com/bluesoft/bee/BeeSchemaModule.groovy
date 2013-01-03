@@ -42,7 +42,8 @@ public class BeeSchemaModule implements BeeWriter {
 		println "Actions:"
 		println "         schema:generate connection [object] - generates an entire schema or single object, if specified"
 		println "         schema:validate connection [object] - validates an entire schema or single object, if specified"
-		println "         schema:recreate [object] - build a DDL script"
+		println "         schema:recreate_mysql [object] - build a MySql DDL script"
+		println "         schema:recreate_oracle [object] - build a Oracle DDL script"
 		println "         schema:check - validate structure correctness"
 	}
 
@@ -58,8 +59,11 @@ public class BeeSchemaModule implements BeeWriter {
 			case "validate":
 				actionRunner = new BeeSchemaValidatorAction(options: options, out: this)
 				break;
-			case "recreate":
-				actionRunner = new BeeSchemaCreatorAction(options: options, out: this)
+			case "recreate_mysql":
+				actionRunner = new BeeMySqlSchemaCreatorAction(options: options, out: this)
+				break;
+			case "recreate_oracle":
+				actionRunner = new BeeOracleSchemaCreatorAction(options: options, out: this)
 				break;
 			case "check":
 				actionRunner = new BeeSchemaCheckerAction(options: options, out: this)

@@ -70,8 +70,12 @@ The module checks the schema structure of the database, comparing with existing 
       To validate all files
          bee schema:validate <database>
 
-      To create a DDL script from local structure files. Will create a file named `bee.sql`
-         bee schema:recreate <object>
+      To create a MySql DDL script from local structure files. Will create a file named `bee.sql`
+         bee schema:recreate_mysql <object>
+
+      To create a Oracle DDL script from local structure files. Will create a file named `bee.sql`
+         bee schema:recreate_oracle <object>
+
 
 ## Data
 

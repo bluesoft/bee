@@ -1,74 +1,8 @@
-package br.com.bluesoft.bee;
-
-import br.com.bluesoft.bee.importer.JsonImporter
-import br.com.bluesoft.bee.model.Options
-import br.com.bluesoft.bee.service.BeeWriter
+package br.com.bluesoft.bee
 
 
-public class BeeSchemaCreatorAction {
-
-	Options options
-	BeeWriter out
-
-	def importer
-
-	//TODO types, outputfile
-
-
-	public boolean validateParameters() {
-		return true
-	}
-
-	public void run() {
-
-		def objectName = options.arguments[0]
-
-		out.log('importing schema metadata from the reference files')
-		def schema = getImporter().importMetaData()
-
-		if(objectName)
-			schema = schema.filter(objectName)
-
-		def file = new File('bee.sql')
-		if(file.exists())
-			file.delete()
-
-		out.println("generating sequences...")
-		createSequences(file, schema)
-
-		out.println("generating tables...")
-		createTables(file, schema)
-
-		out.println("generating constraints...")
-		createPrimaryKeys(file, schema)
-		createUniqueKeys(file, schema)
-		createForeignKeys(file, schema)
-
-		out.println("generating indexes...")
-		createIndexes(file, schema)
-		createFunctionalIndexes(file, schema)
-		createBitmapIndexes(file, schema)
-
-		out.println("generating views...")
-		createViews(file, schema)
-
-		out.println("generating packages...")
-		createPackages(file, schema)
-
-		out.println("generating procedures...")
-		createProcedures(file, schema)
-
-		out.println("generating triggers...")
-		createTriggers(file, schema)
-
-		def env = System.getenv()
-		if(env['EDITOR']) {
-			println "Opening editor ${env['EDITOR']}"
-			def cmd = [env['EDITOR'], file.path]
-			new ProcessBuilder(env['EDITOR'], file.path).start()
-		}
-	}
-
+abstract class BeeSchemaCreator {
+	
 	void createSequences(def file, def schema) {
 		schema.sequences*.value.each { file << "create sequence ${it.name};\n" }
 		file << "\n"
@@ -89,7 +23,6 @@ public class BeeSchemaCreatorAction {
 
 		if(!column.nullable)
 			result += ' not null'
-
 		return result
 	}
 
@@ -233,11 +166,4 @@ public class BeeSchemaCreatorAction {
 	void createTriggers(def file, def schema) {
 		schema.triggers*.value.sort().each { file << "create or replace ${it.text}/\n\n" }
 	}
-
-	private def getImporter() {
-		if(importer == null)
-			return new JsonImporter(options.dataDir.canonicalPath)
-		return importer
-	}
 }
-

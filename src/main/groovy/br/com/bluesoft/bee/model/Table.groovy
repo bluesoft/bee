@@ -32,11 +32,6 @@
  */
 package br.com.bluesoft.bee.model
 
-import br.com.bluesoft.bee.model.message.MessageLevel
-
-import br.com.bluesoft.bee.model.message.MessageLevel
-
-import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
@@ -46,7 +41,6 @@ class Table implements Validator {
 	String name
 	Boolean temporary = false
 	String comment
-	Integer autoIncrement
 
 	Map<String, TableColumn> columns = [:] as LinkedHashMap
 	Map<String, Index> indexes = [:]

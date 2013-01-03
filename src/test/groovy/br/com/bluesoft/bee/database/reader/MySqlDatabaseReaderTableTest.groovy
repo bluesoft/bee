@@ -14,7 +14,7 @@ class MySqlDatabaseReaderTableTest {
 	void setup() {
 
 		def tableRows = [
-			[table_name:'PESSOA', temporary:'N', auto_increment:4, comments:'#Core'],
+			[table_name:'PESSOA', temporary:'N', comments:'#Core'],
 			[table_name:'KEYS', temporary:'N', comments:null]
 		]
 		def columns = createColumns()
@@ -63,12 +63,6 @@ class MySqlDatabaseReaderTableTest {
 	}
 	
 	@Test
-	void 'it should fill the table autoIncrement'(){
-		def tables = reader.getTables()
-		assertEquals 4, tables['PESSOA'].autoIncrement
-	}
-
-	@Test
 	void 'it should fill columns of the table according to the database metadata'() {
 		def tables = reader.getTables()
 		assertEquals 3, tables['PESSOA'].columns.size()
@@ -98,6 +92,13 @@ class MySqlDatabaseReaderTableTest {
 	void 'it should set the default value'() {
 		def tables = reader.getTables()
 		assertEquals "5", tables['PESSOA'].columns['VALOR'].defaultValue
+	}
+	
+	@Test
+	void 'it should set auto_increment'() {
+		def tables = reader.getTables()
+		assertEquals "auto_increment", tables['PESSOA'].columns['PESSOA_KEY'].autoIncrement
+		assertEquals null, tables['PESSOA'].columns['NOME_RAZAO'].autoIncrement
 	}
 
 	@Test
@@ -205,7 +206,8 @@ class MySqlDatabaseReaderTableTest {
 					data_size:6,
 					data_scale:"0",
 					nullable:"NO",
-					data_default:null]
+					data_default:null,
+					auto_increment:"auto_increment"]
 
 		def nomeRazao = [table_name:'PESSOA',
 					column_name:'NOME_RAZAO',

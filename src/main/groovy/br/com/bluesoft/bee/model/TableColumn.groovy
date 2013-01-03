@@ -46,6 +46,7 @@ class TableColumn {
 	Integer scale = 0
 	Boolean nullable = false
 	String defaultValue
+	String autoIncrement
 
 	def messageTemplate = 'The {0} of the column {1} of the table {2} should be {3} but it is {4}'
 
@@ -71,6 +72,11 @@ class TableColumn {
 		if (metadataColumn.defaultValue != this.defaultValue) {
 			messages << createMessage(table.name, metadataColumn, MessageType.DATA_DEFAULT, 'defaultValue')
 		}
+		
+		if (metadataColumn.autoIncrement != this.autoIncrement) {
+			messages << createMessage(table.name, metadataColumn, MessageType.AUTO_INCREMENT, 'autoIncrement')
+		}
+
 
 		return messages
 	}

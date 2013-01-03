@@ -42,13 +42,13 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	static final def TABLES_QUERY = ''' 
-		select ut.table_name , 'N' as temporary, ut.auto_increment, ut.table_comment AS 'comments' 
+		select ut.table_name , 'N' as temporary, ut.table_comment AS 'comments' 
 		from information_schema.tables ut
 		where ut.table_schema = ?
 		order by ut.table_name
 	'''
 	static final def TABLES_QUERY_BY_NAME = '''
-		select ut.table_name , 'N' as temporary, ut.auto_increment, ut.table_comment AS 'comments' 
+		select ut.table_name , 'N' as temporary, ut.table_comment AS 'comments' 
 		from information_schema.tables ut
 		where ut.table_schema = ?
 		and ut.table_name = ?
@@ -65,27 +65,32 @@ class MySqlDatabaseReader implements DatabaseReader {
 		rows.each({
 			def name = it.table_name
 			def temporary = it.temporary == 'Y' ? true : false
-			def autoIncrement = it.auto_increment
 			def comment = it.comments
-			tables[name] = new Table(name:name, temporary:temporary, autoIncrement:autoIncrement, comment:comment)
+			tables[name] = new Table(name:name, temporary:temporary, comment:comment)
 		})
 		return tables
 	}
 
 	static final def TABLES_COLUMNS_QUERY = '''
 		select uc.table_name, uc.column_name, uc.data_type, uc.is_nullable as nullable, coalesce(uc.numeric_precision, uc.character_maximum_length) data_size, 
-		coalesce(uc.numeric_scale, 0) data_scale, uc. column_default as data_default, uc.ordinal_position as column_id
+		if(uc.extra='auto_increment', 'auto_increment', null) as auto_increment, coalesce(uc.numeric_scale, 0) data_scale, 
+		uc. column_default as data_default, uc.ordinal_position as column_id
 		from information_schema.columns uc
+		inner join information_schema.tables ut on uc.table_name = ut.table_name
 		where uc.table_schema = ?  
-		order by table_name, column_id
+		group by table_name, column_name
+		order by table_name, column_name;
 	'''	
 	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
 		select uc.table_name, uc.column_name, uc.data_type, uc.is_nullable as nullable, coalesce(uc.numeric_precision, uc.character_maximum_length) data_size, 
-		coalesce(uc.numeric_scale, 0) data_scale, uc. column_default as data_default, uc.ordinal_position as column_id
+		if(uc.extra='auto_increment', 'auto_increment', null) as auto_increment, coalesce(uc.numeric_scale, 0) data_scale, 
+		uc. column_default as data_default, uc.ordinal_position as column_id
 		from information_schema.columns uc
-		where uc.table_schema = ?
+		inner join information_schema.tables ut on uc.table_name = ut.table_name
+		where uc.table_schema = ?  
 		and uc.table_name = ?
-		order by table_name, column_id
+		group by table_name, column_name
+		order by table_name, column_name;
 	'''
 	private def fillColumns(tables, objectName) {
 		def rows
@@ -102,6 +107,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 			column.size = it.data_size
 			column.scale = it.data_scale
 			column.nullable = it.nullable == 'NO' ? false : true
+			column.autoIncrement = it.auto_increment
 			def defaultValue = it.data_default
 			if(defaultValue) {
 				column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()
@@ -109,6 +115,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 			table.columns[column.name] = column
 		})
 	}
+	
 
 	final static def INDEXES_QUERY = '''
 		select ui.table_name, ui.index_name, ui.index_type, ui.non_unique as uniqueness FROM information_schema.statistics ui
@@ -191,23 +198,25 @@ class MySqlDatabaseReader implements DatabaseReader {
 	final static def CONSTRAINTS_QUERY = '''
 		select ui.table_name, ui.index_name as constraint_name, tc.constraint_type, rc.referenced_table_name as ref_table ,ui.index_name, rc.delete_rule FROM information_schema.statistics ui
 		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
-		inner join information_schema.columns c on c.column_name = ui.column_name
+		inner join information_schema.columns c on c.column_name = ui.column_name and c.table_name = ui.table_name
 		left join information_schema.referential_constraints rc on rc.constraint_name = ui.index_name
 		where ui.table_schema = ?
-		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
+		and (tc.constraint_type in('UNIQUE','PRIMARY KEY','FOREIGN KEY'))
+		and c.extra != 'auto_increment'
 		group by ui.table_name, ui.index_name
-		order by ui.index_name, ui.seq_in_index
+		order by ui.table_name, ui.seq_in_index;
 	'''
 	final static def CONSTRAINTS_QUERY_BY_NAME = '''
 		select ui.table_name, ui.index_name as constraint_name, tc.constraint_type, rc.referenced_table_name as ref_table ,ui.index_name, rc.delete_rule FROM information_schema.statistics ui
 		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
-		inner join information_schema.columns c on c.column_name = ui.column_name
+		inner join information_schema.columns c on c.column_name = ui.column_name and c.table_name = ui.table_name
 		left join information_schema.referential_constraints rc on rc.constraint_name = ui.index_name
 		where ui.table_schema = ?
-		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
+		and (tc.constraint_type in('UNIQUE','PRIMARY KEY','FOREIGN KEY'))
+		and c.extra != 'auto_increment'
 		and ui.table_name = ?
 		group by ui.table_name, ui.index_name
-		order by ui.index_name, ui.seq_in_index
+		order by ui.table_name, ui.seq_in_index;
 	'''
 	private def fillConstraints(tables, objectName) {
 		def rows
@@ -223,31 +232,43 @@ class MySqlDatabaseReader implements DatabaseReader {
 			def constraint = new Constraint()
 			constraint.name = it.constraint_name
 			constraint.refTable = it.ref_table
-			constraint.type = it.constraint_type
+			constraint.type = getConstraintType(it.constraint_type)
 			def onDelete = it.delete_rule?.toLowerCase()
 			constraint.onDelete = onDelete
 			table.constraints[constraint.name] = constraint
 		})
 	}
+	
+	private def getConstraintType(String columnType){
+		switch (columnType) {
+			case "PRIMARY KEY":
+				return "P"
+				break
+			default:
+				return columnType
+		}
+	}
 
 	final static def CONSTRAINTS_COLUMNS_QUERY = '''
 		select ui.table_name, ui.index_name as constraint_name, ui.column_name FROM information_schema.statistics ui
 		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
-		inner join information_schema.columns c on c.column_name = ui.column_name
+		inner join information_schema.columns c on c.column_name = ui.column_name and c.table_name = ui.table_name
 		where ui.table_schema = ?
-		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
+		and (tc.constraint_type in('UNIQUE','PRIMARY KEY','FOREIGN KEY'))
+		and c.extra != 'auto_increment'		
 		group by ui.table_name, ui.index_name, ui.column_name
-		order by ui.index_name, ui.seq_in_index
+		order by ui.index_name, ui.seq_in_index;
 	'''
 	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
 		select ui.table_name, ui.index_name as constraint_name, ui.column_name FROM information_schema.statistics ui
 		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
-		inner join information_schema.columns c on c.column_name = ui.column_name
+		inner join information_schema.columns c on c.column_name = ui.column_name and c.table_name = ui.table_name
 		where ui.table_schema = ?
-		and (tc.constraint_type is not null or tc.constraint_type = 'UNIQUE')
-		and ui.table_name = ?
+		and (tc.constraint_type in('UNIQUE','PRIMARY KEY','FOREIGN KEY'))
+		and c.extra != 'auto_increment'		
+		and ui.table_name = ?		
 		group by ui.table_name, ui.index_name, ui.column_name
-		order by ui.index_name, ui.seq_in_index
+		order by ui.index_name, ui.seq_in_index;
 	'''
 	private def fillConstraintsColumns(tables, objectName) {
 		def rows
