@@ -244,6 +244,12 @@ class MySqlDatabaseReader implements DatabaseReader {
 			case "PRIMARY KEY":
 				return "P"
 				break
+			case "UNIQUE":
+				return "U"
+				break
+			case "FOREIGN KEY":
+				return "R"
+				break
 			default:
 				return columnType
 		}

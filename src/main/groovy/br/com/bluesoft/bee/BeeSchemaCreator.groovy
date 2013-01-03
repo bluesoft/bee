@@ -28,7 +28,9 @@ abstract class BeeSchemaCreator {
 
 	def createTable(def table) {
 		def columns = []
-		table.columns.each( { columns << createColumn(it.value) } )
+		table.columns.each({
+			columns << createColumn(it.value) 
+		})
 		def temp = table.temporary ? " global temporary" : ""
 		def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n\n"
 	}

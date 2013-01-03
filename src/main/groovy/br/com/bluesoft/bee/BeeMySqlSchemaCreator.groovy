@@ -1,6 +1,7 @@
 package br.com.bluesoft.bee
 
 import br.com.bluesoft.bee.model.Options;
+import br.com.bluesoft.bee.model.TableColumn;
 import br.com.bluesoft.bee.service.BeeWriter;
 import br.com.bluesoft.bee.importer.JsonImporter
 
@@ -18,31 +19,59 @@ class BeeMySqlSchemaCreator extends BeeSchemaCreator{
 
 		if(column.defaultValue)
 			result += " default ${column.defaultValue}"
-
 		if(!column.nullable)
 			result += ' not null'
 		if(column.autoIncrement)
 			result += ' auto_increment'
 		return result
 	}
+	
+	def createTimestampColumn(def column, boolean currentTimestampIsAllowed) {
+		def result = "    ${column.name} ${column.type}"
+		if (currentTimestampIsAllowed) {
+			result += " default CURRENT_TIMESTAMP not null"
+		}
+		return result
+	}
 
 	def createTable(def table) {
 		def columns = []
-		boolean createPrimaryKeyColumn = false
+		boolean currentTimestampIsAllowed = true
+		boolean createPrimaryKeyColumnIsAllowed = false
 		String primaryKeyColumn = null
 		
 		table.columns.each({
-			 columns << createColumn(it.value)
-			 if (it.value.autoIncrement) {
-				 createPrimaryKeyColumn = true
+			if (it.value.autoIncrement) {
+				 createPrimaryKeyColumnIsAllowed = true
 				 primaryKeyColumn = it.value.name
-			 } 
+			}
+			
+			boolean isTimestamp = isTimestamp(it.value)
+			
+			if (isTimestamp) {
+				columns << createTimestampColumn(it.value, currentTimestampIsAllowed)
+				currentTimestampIsAllowed = false
+			} else {
+				columns << createColumn(it.value)
+			}
 		})
 		
-		if (createPrimaryKeyColumn)
-			columns << "    primary key(" + primaryKeyColumn + ")"
+		if (createPrimaryKeyColumnIsAllowed)
+			createPrimaryKeyColumnOnTableCreateStatement(columns, primaryKeyColumn)
 		
 		def result = "create table ${table.name} (\n" + columns.join(",\n") + "\n);\n\n"
+	}
+	
+	def isTimestamp(TableColumn column) {
+		if (column.type != null && column.type.toUpperCase() == "TIMESTAMP") {
+			return true
+		} else {
+			return false
+		}
+	}
+	
+	def createPrimaryKeyColumnOnTableCreateStatement(def columns, def primaryKeyColumn) {
+		columns << "    primary key(" + primaryKeyColumn + ")"
 	}
 	
 	def createPrimaryKey(table) {
