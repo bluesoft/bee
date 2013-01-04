@@ -272,7 +272,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 		where kcu.table_schema = ?
 		and c.extra != 'auto_increment'
 		group by kcu.table_name, kcu.constraint_name, kcu.column_name				
-		order by kcu.table_name, kcu.constraint_name, kcu.column_name;
+		order by kcu.table_name, kcu.constraint_name, kcu.ordinal_position;
 	'''
 	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
 		select kcu.table_name, kcu.constraint_name, kcu.column_name, kcu.referenced_column_name as ref_column_name
@@ -282,7 +282,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 		and kcu.table_name = ?
 		and c.extra != 'auto_increment'
 		group by kcu.table_name, kcu.constraint_name, kcu.column_name				
-		order by kcu.table_name, kcu.constraint_name, kcu.column_name;
+		order by kcu.table_name, kcu.constraint_name, kcu.ordinal_position;
 	'''
 	
 	private def fillConstraintsColumns(tables, objectName) {
