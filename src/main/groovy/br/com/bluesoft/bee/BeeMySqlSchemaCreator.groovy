@@ -19,24 +19,20 @@ class BeeMySqlSchemaCreator extends BeeSchemaCreator{
 
 		if(column.defaultValue)
 			result += " default ${column.defaultValue}"
-		if(!column.nullable)
+		if(column.onUpdateCurrentTimestamp)
+			result += " on update CURRENT_TIMESTAMP"
+		if(!column.nullable) {
 			result += ' not null'
+		} else {
+			result += ' null'
+		}
 		if(column.autoIncrement)
 			result += ' auto_increment'
 		return result
 	}
 	
-	def createTimestampColumn(def column, boolean currentTimestampIsAllowed) {
-		def result = "    ${column.name} ${column.type}"
-		if (currentTimestampIsAllowed) {
-			result += " default CURRENT_TIMESTAMP not null"
-		}
-		return result
-	}
-
 	def createTable(def table) {
 		def columns = []
-		boolean currentTimestampIsAllowed = true
 		boolean createPrimaryKeyColumnIsAllowed = false
 		String primaryKeyColumn = null
 		
@@ -45,15 +41,7 @@ class BeeMySqlSchemaCreator extends BeeSchemaCreator{
 				 createPrimaryKeyColumnIsAllowed = true
 				 primaryKeyColumn = it.value.name
 			}
-			
-			boolean isTimestamp = isTimestamp(it.value)
-			
-			if (isTimestamp) {
-				columns << createTimestampColumn(it.value, currentTimestampIsAllowed)
-				currentTimestampIsAllowed = false
-			} else {
-				columns << createColumn(it.value)
-			}
+			columns << createColumn(it.value)
 		})
 		
 		if (createPrimaryKeyColumnIsAllowed)

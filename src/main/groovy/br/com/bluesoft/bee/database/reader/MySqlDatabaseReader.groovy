@@ -72,25 +72,27 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	static final def TABLES_COLUMNS_QUERY = '''
-		select uc.table_name, uc.column_name, uc.data_type, uc.is_nullable as nullable, coalesce(uc.numeric_precision, uc.character_maximum_length) data_size, 
+		select uc.table_name, uc.column_name, uc.data_type, uc.is_nullable as nullable, coalesce(uc.numeric_precision, uc.character_maximum_length) data_size,
 		if(uc.extra='auto_increment', 'auto_increment', null) as auto_increment, coalesce(uc.numeric_scale, 0) data_scale, 
+		if(uc.extra='on update CURRENT_TIMESTAMP', 'on update CURRENT_TIMESTAMP', null) as onUpdateCurrentTimestamp,
 		uc. column_default as data_default, uc.ordinal_position as column_id
 		from information_schema.columns uc
 		inner join information_schema.tables ut on uc.table_name = ut.table_name
 		where uc.table_schema = ?  
 		group by table_name, column_name
-		order by table_name, column_name;
+		order by table_name, uc.ordinal_position;
 	'''	
 	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
-		select uc.table_name, uc.column_name, uc.data_type, uc.is_nullable as nullable, coalesce(uc.numeric_precision, uc.character_maximum_length) data_size, 
+		select uc.table_name, uc.column_name, uc.data_type, uc.is_nullable as nullable, coalesce(uc.numeric_precision, uc.character_maximum_length) data_size,
 		if(uc.extra='auto_increment', 'auto_increment', null) as auto_increment, coalesce(uc.numeric_scale, 0) data_scale, 
+		if(uc.extra='on update CURRENT_TIMESTAMP', 'on update CURRENT_TIMESTAMP', null) as onUpdateCurrentTimestamp,
 		uc. column_default as data_default, uc.ordinal_position as column_id
 		from information_schema.columns uc
 		inner join information_schema.tables ut on uc.table_name = ut.table_name
 		where uc.table_schema = ?  
 		and uc.table_name = ?
 		group by table_name, column_name
-		order by table_name, column_name;
+		order by table_name, uc.ordinal_position;
 	'''
 	private def fillColumns(tables, objectName) {
 		def rows
@@ -108,6 +110,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 			column.scale = it.data_scale
 			column.nullable = it.nullable == 'NO' ? false : true
 			column.autoIncrement = it.auto_increment
+			column.onUpdateCurrentTimestamp = it.onUpdateCurrentTimestamp
 			def defaultValue = it.data_default
 			if(defaultValue) {
 				column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()
