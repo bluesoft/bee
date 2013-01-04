@@ -43,6 +43,7 @@ class Constraint {
 	String type
 	String onDelete
 	def columns = []
+	def refColumns = []
 
 	def validateWithMetadata(Table table, Constraint metadataConstraint) {
 		def messages = []
@@ -60,6 +61,11 @@ class Constraint {
 		if (metadataConstraint.columns != this.columns) {
 			def messageText = "The columns of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.columns} but it is ${this.columns}"
 			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_COLUMNS, message:messageText)
+		}
+		
+		if (metadataConstraint.refColumns != this.refColumns) {
+			def messageText = "The columns of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.refColumns} but it is ${this.refColumns}"
+			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_REF_COLUMNS, message:messageText)
 		}
 
 		if (this.type == 'R' && metadataConstraint.onDelete != this.onDelete) {

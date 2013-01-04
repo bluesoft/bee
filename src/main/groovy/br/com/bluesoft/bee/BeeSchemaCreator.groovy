@@ -65,7 +65,9 @@ abstract class BeeSchemaCreator {
 
 		def result = ""
 
-		constraints.each { result += "alter table ${table.name} add constraint ${it.name} unique(" +it.columns.join(',')+");\n" }
+		constraints.each {
+			result += "alter table ${table.name} add constraint ${it.name} unique(" + it.columns.join(',') + ");\n" 
+		}
 
 		return result
 	}
@@ -85,8 +87,9 @@ abstract class BeeSchemaCreator {
 		def result = ""
 
 		constraints.each {
-			def onDelete = it.onDelete ? " on delete ${it.onDelete}" : ""
-			result += "alter table ${table.name} add constraint ${it.name} foreign key (" + it.columns.join(',') + ") references ${it.refTable}${onDelete};\n"
+			def onDelete = it.onDelete ? "on delete ${it.onDelete}" : ""
+			def refColumns = it.refColumns ? "(" + it.refColumns.join(',') + ")" : ""
+			result += "alter table ${table.name} add constraint ${it.name} foreign key (" + it.columns.join(',') + ") references ${it.refTable} ${refColumns} ${onDelete};\n"
 		}
 
 		return result

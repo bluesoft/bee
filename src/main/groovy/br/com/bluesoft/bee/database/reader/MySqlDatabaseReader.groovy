@@ -121,7 +121,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 		select ui.table_name, ui.index_name, ui.index_type, ui.non_unique as uniqueness FROM information_schema.statistics ui
 		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name
 		where ui.table_schema = ? 
-		and (tc.constraint_type is null or tc.constraint_type = 'UNIQUE')
+		and tc.constraint_type is null
 		group by ui.table_name, ui.index_name, ui.index_type, ui.non_unique
 		order by ui.table_name, ui.index_name
 	'''
@@ -147,10 +147,20 @@ class MySqlDatabaseReader implements DatabaseReader {
 			def table = tables[tableName]
 			def index = new Index()
 			index.name = it.index_name
-			index.type = it.index_type[0]
+			index.type = getIndexType(it.index_type)
 			index.unique = it.uniqueness == '1' ? true : false
 			table.indexes[index.name] = index
 		})
+	}
+	
+	private def getIndexType(String indexType){
+		switch (indexType) {
+			case "BTREE":
+				return "n"
+				break
+			default:
+				return indexType
+		}
 	}
 
 	final static def INDEXES_COLUMNS_QUERY = '''
@@ -159,7 +169,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
 		inner join information_schema.columns c on c.column_name = ui.column_name
 		where ui.table_schema = ? 
-		and (tc.constraint_type is null or tc.constraint_type = 'UNIQUE')
+		and tc.constraint_type is null
 		group by ui.index_name, ui.column_name
 		order by ui.index_name, ui.seq_in_index
 	'''
@@ -169,7 +179,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
 		inner join information_schema.columns c on c.column_name = ui.column_name
 		where ui.table_schema = ? 
-		and (tc.constraint_type is null or tc.constraint_type = 'UNIQUE')
+		and tc.constraint_type is null
 		and ui.table_name = ?
 		group by ui.index_name, ui.column_name
 		order by ui.index_name, ui.seq_in_index
@@ -196,27 +206,27 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	final static def CONSTRAINTS_QUERY = '''
-		select ui.table_name, ui.index_name as constraint_name, tc.constraint_type, rc.referenced_table_name as ref_table ,ui.index_name, rc.delete_rule FROM information_schema.statistics ui
-		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
-		inner join information_schema.columns c on c.column_name = ui.column_name and c.table_name = ui.table_name
-		left join information_schema.referential_constraints rc on rc.constraint_name = ui.index_name
-		where ui.table_schema = ?
-		and (tc.constraint_type in('UNIQUE','PRIMARY KEY','FOREIGN KEY'))
-		and c.extra != 'auto_increment'
-		group by ui.table_name, ui.index_name
-		order by ui.table_name, ui.seq_in_index;
+		select kcu.table_name, kcu.constraint_name, tc.constraint_type, kcu.referenced_table_name as ref_table, if(tc.constraint_type in ('PRIMARY KEY', 'UNIQUE'),tc.constraint_name,null) as index_name, rc.delete_rule
+		from information_schema.key_column_usage kcu
+		inner join information_schema.table_constraints tc on tc.table_schema = kcu.table_schema and tc.table_name = kcu.table_name and kcu.constraint_name = tc.constraint_name
+		inner join information_schema.columns c on c.table_name = kcu.table_name and c.column_name = kcu.column_name
+		left join information_schema.referential_constraints rc on rc.table_name = tc.table_name and  rc.constraint_name = tc.constraint_name
+		where kcu.constraint_schema = ?
+		and c.extra != 'auto_increment'		
+		group by kcu.table_name, kcu.constraint_name, tc.constraint_type
+		order by kcu.table_name, kcu.constraint_name, tc.constraint_type;				
 	'''
 	final static def CONSTRAINTS_QUERY_BY_NAME = '''
-		select ui.table_name, ui.index_name as constraint_name, tc.constraint_type, rc.referenced_table_name as ref_table ,ui.index_name, rc.delete_rule FROM information_schema.statistics ui
-		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
-		inner join information_schema.columns c on c.column_name = ui.column_name and c.table_name = ui.table_name
-		left join information_schema.referential_constraints rc on rc.constraint_name = ui.index_name
-		where ui.table_schema = ?
-		and (tc.constraint_type in('UNIQUE','PRIMARY KEY','FOREIGN KEY'))
-		and c.extra != 'auto_increment'
-		and ui.table_name = ?
-		group by ui.table_name, ui.index_name
-		order by ui.table_name, ui.seq_in_index;
+		select kcu.table_name, kcu.constraint_name, tc.constraint_type, kcu.referenced_table_name as ref_table, if(tc.constraint_type in ('PRIMARY KEY', 'UNIQUE'),tc.constraint_name,null) as index_name, rc.delete_rule
+		from information_schema.key_column_usage kcu
+		inner join information_schema.table_constraints tc on tc.table_schema = kcu.table_schema and tc.table_name = kcu.table_name and kcu.constraint_name = tc.constraint_name
+		inner join information_schema.columns c on c.table_name = kcu.table_name and c.column_name = kcu.column_name
+		left join information_schema.referential_constraints rc on rc.table_name = tc.table_name and  rc.constraint_name = tc.constraint_name
+		where kcu.constraint_schema = ?
+		and kcu.table_name = ?
+		and c.extra != 'auto_increment'		
+		group by kcu.table_name, kcu.constraint_name, tc.constraint_type
+		order by kcu.table_name, kcu.constraint_name, tc.constraint_type;				
 	'''
 	private def fillConstraints(tables, objectName) {
 		def rows
@@ -256,26 +266,25 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	final static def CONSTRAINTS_COLUMNS_QUERY = '''
-		select ui.table_name, ui.index_name as constraint_name, ui.column_name FROM information_schema.statistics ui
-		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
-		inner join information_schema.columns c on c.column_name = ui.column_name and c.table_name = ui.table_name
-		where ui.table_schema = ?
-		and (tc.constraint_type in('UNIQUE','PRIMARY KEY','FOREIGN KEY'))
-		and c.extra != 'auto_increment'		
-		group by ui.table_name, ui.index_name, ui.column_name
-		order by ui.index_name, ui.seq_in_index;
+		select kcu.table_name, kcu.constraint_name, kcu.column_name, kcu.referenced_column_name as ref_column_name
+		from information_schema.key_column_usage kcu
+		inner join information_schema.columns c on c.column_name = kcu.column_name and c.table_name = kcu.table_name		
+		where kcu.table_schema = ?
+		and c.extra != 'auto_increment'
+		group by kcu.table_name, kcu.constraint_name, kcu.column_name				
+		order by kcu.table_name, kcu.constraint_name, kcu.column_name;
 	'''
 	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
-		select ui.table_name, ui.index_name as constraint_name, ui.column_name FROM information_schema.statistics ui
-		inner join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
-		inner join information_schema.columns c on c.column_name = ui.column_name and c.table_name = ui.table_name
-		where ui.table_schema = ?
-		and (tc.constraint_type in('UNIQUE','PRIMARY KEY','FOREIGN KEY'))
-		and c.extra != 'auto_increment'		
-		and ui.table_name = ?		
-		group by ui.table_name, ui.index_name, ui.column_name
-		order by ui.index_name, ui.seq_in_index;
+		select kcu.table_name, kcu.constraint_name, kcu.column_name, kcu.referenced_column_name as ref_column_name
+		from information_schema.key_column_usage kcu
+		inner join information_schema.columns c on c.column_name = kcu.column_name and c.table_name = kcu.table_name		
+		where kcu.table_schema = ?
+		and kcu.table_name = ?
+		and c.extra != 'auto_increment'
+		group by kcu.table_name, kcu.constraint_name, kcu.column_name				
+		order by kcu.table_name, kcu.constraint_name, kcu.column_name;
 	'''
+	
 	private def fillConstraintsColumns(tables, objectName) {
 		def rows
 		if(objectName) {
@@ -288,13 +297,12 @@ class MySqlDatabaseReader implements DatabaseReader {
 			def table = tables[tableName]
 			def constraint = table.constraints[it.constraint_name]
 			constraint.columns << it.column_name
+			constraint.refColumns << it.ref_column_name
 		})
 	}
 
 	def getSequences(objectName){
-		// Not exists in mysql
-		def sequences = [:]
-		return sequences
+		return [:]
 	}
 
 	final static def VIEWS_QUERY = ''' 

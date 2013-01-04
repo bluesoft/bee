@@ -81,7 +81,7 @@ class BeeMySqlSchemaCreator extends BeeSchemaCreator{
 
 		constraint = constraint.value
 
-		return "alter table ${table.name} add constraint ${constraint.name} primary key (" + constraint.columns.join(',') + ");\n"
+		return "alter table ${table.name} add primary key (" + constraint.columns.join(',') + ");\n"
 	}
 	
 }

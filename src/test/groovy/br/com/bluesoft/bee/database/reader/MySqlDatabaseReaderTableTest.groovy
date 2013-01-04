@@ -126,9 +126,9 @@ class MySqlDatabaseReaderTableTest {
 	@Test
 	void 'it should set index type'() {
 		def indexes = reader.getTables()['PESSOA'].indexes
-		assertEquals 'B', indexes['IDX_PESSOA_KEY'].type
-		assertEquals 'F', indexes['IDX_NOME_RAZAO_UPPER'].type
-		assertEquals 'N', indexes['IDX_VALOR'].type
+		assertEquals 'n', indexes['IDX_PESSOA_KEY'].type
+		assertEquals 'n', indexes['IDX_NOME_RAZAO_UPPER'].type
+		assertEquals 'n', indexes['IDX_VALOR'].type
 	}
 
 	@Test
@@ -188,6 +188,15 @@ class MySqlDatabaseReaderTableTest {
 		assertEquals 1, constraints['FK_PESSOA_TIPO_PESSOA'].columns.size()
 		assertEquals 1, constraints['UK_PESSOA_NOME_RAZAO'].columns.size()
 	}
+	
+	@Test
+	void 'it should fill the constraint ref columns'() {
+		def constraints = reader.getTables()['PESSOA'].constraints
+		assertEquals 1, constraints['PK_PESSOA'].refColumns.size()
+		assertEquals 1, constraints['FK_PESSOA_TIPO_PESSOA'].refColumns.size()
+		assertEquals 1, constraints['UK_PESSOA_NOME_RAZAO'].refColumns.size()
+	}
+
 
 	@Test
 	void 'it should fill the constraint columns names'() {
@@ -197,6 +206,13 @@ class MySqlDatabaseReaderTableTest {
 		assertEquals 'NOME_RAZAO', constraints['UK_PESSOA_NOME_RAZAO'].columns[0]
 	}
 	
+	@Test
+	void 'it should fill the constraint ref columns names'() {
+		def constraints = reader.getTables()['PESSOA'].constraints
+		assertEquals 'PESSOA_KEY', constraints['PK_PESSOA'].refColumns[0]
+		assertEquals 'TIPO_PESSOA_KEY', constraints['FK_PESSOA_TIPO_PESSOA'].refColumns[0]
+		assertEquals 'NOME_RAZAO', constraints['UK_PESSOA_NOME_RAZAO'].refColumns[0]
+	}
 	
 	def createColumns() {
 
@@ -232,17 +248,17 @@ class MySqlDatabaseReaderTableTest {
 
 		def idx_valor = [table_name:'PESSOA',
 					index_name:'IDX_VALOR',
-					index_type:"NORMAL",
+					index_type:"BTREE",
 					uniqueness:'0']
 
 		def idx_upper_nome_razao = [table_name:'PESSOA',
 					index_name:'IDX_NOME_RAZAO_UPPER',
-					index_type:"FUNCTION-BASED NORMAL",
+					index_type:"BTREE",
 					uniqueness:'0']
 
 		def idx_nome_razao = [table_name:'PESSOA',
 					index_name:'IDX_PESSOA_KEY',
-					index_type:"BITMAP",
+					index_type:"BTREE",
 					uniqueness:'1']
 
 		return [
@@ -311,19 +327,22 @@ class MySqlDatabaseReaderTableTest {
 		def primary = [
 					table_name: 'PESSOA',
 					constraint_name: 'PK_PESSOA',
-					column_name:'PESSOA_KEY'
+					column_name:'PESSOA_KEY',
+					ref_column_name:'PESSOA_KEY'
 				]
 
 		def foreign = [
 					table_name: 'PESSOA',
 					constraint_name: 'FK_PESSOA_TIPO_PESSOA',
-					column_name:'TIPO_PESSOA_KEY'
+					column_name:'TIPO_PESSOA_KEY',
+					ref_column_name:'TIPO_PESSOA_KEY'
 				]
 
 		def unique = [
 					table_name: 'PESSOA',
 					constraint_name: 'UK_PESSOA_NOME_RAZAO',
-					column_name:'NOME_RAZAO'
+					column_name:'NOME_RAZAO',
+					ref_column_name:'NOME_RAZAO'
 				]
 		return [primary, foreign, unique]
 	}
