@@ -2,7 +2,10 @@ package br.com.bluesoft.bee.dbchange
 
 import groovy.sql.Sql
 
+import java.sql.Connection;
 import java.sql.SQLException
+
+import org.mockito.Mockito;
 
 import spock.lang.Specification
 import br.com.bluesoft.bee.database.ConnectionInfo
@@ -91,7 +94,6 @@ class DbChangeManagerTest extends Specification {
 		def manager = new DbChangeManager()
 		def sql = Mock(Sql)
 		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
-		1 * sql.execute(DbChangeManager.CREATE_TABLE)
 
 		when: "criar tabela caso nao exista"
 		def retorno = manager.criarTabelaDbchangesSeNaoExistir(sql)
@@ -99,7 +101,22 @@ class DbChangeManagerTest extends Specification {
 		then: "e retorna true"
 		retorno == true
 	}
+	
+	def "deve criar a tabela dbchanges caso nao exista em bancos não oracle"() {
+		
+		given:
+		def manager = new DbChangeManager()
+		def sql = Mock(Sql)
+		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
+		1 * sql.execute(DbChangeManager.CREATE_TABLE_ORACLE) >> { throw new SQLException() }
+		
+		when: "criar tabela caso nao exista"
+		def retorno = manager.criarTabelaDbchangesSeNaoExistir(sql)
 
+		then: "e retorna true"
+		retorno == true
+	}
+	
 	def "deve retornar false caso nao consiga criar a tabela dbchanges"() {
 
 		given:
@@ -108,6 +125,7 @@ class DbChangeManagerTest extends Specification {
 		def manager = new DbChangeManager(logger: logger)
 
 		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
+		1 * sql.execute(DbChangeManager.CREATE_TABLE_ORACLE) >> { throw new SQLException() }
 		1 * sql.execute(DbChangeManager.CREATE_TABLE) >> { throw new SQLException() }
 		1 * logger.log(_)
 
@@ -137,22 +155,21 @@ class DbChangeManagerTest extends Specification {
 
 	def "deve inserir uma execucao de dbchange quando o parametro UpDown for igual a UP"() {
 		given:
-		def sql = Mock(Sql)
+		def sql = mockSql()
 		def manager = new DbChangeManager()
 		def arquivo = "989898-test.dbchange"
 
-		2 * sql.commit()
-		1 * sql.execute(DbChangeManager.INSERT_INTO_DBCHANGES, _)
-
 		when: "salvar execucao de dbchange"
-		manager.salvarExecucao(sql, arquivo, UpDown.UP)
+			manager.salvarExecucao(sql, arquivo, UpDown.UP)
 
 		then: "deve inserir execucao e commitar"
+			1 * sql.execute(DbChangeManager.INSERT_INTO_DBCHANGES, _)
+			2 * sql.commit()
 	}
 
 	def "deve excluir uma execucao de dbchange quando o parametro UpDown for igual a DOWN"() {
 		given:
-		def sql = Mock(Sql)
+		def sql = mockSql()
 		def manager = new DbChangeManager()
 		def arquivo = "989898-test.dbchange"
 
@@ -170,7 +187,7 @@ class DbChangeManagerTest extends Specification {
 
 		given:
 		def mensagens = []
-		def sql = Mock(Sql)
+		def sql = mockSql()
 		def parser = Mock(SQLFileParser)
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { ["abc", "xyz"]} ]
@@ -205,7 +222,7 @@ class DbChangeManagerTest extends Specification {
 
 		given:
 		def mensagens = []
-		def sql = Mock(Sql)
+		def sql = mockSql()
 		def parser = Mock(SQLFileParser)
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { ["abc", "xyz"]} ]
@@ -233,7 +250,7 @@ class DbChangeManagerTest extends Specification {
 
 		given:
 		def mensagens = []
-		def sql = Mock(Sql)
+		def sql = mockSql()
 		def parser = Mock(SQLFileParser)
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { ["abc", "xyz"]} ]
@@ -261,7 +278,7 @@ class DbChangeManagerTest extends Specification {
 
 		given:
 		def mensagens = []
-		def sql = Mock(Sql)
+		def sql = mockSql()
 		def parser = Mock(SQLFileParser)
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { ["abc", "xyz"]} ]
@@ -396,7 +413,7 @@ class DbChangeManagerTest extends Specification {
 
 		given:
 		def mensagens = []
-		def sql = Mock(Sql)
+		def sql = mockSql()
 		def parser = Mock(SQLFileParser)
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { ["abc", "xyz"]} ]
@@ -465,5 +482,13 @@ class DbChangeManagerTest extends Specification {
 		"989898"  | "989898-test.dbchange"
 		"132123"  | "132123-x.dbchange"
 		"0"       | "789987-teste"
+	}
+	
+	private Sql mockSql(){
+		def connection = Mock(Connection)
+		connection.autoCommit() >> false
+		def sql = Mock(Sql)
+		sql.connection >> connection
+		return sql
 	}
 }

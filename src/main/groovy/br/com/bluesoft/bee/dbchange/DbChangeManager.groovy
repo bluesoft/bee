@@ -42,8 +42,9 @@ import br.com.bluesoft.bee.service.BeeWriter
 class DbChangeManager {
 
 	final static def SELECT_TABLE = "select * from dbchanges"
-	final static def CREATE_TABLE = "create table dbchanges(arquivo_timestamp number(14), arquivo_nome varchar(60) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
-	final static def INSERT_INTO_DBCHANGES = "insert into dbchanges(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?, sysdate)"
+	final static def CREATE_TABLE_ORACLE = "create table dbchanges(arquivo_timestamp number(14), arquivo_nome varchar(60) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
+	final static def CREATE_TABLE = "create table dbchanges(arquivo_timestamp bigint, arquivo_nome varchar(60) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
+	final static def INSERT_INTO_DBCHANGES = "insert into dbchanges(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?, current_timestamp)"
 	final static def DELETE_FROM_DBCHANGES = "delete from dbchanges where arquivo_timestamp = ?"
 	final static def MESSAGE_THERE_IS_NO_INSTRUCTIONS = "!!!Error: There is no ::up/::down statement in dbchange file"
 	final static def MESSAGE_NO_COMMANDS_IN_FILE = "There is no commands in the dbchange file"
@@ -142,7 +143,10 @@ class DbChangeManager {
 	}
 
 	def salvarExecucao(def sql, def arquivo, def upDown) {
-		sql.commit()
+		boolean autocommit = sql.connection.getAutoCommit()
+		
+		if (!autocommit)
+			sql.commit()
 
 		if (!criarTabelaDbchangesSeNaoExistir(sql)) {
 			return false
@@ -155,7 +159,9 @@ class DbChangeManager {
 		} else {
 			sql.execute(DELETE_FROM_DBCHANGES, [timestamp])
 		}
-		sql.commit()
+		
+		if (!autocommit)
+			sql.commit()
 	}
 
 	def podeExecutar(def arquivo, def sql, def upDown) {
@@ -213,6 +219,7 @@ class DbChangeManager {
 	}
 
 	def criarTabelaDbchangesSeNaoExistir(def sql) {
+		def tabelaDbchangesFoiCriada = false
 		if (sql == null) {
 			logger.log(MESSAGE_COULD_NOT_GET_CONNECTION)
 			return false
@@ -220,15 +227,22 @@ class DbChangeManager {
 
 		try {
 			sql.execute(SELECT_TABLE)
+			tabelaDbchangesFoiCriada = true
 		} catch (SQLException ex) {
 			try {
-				sql.execute(CREATE_TABLE)
+				sql.execute(CREATE_TABLE_ORACLE)
+				tabelaDbchangesFoiCriada = true
 			} catch (SQLException e) {
-				logger.log("!!!Erro: Nao foi possivel criar a tabela dbchanges")
-				return false
+				try {
+					sql.execute(CREATE_TABLE)
+					tabelaDbchangesFoiCriada = true
+				} catch (Exception e2) {
+					logger.log("!!!Erro: Nao foi possivel criar a tabela dbchanges")
+					return false
+				}
 			}
 		}
-		return true
+		return tabelaDbchangesFoiCriada
 	}
 
 	def createDbChangeFile(description) {

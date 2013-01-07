@@ -82,7 +82,7 @@ public class TableDataReader {
 
 			result << rowArray
 		})
-
+		
 		return result
 	}
 }
