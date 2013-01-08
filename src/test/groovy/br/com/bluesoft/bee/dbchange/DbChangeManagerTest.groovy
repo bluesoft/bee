@@ -52,7 +52,7 @@ class DbChangeManagerTest extends Specification {
 				]
 			} ]
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
-		def manager = new DbChangeManager(directoryFile: directoryFile, logger: logger)
+		def manager = new DbChangeManager(directoryFile: directoryFile, logger: logger, configFile: Mock(File))
 		ConnectionInfo.metaClass.static.createDatabaseConnection = { def a, def b -> return null }
 
 		when: "listar dbchanges a lista do banco retorna null"
@@ -409,7 +409,7 @@ class DbChangeManagerTest extends Specification {
 		mensagens[1] == DbChangeManager.MESSAGE_DBCHANGE_ALREADY_EXECUTED
 	}
 
-	def "deve retornar true mesmo quando ja existir um execucao anterior caso seja for�ado 'force=true' "() {
+	def "deve retornar true mesmo quando ja existir um execucao anterior caso seja forçado 'force=true' "() {
 
 		given:
 		def mensagens = []
@@ -436,7 +436,7 @@ class DbChangeManagerTest extends Specification {
 		mensagens[5].startsWith("Execution time:")
 	}
 
-	def "deve retornar false quando o nome do arquivo for inv�lido"() {
+	def "deve retornar false quando o nome do arquivo for inválido"() {
 
 		given: "arquivo com nome errado"
 		def mensagens = []
@@ -459,7 +459,7 @@ class DbChangeManagerTest extends Specification {
 		def mensagens = []
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def arquivo = "989898-test.dbchange"
-		def manager = new DbChangeManager(logger: logger)
+		def manager = new DbChangeManager(configFile: Mock(File), logger: logger)
 		ConnectionInfo.metaClass.static.createDatabaseConnection = { def a, def b -> return null }
 
 		when: "o metodo createDatabaseConnection retornar null"
