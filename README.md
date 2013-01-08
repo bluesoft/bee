@@ -151,5 +151,5 @@ Note:  when there is no rollback commands section: down should be removed, inclu
 
 ## Known Issues
 
-* The `dbschema:generate` and `dbchema:validate` only works on Oracle databases
+* The `dbschema:generate` and `dbchema:validate` only works on Oracle and MySql databases
 * Windows .bat script doesn't scan for lib jars, so you need to set the CLASSPATH variable manually.
