@@ -60,7 +60,7 @@ public class BeeDataValidatorAction {
 		sourceSet.each {
 			def row = it
 
-			if (!row in destSet) {
+			if (!destSet.contains(row)) {
 				messages << new Message(messageType: MessageType.DATA_MISMATCH, level: level, objectName: objectName, message: message + "${row}")
 			}
 		}
