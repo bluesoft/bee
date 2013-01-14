@@ -77,7 +77,8 @@ public class TableDataReader {
 			def rowArray = []
 			def row = it
 			columnNames.each {
-				rowArray << (row[it] as String)
+				def row1 = row[it] as String
+				rowArray << (row1?.trim())
 			}
 
 			result << rowArray

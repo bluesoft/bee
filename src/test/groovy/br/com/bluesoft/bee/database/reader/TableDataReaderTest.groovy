@@ -61,8 +61,8 @@ public class TableDataReaderTest extends Specification {
 		]
 
 		def data = [
-			[ teste1: "xx1", teste2: "yy1"],
-			[ teste1: "xx2", teste2: "yy2"]
+			[ teste1: "xx1 ", teste2: "yy1"],
+			[ teste1: "xx2", teste2: "yy2 "]
 		]
 
 		def sql = [
