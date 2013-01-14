@@ -182,7 +182,7 @@ class DbChangeManager {
 	List<String> listar() {
 		def listaBanco = listarInstrucoesJaExecutadas()
 		def listaArquivo = listarArquivos()
-
+		
 		if (listaArquivo == null || listaBanco == null) {
 			return null
 		}
@@ -212,7 +212,7 @@ class DbChangeManager {
 
 		def result = null
 		if (criarTabelaDbchangesSeNaoExistir(sql)) {
-			result = sql.rows("select arquivo_nome from dbchanges order by arquivo_timestamp desc")
+			result = sql.rows("select arquivo_nome as ARQUIVO_NOME from dbchanges order by arquivo_timestamp desc")
 			sql.close()
 		}
 		return result
