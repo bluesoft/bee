@@ -9,24 +9,17 @@ class BeeMySqlSchemaCreator extends BeeSchemaCreator{
 
 	def createColumn(def column) {
 		def result = "    ${column.name} ${column.type}"
-		if(column.type in ['char', 'varchar'])
-			result += "(${column.size})"
-		if(column.type == 'number')
-			if(column.scale > 0)
-				result += "(${column.size}, ${column.scale})"
-			else
-				result += "(${column.size})"
-
-		if(column.defaultValue)
+		
+		if (column.defaultValue)
 			result += " default ${column.defaultValue}"
-		if(column.onUpdateCurrentTimestamp)
+		if (column.onUpdateCurrentTimestamp)
 			result += " on update CURRENT_TIMESTAMP"
-		if(!column.nullable) {
+		if (!column.nullable) {
 			result += ' not null'
 		} else {
 			result += ' null'
 		}
-		if(column.autoIncrement)
+		if (column.autoIncrement)
 			result += ' auto_increment'
 		return result
 	}
