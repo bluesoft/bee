@@ -1,6 +1,6 @@
 # Bee
 
-A tool for managing database changes.
+A tool for managing database changes. Works with Oracle and MySQL.
 
 Note: the use with ANT is deprecated, the most recent version uses MAVEN.
 
