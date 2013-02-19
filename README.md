@@ -18,6 +18,7 @@ Put your jdbc jar into the `lib` folder.
 
 # Download Links
 
+   * 1.31 - http://www.mediafire.com/?19bzbi1zrhwd343
    * 1.30 - http://www.mediafire.com/?zf16m0mw23e7278
    * 1.29 - http://www.mediafire.com/?ugdnltu9odyd0tt
    * 1.28 - http://www.mediafire.com/?43reirxlhozbgtn

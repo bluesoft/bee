@@ -44,9 +44,10 @@ class View implements Validator {
 	def text
 
 	List validateWithMetadata(metadataView) {
-		if (!metadataView instanceof View)
+		if (! (metadataView instanceof View) ) {
 			return []
-
+		}
+			
 		def messages = []
 
 		if (!StringUtil.compare(metadataView.text,this.text)) {

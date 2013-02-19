@@ -54,14 +54,28 @@ class Schema {
 		def messages = []
 		messages.addAll getMissingObjectsMessages(databaseObjects, metadataObjects)
 		messages.addAll getAdditionalObjectsMessages(databaseObjects, metadataObjects)
+		messages.addAll getWrongTypesObjectMessages(databaseObjects, metadataObjects)
 		databaseObjects.each { objName, obj ->
-			if(obj instanceof Validator) {
+			if (obj instanceof Validator) {
 				def target = metadataSchema.getAllObjects()[objName]
 				if (target)
 					messages.addAll obj.validateWithMetadata(target)
 			}
 		}
 
+		return messages
+	}
+	
+	private def getWrongTypesObjectMessages(databaseObjects, metadataObjects) {
+		def messages = []
+		databaseObjects.each { objName, obj ->
+			def objectsWithWrongType = metadataObjects.find{it.key == objName && it.value.class != obj.class}
+			objectsWithWrongType.each {
+				def messageText = "The database contain one ${obj.class.simpleName} with name ${objName}, but reference metadata too contain a ${it.value.class.simpleName} with same name.";
+				def message = new Message(objectName:objName, level:MessageLevel.ERROR, objectType:ObjectType.TABLE, messageType:MessageType.PRESENCE, message:messageText)
+				messages << message
+			}
+		}
 		return messages
 	}
 
