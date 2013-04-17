@@ -1,5 +1,6 @@
 package br.com.bluesoft.bee.dbchange
 
+import groovy.sql.GroovyRowResult;
 import groovy.sql.Sql
 
 import java.sql.Connection;
@@ -482,6 +483,40 @@ class DbChangeManagerTest extends Specification {
 		"989898"  | "989898-test.dbchange"
 		"132123"  | "132123-x.dbchange"
 		"0"       | "789987-teste"
+	}
+	
+	def "deve marcar todos os dbchanges"() {
+		given:
+		def sql = mockSql()
+		def mensagens = []
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: { [ "abc", "65564564-test.dbchange" ] } ]
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger)
+
+		when: "marcar todos os dbchanges"
+		manager.markAll()
+
+		then:
+		mensagens.size() == 2
+		mensagens[0] == "marking 1 file(s)"
+		mensagens[1] == "65564564-test.dbchange marked as implemented"
+	}
+	
+	def "se todos os arquivos já foram executados, não fazer nada quando rodar markAll" () {
+		given:
+		def sql = [execute: { instrucao -> []}, rows: { instrucao -> RESULT}, close: {} ]
+
+		def mensagens = []
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: { ["65564564-test.dbchange"] } ]
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger)
+
+		when: "marcar todos os dbchanges"
+		manager.markAll()
+
+		then: "Informar que todos arquivos já estão marcados"
+		mensagens.size() == 1
+		mensagens[0] == "All files are already marked as implemented"
 	}
 	
 	private Sql mockSql(){

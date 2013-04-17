@@ -34,6 +34,7 @@ package br.com.bluesoft.bee.dbchange
 
 import br.com.bluesoft.bee.service.BeeWriter
 import java.sql.SQLException
+import java.text.MessageFormat;
 import java.util.List
 
 import br.com.bluesoft.bee.database.ConnectionInfo
@@ -272,6 +273,27 @@ class DbChangeManager {
 		def sql = getDatabaseConnection()
 		if(podeExecutar(arquivo, sql, UpDown.UP))
 			salvarExecucao(sql, arquivo, UpDown.UP)
+	}
+	
+	def markAll() {
+		def sql = getDatabaseConnection()
+		def listaBanco = listarInstrucoesJaExecutadas()
+		def listaArquivo = listarArquivos()
+		
+		def listaParaExecutar = (listaArquivo - listaBanco)
+		listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
+
+		if (listaParaExecutar.size > 0) {
+			logger.log "marking ${listaParaExecutar.size} file(s)"
+			listaParaExecutar.each {
+			def timestamp = obterTimestamp("${it.ARQUIVO_NOME}")
+			String arquivo_nome = "${it.ARQUIVO_NOME}"
+			sql.execute(INSERT_INTO_DBCHANGES, [arquivo_nome, timestamp])
+			logger.log "${it.ARQUIVO_NOME} marked as implemented"
+			}
+		} else {
+			logger.log "All files are already marked as implemented"
+		}
 	}
 
 	def unmark(def arquivo) {

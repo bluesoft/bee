@@ -18,6 +18,7 @@ Put your jdbc jar into the `lib` folder.
 
 # Download Links
 
+   * 1.32 - http://www.mediafire.com/?kyohudabkh96o27
    * 1.31 - http://www.mediafire.com/?19bzbi1zrhwd343
    * 1.30 - http://www.mediafire.com/?zf16m0mw23e7278
    * 1.29 - http://www.mediafire.com/?ugdnltu9odyd0tt
@@ -155,6 +156,9 @@ Note:  when there is no rollback commands section: down should be removed, inclu
             
         To mark a dbchange as implemented
         	bee dbchange:mark <database> <name of file>
+        	
+        To mark all dbchanges as implemented
+        	bee dbchange:markall <database>
         	
         To unmark a dbchange as implemented (or mark as not implemented)
         	bee dbchange:mark <database> <name of file>

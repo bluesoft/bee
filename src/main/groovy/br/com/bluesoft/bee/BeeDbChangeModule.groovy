@@ -43,6 +43,7 @@ public class BeeDbChangeModule implements BeeWriter {
 		"up": [1, 2],
 		"down": [2, 2],
 		"mark": [2, 2],
+		"markall": [1, 1],
 		"unmark": [2, 2]]
 
 	def usage() {
@@ -53,6 +54,7 @@ public class BeeDbChangeModule implements BeeWriter {
 		println "         dbchange:up connection <file> - runs all pending dbchange files, or one if specified"
 		println "         dbchange:down connection file - runs a dbchange rollback action"
 		println "         dbchange:mark connection file - mark a file as executed"
+		println "         dbchange:markall connection - mark All files as executed"
 		println "         dbchange:unmark connection file - unmark a file as executed"
 	}
 
@@ -89,6 +91,9 @@ public class BeeDbChangeModule implements BeeWriter {
 				break;
 			case "mark":
 				actionRunner = new BeeDbChangeMarkAction(options: options, out: this)
+				break;
+			case "markall":
+				actionRunner = new BeeDbChangeMarkAllAction(options: options, out: this)
 				break;
 			case "unmark":
 				actionRunner = new BeeDbChangeUnmarkAction(options: options, out: this)
