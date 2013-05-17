@@ -98,7 +98,7 @@ class OracleDatabaseReader implements DatabaseReader {
 
 	static final def TABLES_COLUMNS_QUERY = '''
 			select ut.table_name, column_name, data_type, nullable, 
-				   coalesce(data_precision, data_length) data_size, 
+				   coalesce(data_precision, data_length) data_size, char_used as size_type, 
 				   coalesce(data_scale, 0) data_scale, data_default, column_id
 			from   user_tab_cols utc join user_tables ut on utc.table_name = ut.table_name
 			where  hidden_column = 'NO'
@@ -107,7 +107,7 @@ class OracleDatabaseReader implements DatabaseReader {
 		'''
 	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
 			select ut.table_name, column_name, data_type, nullable, 
-				   coalesce(data_precision, data_length) data_size, 
+				   coalesce(data_precision, data_length) data_size, char_used as size_type, 
 				   coalesce(data_scale, 0) data_scale, data_default, column_id
 			from   user_tab_cols utc join user_tables ut on utc.table_name = ut.table_name
 			where  hidden_column = 'NO'
@@ -121,13 +121,14 @@ class OracleDatabaseReader implements DatabaseReader {
 			rows = sql.rows(TABLES_COLUMNS_QUERY_BY_NAME, [objectName])
 		} else {
 			rows = sql.rows(TABLES_COLUMNS_QUERY)
-		}
+		}	
 		rows.each({
 			def table = tables[it.table_name.toLowerCase()]
 			def column = new TableColumn()
 			column.name = it.column_name.toLowerCase()
 			column.type = getColumnType(it.data_type)
 			column.size = it.data_size
+			column.sizeType = getColumnSizeType(it.size_type)
 			column.scale = it.data_scale
 			column.nullable = it.nullable == 'N' ? false : true
 			def defaultValue = it.data_default
@@ -146,6 +147,17 @@ class OracleDatabaseReader implements DatabaseReader {
 			default:
 				return oracleColumnType.toLowerCase()
 		}
+	}
+	
+	private def getColumnSizeType(String sizeType){
+		def result = ""
+		if (sizeType == "B") {
+			result = "BYTE"
+		}
+		if (sizeType == "C") {
+			result = "CHAR"
+		}
+		result
 	}
 
 

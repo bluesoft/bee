@@ -11,7 +11,11 @@ abstract class BeeSchemaCreator {
 	def createColumn(def column) {
 		def result = "    ${column.name} ${column.type}"
 		if(column.type in ['char', 'varchar'])
-			result += "(${column.size})"
+			if(column.sizeType != null)
+				result += "(${column.size} ${column.sizeType})"
+			else
+				result += "(${column.size})"
+				
 		if(column.type == 'number')
 			if(column.scale > 0)
 				result += "(${column.size}, ${column.scale})"

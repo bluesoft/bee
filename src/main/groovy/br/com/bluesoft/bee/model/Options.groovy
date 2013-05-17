@@ -66,6 +66,7 @@ public class Options {
 		println "         schema"
 		println "         data"
 		println "         dbchange"
+		println "         dbseed"
 	}
 
 	boolean parse(def args) {

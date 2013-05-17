@@ -221,6 +221,7 @@ public class OracleDatabaseReaderTableTest {
 		def nomeRazao = [table_name:'PESSOA',
 					column_name:'NOME_RAZAO',
 					data_type:"VARCHAR2",
+					size_type: "BYTE",
 					data_size:30,
 					data_scale:"0",
 					nullable:"Y",

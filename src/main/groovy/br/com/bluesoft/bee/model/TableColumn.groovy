@@ -43,6 +43,7 @@ class TableColumn {
 	String name
 	String type
 	Integer size
+	String sizeType
 	Integer scale = 0
 	Boolean nullable = false
 	String defaultValue

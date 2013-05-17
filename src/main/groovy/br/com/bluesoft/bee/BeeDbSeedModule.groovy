@@ -30,67 +30,57 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee
+package br.com.bluesoft.bee;
 
-import java.util.jar.*
+import br.com.bluesoft.bee.service.BeeWriter
 
-import br.com.bluesoft.bee.model.Options
 
-class Bee {
+public class BeeDbSeedModule implements BeeWriter {
 
-	static def cliBuilder
+	def parameterCount = [
+		"create_core_data": [1, 1]]
 
-	static getRunner(options) {
-		def runner = null
-
-		switch(options.moduleName) {
-			case "dbchange":
-				runner = new BeeDbChangeModule()
-				break;
-			case "dbseed":
-				runner = new BeeDbSeedModule()
-				break;
-			case "schema":
-				runner = new BeeSchemaModule()
-				break;
-			case "data":
-				runner = new BeeDataModule()
-				break;
-			default:
-				options.usage()
-				System.exit(0)
-		}
-
-		return runner
+	def usage() {
+		println "usage: bee <options> dbchange:action <parameters>"
+		println "Actions:"
+		println "         dbseed:create_core_data"
 	}
 
-	static getVersion() {
-		def resources = Thread.currentThread().getContextClassLoader().getResources(JarFile.MANIFEST_NAME)
-		def version = "test"
+	def parseOptions(options) {
+		def action = options.actionName
+		def arguments = options.arguments
 
-		resources.each {
-			Manifest manifest = new Manifest(it.openStream())
-			if(manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_TITLE] == 'bee') {
-				version = manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_VERSION]
-			}
-		}
-
-		return version
-	}
-
-	static main(args) {
-		def version = getVersion()
-		println "Bee - v. ${version} - Bluesoft (2013) - GPL - All rights reserved"
-		Options options = Options.instance
-		if(!options.parse(args)) {
-			options.usage()
-			System.exit(1)
-		}
-		def runner = getRunner(options)
-		if(runner == null) {
+		if(parameterCount[action] == null) {
 			usage()
 			System.exit 0
 		}
-		runner.run(options)
+
+		def min = parameterCount[action][0]
+		def max = parameterCount[action][1]
+
+		if(arguments.size > max || arguments.size < min) {
+			usage()
+			System.exit 0
+		}
+
+		def actionRunner = null
+		switch(action) {
+			case "create_core_data":
+				actionRunner = new BeeDbSeedCreateCoreDataAction(options: options, out: this)
+				break;
+		}
+
+		return actionRunner;
+	}
+
+	def run(options) {
+		def actionRunner = parseOptions(options)
+		if(actionRunner)
+			if(!actionRunner.run())
+				System.exit(1)
+	}
+
+	void log(String msg) {
+		println msg
 	}
 }

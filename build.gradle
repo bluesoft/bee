@@ -6,7 +6,7 @@ mainClassName = "br.com.bluesoft.bee.Bee"
 
 group = 'br.com.bluesoft.bee'
 def artifact = 'bee'
-version = '1.32'
+version = '1.33'
 
 def startScriptsDir = new File("$buildDir/scripts")
 
@@ -20,8 +20,8 @@ dependencies {
 	compile group: 'org.codehaus.jackson', name: 'jackson-mapper-lgpl', version: '1.5.6'
 	compile group: 'commons-cli', name: 'commons-cli', version: '1.2'
 	testCompile "org.spockframework:spock-core:0.6-groovy-1.8"
-	testCompile group: 'cglib', name: 'cglib-nodep', version: '2.2'	
-	testCompile group: 'org.mockito', name: 'mockito-core', version: '1.8.5'	
+	testCompile group: 'cglib', name: 'cglib-nodep', version: '2.2'
+	testCompile group: 'org.mockito', name: 'mockito-core', version: '1.8.5'
 }
 
 startScripts.doLast {
@@ -30,12 +30,12 @@ startScripts.doLast {
 		def script = it
 		def scriptText = script.text
 		scriptText = scriptText.replaceAll('CLASSPATH=.*', 'for i in \\$APP_HOME/lib/*;do CLASSPATH=\\$CLASSPATH:\\$i; done')
- 		script.write scriptText
+		script.write scriptText
 	}
 }
 
 jar {
-    manifest {
-        attributes 'Implementation-Title': "${artifact}", 'Implementation-Version': "${version}"
-    }
+	manifest {
+		attributes 'Implementation-Title': "${artifact}", 'Implementation-Version': "${version}"
+	}
 }
