@@ -23,6 +23,7 @@ public class BeeOracleSchemaCreatorAction {
 	public void run() {
 
 		def objectName = options.arguments[0]
+		def dataFolderPath = new File(options.dataDir.absolutePath, 'data')
 
 		out.log('importing schema metadata from the reference files')
 		def schema = getImporter().importMetaData()
@@ -41,6 +42,9 @@ public class BeeOracleSchemaCreatorAction {
 
 		out.println("generating tables...")
 		beeSchemaCreator.createTables(file, schema)
+		
+		out.println("generating core data...")
+		beeSchemaCreator.createCoreData(file, schema, dataFolderPath)
 
 		out.println("generating constraints...")
 		beeSchemaCreator.createPrimaryKeys(file, schema)
@@ -64,6 +68,7 @@ public class BeeOracleSchemaCreatorAction {
 		out.println("generating triggers...")
 		beeSchemaCreator.createTriggers(file, schema)
 
+		
 		def env = System.getenv()
 		if(env['EDITOR']) {
 			println "Opening editor ${env['EDITOR']}"

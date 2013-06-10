@@ -6,7 +6,7 @@ import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.service.BeeWriter
 
 
-class BeeDbChangeMarkAllAction {
+class BeeDbSeedMarkAllAction {
 	Options options
 	BeeWriter out
 

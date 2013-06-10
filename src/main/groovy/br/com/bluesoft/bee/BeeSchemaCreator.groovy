@@ -1,5 +1,7 @@
 package br.com.bluesoft.bee
 
+import br.com.bluesoft.bee.util.CsvUtil;
+
 
 abstract class BeeSchemaCreator {
 	
@@ -174,5 +176,67 @@ abstract class BeeSchemaCreator {
 
 	void createTriggers(def file, def schema) {
 		schema.triggers*.value.sort().each { file << "create or replace ${it.text}/\n\n" }
+	}
+	
+	void createCoreData(def file, def schema, def dataFolderPath) {
+		def listFiles = dataFolderPath.listFiles()
+		listFiles.each {
+			if(it.name.endsWith(".csv")) {
+				def tableName = it.name[0..-5]
+				def csvFile = new File(dataFolderPath, tableName + ".csv")
+				def fileData = CsvUtil.read(csvFile)
+				def table = schema.tables[tableName]
+				def columnNames = []
+				def columns = [:]
+
+				if (table != null) {
+					table.columns.each{
+						columns[it.value.name] = it.value.type
+								columnNames << it.value.name
+					}
+				
+					def counterColumnNames = 1
+					def counterValue = 1
+	
+					def query = new StringBuilder()
+					for (int i = 0; i < fileData.size; i++) {
+						query << "insert into ${tableName} ("
+						columnNames.each {
+							query << it
+							if(counterColumnNames < (columnNames.size())) {
+								query << ", "
+							}
+							counterColumnNames++
+						}
+						query << ") "
+						query << "values ("
+						def params = []
+						fileData[i].each() {
+							def fieldValue = it.toString()
+							params.add(fieldValue)
+							if (!fieldValue?.isNumber()) {
+								fieldValue = fieldValue.replaceAll("\'", "\"")
+								if(fieldValue != 'null'){
+									fieldValue = "\'" + fieldValue + "\'"
+								}
+							}
+							query << fieldValue
+							if (counterValue < (columnNames.size())) {
+								query << ", "
+							}
+							counterValue++
+						}
+						query << ");\n"
+						counterColumnNames = 1
+						counterValue = 1
+						String queryString = query.toString()
+						queryString << "commit;\n"
+					}
+					file.append(query.toString(), 'utf-8')
+				} else {
+					println("Warning: csv file ${tableName} without schema definition")
+				}
+			}
+		}
 	}
 }
