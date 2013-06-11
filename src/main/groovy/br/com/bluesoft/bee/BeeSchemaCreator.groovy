@@ -229,9 +229,8 @@ abstract class BeeSchemaCreator {
 						query << ");\n"
 						counterColumnNames = 1
 						counterValue = 1
-						String queryString = query.toString()
-						queryString << "commit;\n"
 					}
+					query << "commit;\n"
 					file.append(query.toString(), 'utf-8')
 				} else {
 					println("Warning: csv file ${tableName} without schema definition")
