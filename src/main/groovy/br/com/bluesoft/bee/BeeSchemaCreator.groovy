@@ -155,13 +155,18 @@ abstract class BeeSchemaCreator {
 	}
 
 	void createViews(def file, def schema) {
-		schema.views*.value.sort().each { file << "create or replace view ${it.name} as ${it.text};\n\n" }
+		schema.views*.value.sort().each {
+			def view = "create or replace view ${it.name} as ${it.text};\n\n"
+			file.append(view.toString(), 'utf-8')
+		}
 	}
 
 	void createPackages(def file, def schema) {
 		schema.packages*.value.sort().each {
-			file << "create or replace ${it.text}/\n\n"
-			file << "create or replace ${it.body}/\n\n"
+			def text = "create or replace ${it.text}\n/\n\n"
+			def body = "create or replace ${it.body}\n/\n\n"
+			file.append(text.toString(), 'utf-8')
+			file.append(body.toString(), 'utf-8')
 		}
 	}
 
@@ -170,12 +175,16 @@ abstract class BeeSchemaCreator {
 			def text = []
 			it.text.eachLine { text << it }
 			def text2 = text[1..text.size()-1].join("\n")
-			file << "create or replace ${text2}\n/\n\n"
+			def procedure = "create or replace ${text2}\n/\n\n" 
+			file.append(procedure.toString(), 'utf-8')
 		}
 	}
 
 	void createTriggers(def file, def schema) {
-		schema.triggers*.value.sort().each { file << "create or replace ${it.text}/\n\n" }
+		schema.triggers*.value.sort().each {
+			def trigger = "create or replace ${it.text}\n/\n\n"
+			file.append(trigger.toString(), 'utf-8')
+		}
 	}
 	
 	void createCoreData(def file, def schema, def dataFolderPath) {
@@ -232,8 +241,6 @@ abstract class BeeSchemaCreator {
 					}
 					query << "commit;\n"
 					file.append(query.toString(), 'utf-8')
-				} else {
-					println("Warning: csv file ${tableName} without schema definition")
 				}
 			}
 		}

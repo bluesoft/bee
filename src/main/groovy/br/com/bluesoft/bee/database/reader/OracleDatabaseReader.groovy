@@ -150,14 +150,13 @@ class OracleDatabaseReader implements DatabaseReader {
 	}
 	
 	private def getColumnSizeType(String sizeType){
-		def result = ""
 		if (sizeType == "B") {
-			result = "BYTE"
+			return "BYTE"
+		} else if (sizeType == "C") {
+			return "CHAR"
+		} else {
+			return null
 		}
-		if (sizeType == "C") {
-			result = "CHAR"
-		}
-		result
 	}
 
 
