@@ -248,6 +248,7 @@ class MySqlDatabaseReader implements DatabaseReader {
 			constraint.type = getConstraintType(it.constraint_type)
 			def onDelete = it.delete_rule?.toLowerCase()
 			constraint.onDelete = onDelete
+			constraint.status = 'enabled'
 			table.constraints[constraint.name] = constraint
 		})
 	}

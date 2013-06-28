@@ -241,7 +241,7 @@ class OracleDatabaseReader implements DatabaseReader {
 
 	final static def CONSTRAINTS_QUERY = '''
 		select uc.table_name, uc.constraint_name, uc.constraint_type, uc2.table_name ref_table,
-		   uc.index_name, uc.delete_rule
+		   uc.index_name, uc.delete_rule, uc.status
 		from   user_constraints uc
 			   left join user_constraints uc2 on uc.r_constraint_name = uc2.constraint_name
 			   join user_tables ut on uc.table_name = ut.table_name
@@ -250,7 +250,7 @@ class OracleDatabaseReader implements DatabaseReader {
 	'''
 	final static def CONSTRAINTS_QUERY_BY_NAME = '''
 		select uc.table_name, uc.constraint_name, uc.constraint_type, uc2.table_name ref_table,
-		   uc.index_name, uc.delete_rule
+		   uc.index_name, uc.delete_rule, uc.status
 		from   user_constraints uc
 			   left join user_constraints uc2 on uc.r_constraint_name = uc2.constraint_name
 			   join user_tables ut on uc.table_name = ut.table_name
@@ -276,6 +276,8 @@ class OracleDatabaseReader implements DatabaseReader {
 			constraint.type = it.constraint_type
 			def onDelete = it.delete_rule?.toLowerCase()
 			constraint.onDelete = onDelete == 'no action' ? null : onDelete
+			def status = it.status?.toLowerCase()
+			constraint.status = status
 			table.constraints[constraint.name] = constraint
 		})
 	}

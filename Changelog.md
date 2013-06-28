@@ -10,3 +10,5 @@ Updated funtion schema:recreate_oracle and schema:recreate_mysql, now creating i
 1.34
 bug fix encoding problems
 bug fix metadata files generation 
+1.35
+Added new function to validate if a constraint is enabled or not (Works only in Oracle)
