@@ -1,9 +1,7 @@
 package br.com.bluesoft.bee
 
-import br.com.bluesoft.bee.model.Options;
-import br.com.bluesoft.bee.model.TableColumn;
-import br.com.bluesoft.bee.service.BeeWriter;
-import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.model.TableColumn
+
 
 class BeeMySqlSchemaCreator extends BeeSchemaCreator{
 
@@ -61,7 +59,13 @@ class BeeMySqlSchemaCreator extends BeeSchemaCreator{
 			return ""
 
 		constraint = constraint.value
-
+		
+		def constraintRefColumn = table.columns.find({ it.value.name == constraint.columns.first()})
+		
+		if (constraintRefColumn != null && constraintRefColumn.value.autoIncrement == "auto_increment") {
+			return ""
+		}
+		
 		return "alter table ${table.name} add primary key (" + constraint.columns.join(',') + ");\n"
 	}
 	

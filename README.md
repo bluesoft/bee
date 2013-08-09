@@ -17,6 +17,7 @@ Download the binary distribution and unzip it. There are 2 folders: `bin` and `l
 Put your jdbc jar into the `lib` folder.
 
 # Download Links
+   * 1.36
    * 1.35 - http://www.mediafire.com/?2ywfkitxkzdk1j7
    * 1.34 - http://www.mediafire.com/?bktxyw42rrrqzae
    * 1.33 - http://www.mediafire.com/?ygx3ja1jedbzh4g
