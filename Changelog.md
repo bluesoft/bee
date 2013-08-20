@@ -14,3 +14,5 @@ bug fix metadata files generation
 Added new function to validate if a constraint is enabled or not (Works only in Oracle)
 1.36
 bug fix schema:recreate_mysql duplicating primary key statement
+1.37
+bug fix dbchange:markall in mysql

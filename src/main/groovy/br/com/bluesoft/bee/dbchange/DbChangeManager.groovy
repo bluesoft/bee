@@ -34,7 +34,6 @@ package br.com.bluesoft.bee.dbchange
 
 import br.com.bluesoft.bee.service.BeeWriter
 import java.sql.SQLException
-import java.text.MessageFormat;
 import java.util.List
 
 import br.com.bluesoft.bee.database.ConnectionInfo
@@ -43,8 +42,8 @@ import br.com.bluesoft.bee.service.BeeWriter
 class DbChangeManager {
 
 	final static def SELECT_TABLE = "select * from dbchanges"
-	final static def CREATE_TABLE_ORACLE = "create table dbchanges(arquivo_timestamp number(14), arquivo_nome varchar(60) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
-	final static def CREATE_TABLE = "create table dbchanges(arquivo_timestamp bigint, arquivo_nome varchar(60) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
+	final static def CREATE_TABLE_ORACLE = "create table dbchanges(arquivo_timestamp number(14), arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
+	final static def CREATE_TABLE = "create table dbchanges(arquivo_timestamp bigint, arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
 	final static def INSERT_INTO_DBCHANGES = "insert into dbchanges(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?, current_timestamp)"
 	final static def DELETE_FROM_DBCHANGES = "delete from dbchanges where arquivo_timestamp = ?"
 	final static def MESSAGE_THERE_IS_NO_INSTRUCTIONS = "!!!Error: There is no ::up/::down statement in dbchange file"
@@ -282,7 +281,7 @@ class DbChangeManager {
 		
 		def listaParaExecutar = (listaArquivo - listaBanco)
 		listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
-
+		
 		if (listaParaExecutar.size > 0) {
 			logger.log "marking ${listaParaExecutar.size} file(s)"
 			listaParaExecutar.each {
