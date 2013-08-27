@@ -24,5 +24,6 @@ class CsvUtilTest extends Specification {
 		'xx\\,yy,zz\nyy'		|	[['xx,yy', 'zz'], ['yy']]
 		'xx,,zz\nyy'			|	[['xx', null , 'zz'], ['yy']]
 		'xx,yy,'				|	[['xx', 'yy', null]]
+		'xx,yy\nyy,zz\\nzz'     |   [['xx', 'yy'], ['yy', 'zz\nzz']]
 	}
 }

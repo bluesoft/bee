@@ -39,7 +39,7 @@ class CsvUtil {
 		def result = []
 		def matcher = line.split("(?<!\\\\),")
 		matcher.each {
-			def campo = it.trim().replace("\\,", ",")
+			def campo = it.trim().replace("\\,", ",").replace("\\n", "\n")
 			if(campo.equals(""))
 				result << null
 			else
@@ -76,7 +76,7 @@ class CsvUtil {
 		def linha = new StringBuffer()
 		row.each {
 			if(it != null)
-				linha << ("${it}".replace(",", "\\,")) + ",";
+				linha << ("${it}".replace(",", "\\,").replace("\n", "\\n")) + ",";
 			else {
 				linha << ","
 			}
