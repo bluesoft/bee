@@ -16,22 +16,6 @@ Download the binary distribution and unzip it. There are 2 folders: `bin` and `l
 
 Put your jdbc jar into the `lib` folder.
 
-# Download Links
-   * 1.37 - http://www.mediafire.com/?2j3s1bmfzs22ptn
-   * 1.36 - http://www.mediafire.com/?dhbd8aepgd4dcy9
-   * 1.35 - http://www.mediafire.com/?2ywfkitxkzdk1j7
-   * 1.34 - http://www.mediafire.com/?bktxyw42rrrqzae
-   * 1.33 - http://www.mediafire.com/?ygx3ja1jedbzh4g
-   * 1.32 - http://www.mediafire.com/?kyohudabkh96o27
-   * 1.31 - http://www.mediafire.com/?19bzbi1zrhwd343
-   * 1.30 - http://www.mediafire.com/?zf16m0mw23e7278
-   * 1.29 - http://www.mediafire.com/?ugdnltu9odyd0tt
-   * 1.28 - http://www.mediafire.com/?43reirxlhozbgtn
-   * 1.27 - http://www.mediafire.com/?vbzbj54zr6zcxdo
-   * 1.26 - http://www.mediafire.com/?s9rc9a1mqyn8mk2
-   * 1.25 - http://www.mediafire.com/?u8d8uypipeta28p
-   * 1.24 - http://www.mediafire.com/?j68aurg9z90nf7h
-
 ## Configuration
 
 All modules use by the file "bee.properties" by default. This file contains the database connection settings. There may be several database configurations inside this file.
