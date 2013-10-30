@@ -1,6 +1,11 @@
 package br.com.bluesoft.bee
 
-import br.com.bluesoft.bee.util.CsvUtil;
+import java.text.SimpleDateFormat;
+
+import br.com.bluesoft.bee.util.CsvUtil
+
+
+
 
 
 abstract class BeeSchemaCreator {
@@ -197,6 +202,7 @@ abstract class BeeSchemaCreator {
 				def table = schema.tables[tableName]
 				def columnNames = []
 				def columns = [:]
+				def columnTypes = [:]
 
 				if (table != null) {
 					table.columns.each{
@@ -210,8 +216,9 @@ abstract class BeeSchemaCreator {
 					def query = new StringBuilder()
 					for (int i = 0; i < fileData.size; i++) {
 						query << "insert into ${tableName} ("
-						columnNames.each {
-							query << it
+						columnNames.eachWithIndex {columName, index ->
+							query << columName
+							columnTypes[index] = columns[columName]
 							if(counterColumnNames < (columnNames.size())) {
 								query << ", "
 							}
@@ -220,14 +227,26 @@ abstract class BeeSchemaCreator {
 						query << ") "
 						query << "values ("
 						def params = []
-						fileData[i].each() {
-							def fieldValue = it.toString()
+						fileData[i].eachWithIndex { columnValue, index2 ->
+							def fieldValue = columnValue.toString()
 							params.add(fieldValue)
-							if (!fieldValue?.isNumber()) {
-								fieldValue = fieldValue.replaceAll("\'", "\"")
-								if(fieldValue != 'null'){
+							def columnType = columnTypes[index2]
+							def isString = columnType == 'varchar' || columnType == 'varchar2'
+							def isDate = columnType == 'date'
+							def isNotNumber = !fieldValue?.isNumber() 
+							if (isNotNumber && !isDate || isString) {
+								fieldValue = fieldValue.replaceAll("\'", "\''")
+								if (fieldValue != 'null') {
 									fieldValue = "\'" + fieldValue + "\'"
 								}
+							}
+							if (isDate && fieldValue != 'null') {
+								fieldValue = fieldValue.replaceAll("\'", "")
+								SimpleDateFormat inputSdf = new SimpleDateFormat('yyyy-MM-dd')
+								SimpleDateFormat outputSdf = new SimpleDateFormat('yyyy-MM-dd')
+								def date = inputSdf.parse(fieldValue);
+								fieldValue = outputSdf.format(date)
+								fieldValue = "\'" + fieldValue + "\'"
 							}
 							query << fieldValue
 							if (counterValue < (columnNames.size())) {

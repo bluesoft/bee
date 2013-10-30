@@ -16,3 +16,6 @@ Added new function to validate if a constraint is enabled or not (Works only in 
 bug fix schema:recreate_mysql duplicating primary key statement
 1.37
 bug fix dbchange:markall in mysql
+1.40
+bug fix - Single quotes duplicated in insert into query
+bug-fix - String fields not encapsulated with single quotes when value is number
