@@ -369,15 +369,16 @@ class PostgresDatabaseReader implements DatabaseReader {
 	}
 
 	final static def VIEWS_QUERY = '''
-		select view_name, text
-		from   user_views
-		order  by view_name
+		select table_name as view_name, view_definition as text 
+		from information_schema.views 
+		where table_schema = 'public'
+		order by view_name;
 	'''
 	final static def VIEWS_QUERY_BY_NAME = '''
-		select view_name, text
-		from   user_views
-		where  view_name = upper(?)
-		order  by view_name
+		select table_name as view_name, view_definition as text 
+		from information_schema.views 
+		where table_schema = 'public' and view_name = upper(?)
+		order by view_name
 	'''
 	def getViews(objectName){
 		def views = [:]
