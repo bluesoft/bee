@@ -19,3 +19,5 @@ bug fix dbchange:markall in mysql
 1.40
 bug fix - Single quotes duplicated in insert into query
 bug-fix - String fields not encapsulated with single quotes when value is number
+1.41
+bug fix - schema:recreate_mysql not escaping strings in defaultValue
