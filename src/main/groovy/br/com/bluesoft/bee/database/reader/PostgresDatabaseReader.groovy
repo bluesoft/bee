@@ -469,56 +469,18 @@ class PostgresDatabaseReader implements DatabaseReader {
 			procedure.text = body
 	}
 
-	final static def PACKAGES_QUERY = '''
-		select name, type, text
-		from user_source
-		where type in ('PACKAGE', 'PACKAGE BODY')
-		order by name, type, line
-	'''
-	final static def PACKAGES_QUERY_BY_NAME = '''
-		select name, type, text
-		from user_source
-		where type in ('PACKAGE', 'PACKAGE BODY')
-		  and name = upper(?)
-		order by name, type, line
-	'''
-	def getPackages(objectName) {
-		def packages = [:]
-		def rows
-
-		if(objectName) {
-			rows = sql.rows(PACKAGES_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(PACKAGES_QUERY)
-		}
-
-		rows.each({
-			def packageName = it.name.toLowerCase()
-			def pack = packages[packageName] ?: new Package()
-			pack.name = packageName
-			if (it.type == 'PACKAGE') {
-				pack.text += it.text
-			} else {
-				pack.body += it.text
-			}
-			packages[pack.name] = pack
-		})
-
-		return packages
-	}
-
 	final static def TRIGGERS_QUERY = '''
-		select name, text
-		from user_source
-		where type in 'TRIGGER'
-		order by name, line
+		SELECT trigger_name as name, action_statement as text 
+		FROM information_schema.triggers 
+		where trigger_schema = 'public'
+		order by name
 	'''
 	final static def TRIGGERS_QUERY_BY_NAME = '''
-		select name, text
-		from user_source
-		where type in 'TRIGGER'
+		SELECT trigger_name as name, action_statement as text 
+		FROM information_schema.triggers 
+		where trigger_schema = 'public'
 		and  name = upper(?)
-		order by name, line
+		order by name
 	'''
 	def getTriggers(objectName) {
 		def triggers = [:]
