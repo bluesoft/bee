@@ -39,11 +39,17 @@ You can also specify an alternate configuration file using the -DdatabaseConfig 
           <password> - connection password.
 
       Example:
-            Configuring a database called 'delta'.
+            Configuring a database called 'delta' on Oracle.
                   delta.driver=oracle.jdbc.OracleDriver
                   delta.url=jdbc:oracle:thin:@server:1111:delta
                   delta.user=delta123
                   delta.password=delta123
+                  
+            Configuring a database called 'test' on Mysql.
+                  test.driver=com.mysql.jdbc.Driver
+                  test.url=mysql://server:3306/test
+                  test.user=test123
+                  test.password=test123
 
 ## Schema
 
