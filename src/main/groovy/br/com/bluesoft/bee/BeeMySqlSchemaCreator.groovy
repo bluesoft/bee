@@ -9,7 +9,11 @@ class BeeMySqlSchemaCreator extends BeeSchemaCreator{
 		def result = "    ${column.name} ${column.type}"
 		
 		if (column.defaultValue)
-			result += " default ${column.defaultValue}"
+			if ( (column.defaultValue != null && column.defaultValue.isNumber()) || column.defaultValue == 'CURRENT_TIMESTAMP' || column.defaultValue == 'NULL' ) {
+				result += " default ${column.defaultValue}"
+			} else if(column.defaultValue != null) {
+				result += " default '${column.defaultValue}'"
+			}
 		if (column.onUpdateCurrentTimestamp)
 			result += " on update CURRENT_TIMESTAMP"
 		if (!column.nullable) {
