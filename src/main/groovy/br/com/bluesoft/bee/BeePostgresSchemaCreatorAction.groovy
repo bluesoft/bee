@@ -1,11 +1,10 @@
 package br.com.bluesoft.bee
 
-import br.com.bluesoft.bee.importer.JsonImporter;
-import br.com.bluesoft.bee.model.Options;
-import br.com.bluesoft.bee.service.BeeWriter;
+import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.model.Options
+import br.com.bluesoft.bee.service.BeeWriter
 
-
-class BeePostgresSchemaCreatorAction {
+public class BeePostgresSchemaCreatorAction {
 
 	Options options
 	BeeWriter out
@@ -36,36 +35,33 @@ class BeePostgresSchemaCreatorAction {
 
 		beeSchemaCreator = new BeePostgresSchemaCreator()
 
-		out.println("generating sequences...")
-		beeSchemaCreator.createSequences(file, schema)
-
+//		out.println("generating sequences...")
+//		beeSchemaCreator.createSequences(file, schema)
+//
 		out.println("generating tables...")
 		beeSchemaCreator.createTables(file, schema)
-		
-		out.println("generating core data...")
-		beeSchemaCreator.createCoreData(file, schema, dataFolderPath)
-
-		out.println("generating constraints...")
-		beeSchemaCreator.createPrimaryKeys(file, schema)
-		beeSchemaCreator.createUniqueKeys(file, schema)
-		beeSchemaCreator.createForeignKeys(file, schema)
-
+//		
+//		out.println("generating core data...")
+//		beeSchemaCreator.createCoreData(file, schema, dataFolderPath)
+//
+//		out.println("generating constraints...")
+//		beeSchemaCreator.createPrimaryKeys(file, schema)
+//		beeSchemaCreator.createUniqueKeys(file, schema)
+//		beeSchemaCreator.createForeignKeys(file, schema)
+//
 		out.println("generating indexes...")
 		beeSchemaCreator.createIndexes(file, schema)
 		beeSchemaCreator.createFunctionalIndexes(file, schema)
 		beeSchemaCreator.createBitmapIndexes(file, schema)
-
-		out.println("generating views...")
-		beeSchemaCreator.createViews(file, schema)
-
-		out.println("generating packages...")
-		beeSchemaCreator.createPackages(file, schema)
-
-		out.println("generating procedures...")
-		beeSchemaCreator.createProcedures(file, schema)
-
-		out.println("generating triggers...")
-		beeSchemaCreator.createTriggers(file, schema)
+//
+//		out.println("generating views...")
+//		beeSchemaCreator.createViews(file, schema)
+//
+//		out.println("generating procedures...")
+//		beeSchemaCreator.createProcedures(file, schema)
+//
+//		out.println("generating triggers...")
+//		beeSchemaCreator.createTriggers(file, schema)
 
 		
 		def env = System.getenv()

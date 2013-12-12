@@ -4,7 +4,6 @@ import java.text.MessageFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import br.com.bluesoft.bee.database.reader.DatabaseReader;
 import br.com.bluesoft.bee.model.Options;
 
 
@@ -22,6 +21,8 @@ public class RDBMSUtil {
 			return RDBMS.MYSQL
 		} else if(databaseType.equals("oracle")) {
 			return RDBMS.ORACLE
+		} else if(databaseType.equals("postgresql")) {
+			return RDBMS.POSTGRES
 		} else {
 			def mensagemDeErro = MessageFormat.format(MENSAGEM_DE_ERRO_BANCO_NAO_SUPORTADO, databaseType)
 			throw new IllegalArgumentException(mensagemDeErro)
