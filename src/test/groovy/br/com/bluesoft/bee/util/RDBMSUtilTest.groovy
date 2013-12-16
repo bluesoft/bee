@@ -7,7 +7,6 @@ import java.text.MessageFormat;
 import org.junit.Test;
 import org.mockito.Mock;
 import br.com.bluesoft.bee.model.Options;
-import br.com.bluesoft.bee.model.message.Message;
 import static org.junit.Assert.*;
 
 class RDBMSUtilTest {
@@ -35,6 +34,17 @@ class RDBMSUtilTest {
 		RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(options)
 		assertNotNull(oracleDatabaseType)
 		assertEquals(RDBMS.MYSQL, oracleDatabaseType);
+	}
+	
+	@Test
+	public void 'deve retornar o tipo Postgres'() {
+		Options options = new Options()
+		options.configFile = getProperties("/postgresTest.properties")
+		options.arguments[0] = "test"
+
+		RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(options)
+		assertNotNull(oracleDatabaseType)
+		assertEquals(RDBMS.POSTGRES, oracleDatabaseType);
 	}
 
 	@Test

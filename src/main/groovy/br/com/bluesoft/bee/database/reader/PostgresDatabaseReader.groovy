@@ -39,7 +39,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 
 	def sql
 	
-	
 	PostgresDatabaseReader (def sql) {
 		this.sql = sql
 	}
@@ -101,14 +100,18 @@ class PostgresDatabaseReader implements DatabaseReader {
 		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable, ic.numeric_precision as data_size, 
 			ic.numeric_scale as data_scale, ic.column_default as data_default
 		from information_schema.columns ic
+		inner join information_schema.tables it on it.table_name = ic.table_name
 		where ic.table_schema not in ('pg_catalog' , 'information_schema')
+		and it.table_type = 'BASE TABLE'
 		order by ic.table_name, ic.ordinal_position
 		'''
 	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
 		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable, ic.numeric_precision as data_size, 
 			ic.numeric_scale as data_scale, ic.column_default as data_default
 		from information_schema.columns ic
+		inner join information_schema.tables it on it.table_name = ic.table_name
 		where ic.table_schema not in ('pg_catalog' , 'information_schema')
+		and it.table_type = 'BASE TABLE'
         and ic.table_name = ?
 		order by ic.table_name, ic.ordinal_position
 	'''
@@ -162,7 +165,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 		    t.oid = ix.indrelid
 		    and i.oid = ix.indexrelid
 		    and a.attrelid = t.oid
-		    and a.attnum = ANY(ix.indkey)
 		    and t.relkind = 'r'
 		    and n.oid = i.relnamespace
 		    AND n.nspname NOT IN ('pg_catalog')
@@ -193,7 +195,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 		    t.oid = ix.indrelid
 		    and i.oid = ix.indexrelid
 		    and a.attrelid = t.oid
-		    and a.attnum = ANY(ix.indkey)
 		    and t.relkind = 'r'
 		    and n.oid = i.relnamespace
 		    and n.nspname not in ('pg_catalog')
@@ -237,21 +238,10 @@ class PostgresDatabaseReader implements DatabaseReader {
 		  and i.oid = ix.indexrelid
 		  and n.oid = i.relnamespace
 		  and a.attrelid = t.oid
-		  and a.attnum = ANY(indkey)
 		  and t.relname = ?
 		  and a.attnum = ?
 	'''
-	final static def INDEXES_COLUMNS_QUERY_BY_NAME = '''
-		select uic.table_name, uic.index_name, uic.column_name as column_name, utc.data_default,
-			   uic.descend
-		from   user_ind_columns uic
-			   join user_indexes ui on ui.index_name = uic.index_name
-			   left join user_constraints uc on uic.index_name = uc.index_name
-			   join user_tab_cols utc on (uic.column_name = utc.column_name and uic.table_name = utc.table_name)
-		where  uc.index_name is null
-		  and  ui.table_name = upper(?)
-		order  by uic.index_name, uic.column_position
-	'''
+	
 	private def fillIndexColumns(tables, objectName, columnIndexesMap) {
 		def rows = []
 		tables.each { tableKey, tableValue ->
@@ -264,14 +254,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 			}
 		}
 		
-		println "----------------------------------"
-		columnIndexesMap.each {	key, value -> 
-			def indices = value.split(' ')
-			indices.each {
-				println "IndexName => ${key.name} indKey => ${it}"
-			}
-		}
-		
 		rows.each({
 			it.each {
 				def table = it.table_name.toLowerCase()
@@ -280,7 +262,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 				def indexColumn = new IndexColumn()
 				indexColumn.name = it.column_name.toLowerCase()
 				indexColumn.descend = true
-				println indexColumn
 				index.columns << indexColumn
 			}
 		})
@@ -297,106 +278,116 @@ class PostgresDatabaseReader implements DatabaseReader {
 	}
 
 	final static def CONSTRAINTS_QUERY = '''
-		select uc.table_name, uc.constraint_name, uc.constraint_type, uc2.table_name ref_table,
-		   uc.index_name, uc.delete_rule, uc.status
-		from   user_constraints uc
-			   left join user_constraints uc2 on uc.r_constraint_name = uc2.constraint_name
-			   join user_tables ut on uc.table_name = ut.table_name
-		where  uc.constraint_type <> 'C'
-		order  by uc.table_name, uc.constraint_type, uc.constraint_name
+		select tc.table_name, tc.constraint_name, ccu.table_name as ref_table, tc.constraint_type, rc.delete_rule as delete_rule, 'enabled' as status
+		from information_schema.table_constraints tc
+			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
+			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
+		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key')
 	'''
 	final static def CONSTRAINTS_QUERY_BY_NAME = '''
-		select uc.table_name, uc.constraint_name, uc.constraint_type, uc2.table_name ref_table,
-		   uc.index_name, uc.delete_rule, uc.status
-		from   user_constraints uc
-			   left join user_constraints uc2 on uc.r_constraint_name = uc2.constraint_name
-			   join user_tables ut on uc.table_name = ut.table_name
-		where  uc.constraint_type <> 'C'
-		  and  uc.table_name = upper(?)
-		order  by uc.table_name, uc.constraint_type, uc.constraint_name
+		select tc.table_name, tc.constraint_name, ccu.table_name as ref_table, tc.constraint_type, rc.delete_rule as delete_rule, 'enabled' as status
+		from information_schema.table_constraints tc
+			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
+			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
+		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key') and tc.table_name = ?
 	'''
 	private def fillCostraints(tables, objectName) {
 		def rows
-//		if(objectName) {
-//			rows = sql.rows(CONSTRAINTS_QUERY_BY_NAME, [objectName])
-//		} else {
-//			rows = sql.rows(CONSTRAINTS_QUERY)
-//		}
-//
-//		rows.each({
-//			def tableName = it.table_name.toLowerCase()
-//			def table = tables[tableName]
-//
-//			def constraint = new Constraint()
-//			constraint.name = it.constraint_name.toLowerCase()
-//			constraint.refTable = it.ref_table?.toLowerCase()
-//			constraint.type = it.constraint_type
-//			def onDelete = it.delete_rule?.toLowerCase()
-//			constraint.onDelete = onDelete == 'no action' ? null : onDelete
-//			def status = it.status?.toLowerCase()
-//			constraint.status = status
-//			table.constraints[constraint.name] = constraint
-//		})
+		if(objectName) {
+			rows = sql.rows(CONSTRAINTS_QUERY_BY_NAME, [objectName])
+		} else {
+			rows = sql.rows(CONSTRAINTS_QUERY)
+		}
+
+		rows.each({
+			def tableName = it.table_name.toLowerCase()
+			def table = tables[tableName]
+
+			def constraint = new Constraint()
+			constraint.name = it.constraint_name.toLowerCase()
+			constraint.refTable = it.ref_table?.toLowerCase()
+			constraint.type = getConstraintType(it.constraint_type.toLowerCase())
+			def onDelete = it.delete_rule?.toLowerCase()
+			constraint.onDelete = onDelete == 'no action' ? null : onDelete
+			def status = it.status?.toLowerCase()
+			constraint.status = status
+			table.constraints[constraint.name] = constraint
+		})
 	}
+	
+	private getConstraintType(constraint_type) {
+		switch (constraint_type) {
+			case "primary key":
+				return "P"
+				break
+			case "unique":
+				return "U"
+				break
+			case "foreign key":
+				return "R"
+				break
+			default:
+				return constraint_type
+		}
+	} 
 
 	final static def CONSTRAINTS_COLUMNS_QUERY = '''
-		select ucc.table_name, ucc.constraint_name, ucc.column_name
-		from   user_cons_columns ucc
-			   join user_constraints uc on ucc.constraint_name = uc.constraint_name
-			   join user_tables ut on uc.table_name = ut.table_name
-		where  uc.constraint_type <> 'C'
-		order  by ucc.table_name, ucc.constraint_name, ucc.position
+		select tc.table_name, tc.constraint_name, kcu.column_name, ccu.table_name as ref_table, ccu.column_name as ref_field
+		from information_schema.table_constraints tc 
+			left join information_schema.key_column_usage kcu on tc.constraint_catalog = kcu.constraint_catalog and tc.constraint_schema = kcu.constraint_schema and tc.constraint_name = kcu.constraint_name
+			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
+			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
+		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key')
 	'''
 	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
-		select ucc.table_name, ucc.constraint_name, ucc.column_name
-		from   user_cons_columns ucc
-			   join user_constraints uc on ucc.constraint_name = uc.constraint_name
-			   join user_tables ut on uc.table_name = ut.table_name
-		where  uc.constraint_type <> 'C'
-		  and  uc.table_name = upper(?)
-		order  by ucc.table_name, ucc.constraint_name, ucc.position
+		select tc.table_name, tc.constraint_name, kcu.column_name, ccu.table_name as ref_table, ccu.column_name as ref_field
+		from information_schema.table_constraints tc 
+			left join information_schema.key_column_usage kcu on tc.constraint_catalog = kcu.constraint_catalog and tc.constraint_schema = kcu.constraint_schema and tc.constraint_name = kcu.constraint_name
+			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
+			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
+		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key') and tc.table_name = ? 
 	'''
 	private def fillCostraintsColumns(tables, objectName) {
 		def rows
-//		if(objectName) {
-//			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY_BY_NAME, [objectName])
-//		} else {
-//			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY)
-//		}
-//		rows.each({
-//			def tableName = it.table_name.toLowerCase()
-//			def table = tables[tableName]
-//			def constraint = table.constraints[it.constraint_name.toLowerCase()]
-//			constraint.columns << it.column_name.toLowerCase()
-//		})
+		if(objectName) {
+			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY_BY_NAME, [objectName])
+		} else {
+			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY)
+		}
+		rows.each({
+			def tableName = it.table_name.toLowerCase()
+			def table = tables[tableName]
+			def constraint = table.constraints[it.constraint_name.toLowerCase()]
+			constraint.columns << it.column_name.toLowerCase()
+		})
 	}
 
 	final static def SEQUENCES_QUERY = '''
 			select c.relname as sequence_name, '1' as min_value   
 			from pg_class c 
 			where c.relkind = 'S'
-			order by sequence_name
+			order by c.relname
 		'''
 	final static def SEQUENCES_QUERY_BY_NAME = '''
 			select c.relname as sequence_name, '1' as min_value   
 			from pg_class c 
-			where c.relkind = 'S' and sequence_name = upper(?)
-			order by sequence_name
+			where c.relkind = 'S' and c.relname = upper(?)
+			order by c.relname
 		'''
 	def getSequences(objectName){
 		def sequences = [:]
 		def rows
-//		if(objectName) {
-//			rows = sql.rows(SEQUENCES_QUERY_BY_NAME, [objectName])
-//		} else {
-//			rows = sql.rows(SEQUENCES_QUERY)
-//		}
-//		rows.each({
-//			def sequence = new Sequence()
-//			sequence.name = it.sequence_name.toLowerCase()
-//			sequence.minValue = it.min_value
-//			sequences[sequence.name] = sequence
-//		})
+		if(objectName) {
+			rows = sql.rows(SEQUENCES_QUERY_BY_NAME, [objectName])
+		} else {
+			rows = sql.rows(SEQUENCES_QUERY)
+		}
+		rows.each({
+			def sequence = new Sequence()
+			sequence.name = it.sequence_name.toLowerCase()
+			sequence.minValue = it.min_value
+			sequences[sequence.name] = sequence
+		})
 		return sequences
 	}
 
@@ -404,29 +395,29 @@ class PostgresDatabaseReader implements DatabaseReader {
 		select table_name as view_name, view_definition as text 
 		from information_schema.views 
 		where table_schema = 'public'
-		order by view_name;
+		order by view_name
 	'''
 	final static def VIEWS_QUERY_BY_NAME = '''
 		select table_name as view_name, view_definition as text 
 		from information_schema.views 
-		where table_schema = 'public' and view_name = upper(?)
+		where table_schema = 'public' and table_name = upper(?)
 		order by view_name
 	'''
 	def getViews(objectName){
 		def views = [:]
 		def rows
-//		if(objectName) {
-//			rows = sql.rows(VIEWS_QUERY_BY_NAME, [objectName])
-//		} else {
-//			rows = sql.rows(VIEWS_QUERY)
-//		}
-//
-//		rows.each({
-//			def view = new View()
-//			view.name = it.view_name.toLowerCase()
-//			view.text = it.text
-//			views[view.name] = view
-//		})
+		if(objectName) {
+			rows = sql.rows(VIEWS_QUERY_BY_NAME, [objectName])
+		} else {
+			rows = sql.rows(VIEWS_QUERY)
+		}
+
+		rows.each({
+			def view = new View()
+			view.name = it.view_name.toLowerCase()
+			view.text = it.text
+			views[view.name] = view
+		})
 		return views
 	}
 
