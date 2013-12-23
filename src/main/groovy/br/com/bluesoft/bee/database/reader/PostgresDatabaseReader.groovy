@@ -422,74 +422,65 @@ class PostgresDatabaseReader implements DatabaseReader {
 	}
 
 	final static def PROCEDURES_NAME_QUERY = '''
-		select distinct name
-		from user_source
-		where type in ('PROCEDURE', 'FUNCTION')
+		select p.proname as name
+		from pg_catalog.pg_namespace n
+		join pg_catalog.pg_proc p on pronamespace = n.oid
+		where n.nspname not like 'pg_%'
+		order by p.proname
 	'''
 	final static def PROCEDURES_NAME_QUERY_BY_NAME = '''
-		select distinct name
-		from user_source
-		where type in ('PROCEDURE', 'FUNCTION')
-		  and name = upper(?)
+		select p.proname as name
+		from pg_catalog.pg_namespace n
+		join pg_catalog.pg_proc p on pronamespace = n.oid
+		where n.nspname not like 'pg_%'
+		and p.proname = ?
+		order by p.proname
 	'''
 	def getProcedures(objectName) {
-		def procedures = [:]
-		def rows
-//		if(objectName) {
-//			rows = sql.rows(PROCEDURES_NAME_QUERY_BY_NAME, [objectName])
-//		} else {
-//			rows = sql.rows(PROCEDURES_NAME_QUERY)
-//		}
-//
-//		rows.each({
-//			def procedure = new Procedure(name: it.name.toLowerCase())
-//			procedures[procedure.name] = procedure
-//		})
-//
-//		getProceduresBody(procedures, objectName)
-//
+		def procedures = getProceduresBody(objectName)
 		return procedures
 	}
 
 	final static def PROCEDURES_BODY_QUERY = '''
-		select name, text
-		from user_source
-		where type in ('PROCEDURE', 'FUNCTION')
-		order by name, line	
+		select 
+			pp.proname as name,
+			pg_get_functiondef(pp.oid) as text
+		from pg_proc pp
+			inner join pg_namespace pn on (pp.pronamespace = pn.oid)
+			inner join pg_language pl on (pp.prolang = pl.oid)
+		where pl.lanname NOT IN ('c','internal') 
+			and pn.nspname NOT LIKE 'pg_%'
+			and pn.nspname <> 'information_schema'
+		order by pp.proname
 	'''
 	final static def PROCEDURES_BODY_QUERY_BY_NAME = '''
-		select name, text
-		from user_source
-		where type in ('PROCEDURE', 'FUNCTION')
-		  and name = upper(?)
-		order by name, line	
+		select 
+			pp.proname as name,
+			pg_get_functiondef(pp.oid) as text
+		from pg_proc pp
+			inner join pg_namespace pn on (pp.pronamespace = pn.oid)
+			inner join pg_language pl on (pp.prolang = pl.oid)
+		where pl.lanname NOT IN ('c','internal') 
+			and pn.nspname NOT LIKE 'pg_%'
+			and pn.nspname <> 'information_schema'
+			and pp.proname = ?
+		order by pp.proname
 	'''
-	def getProceduresBody(procedures, objectName) {
-		def body = ''
-		def name
+	def getProceduresBody(objectName) {
+		def procedures = [:]
 		def rows
 
-//		if(objectName) {
-//			rows = sql.rows(PROCEDURES_BODY_QUERY_BY_NAME, [objectName])
-//		} else {
-//			rows = sql.rows(PROCEDURES_BODY_QUERY)
-//		}
-//
-//		rows.each({
-//			if (it.name.toLowerCase() != name) {
-//				if (name) {
-//					def procedure = procedures[name]
-//					if (procedure)
-//						procedure.text = body
-//				}
-//				name = it.name.toLowerCase()
-//				body = it.text
-//			}
-//			body += it.text
-//		})
-		def procedure = procedures[name]
-		if (procedure)
-			procedure.text = body
+		if(objectName) {
+			rows = sql.rows(PROCEDURES_BODY_QUERY_BY_NAME, [objectName])
+		} else {
+			rows = sql.rows(PROCEDURES_BODY_QUERY)
+		}
+
+		rows.each({
+			def procedure = new Procedure(name: it.name.toLowerCase(), text: it.text)
+			procedures[procedure.name] = procedure
+		})
+		return procedures
 	}
 
 	final static def TRIGGERS_QUERY = '''

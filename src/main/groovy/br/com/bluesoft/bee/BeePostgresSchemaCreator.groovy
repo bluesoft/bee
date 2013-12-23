@@ -17,7 +17,6 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 	void createIndexes(def file, def schema) {
 		def tables = schema.tables.sort()
 		tables.each {
-			println "Table ${it.value.name}"
 			def table = it.value
 			def indexes = table.indexes*.value.findAll { it.type == 'n' }
 			def primaryKeys = table.constraints*.value.findAll {it.type == 'P'}
@@ -34,4 +33,12 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
 		file << "\n"
 	}
+	
+	void createProcedures(def file, def schema) {
+		schema.procedures*.value.sort().each {
+			def procedure = "${it.text}\n"
+			file.append(procedure.toString(), 'utf-8')
+		}
+	}
+	
 }

@@ -57,9 +57,9 @@ public class BeePostgresSchemaCreatorAction {
 //
 		out.println("generating views...")
 		beeSchemaCreator.createViews(file, schema)
-//
-//		out.println("generating procedures...")
-//		beeSchemaCreator.createProcedures(file, schema)
+
+		out.println("generating procedures...")
+		beeSchemaCreator.createProcedures(file, schema)
 //
 //		out.println("generating triggers...")
 //		beeSchemaCreator.createTriggers(file, schema)
