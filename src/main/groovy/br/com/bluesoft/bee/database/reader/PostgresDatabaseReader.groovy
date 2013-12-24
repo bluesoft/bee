@@ -423,19 +423,25 @@ class PostgresDatabaseReader implements DatabaseReader {
 
 	final static def PROCEDURES_NAME_QUERY = '''
 		select p.proname as name
-		from pg_catalog.pg_namespace n
-		join pg_catalog.pg_proc p on pronamespace = n.oid
+		from pg_namespace n
+		inner join pg_proc p on pronamespace = n.oid
+		inner join pg_type pt on (pt.oid = p.prorettype)
 		where n.nspname not like 'pg_%'
+		and n.nspname not in ('information_schema','pg_catalog','pg_toast')
+		and pt.typname <>  'trigger'
 		order by p.proname
 	'''
 	final static def PROCEDURES_NAME_QUERY_BY_NAME = '''
 		select p.proname as name
-		from pg_catalog.pg_namespace n
-		join pg_catalog.pg_proc p on pronamespace = n.oid
+		from pg_namespace n
+		join pg_proc p on pronamespace = n.oid
+		inner join pg_type pt on (pt.oid = p.prorettype)
 		where n.nspname not like 'pg_%'
+		and n.nspname not in ('information_schema','pg_catalog','pg_toast')
+		and pt.typname <>  'trigger'
 		and p.proname = ?
-		order by p.proname
-	'''
+		order by p.pronames	
+'''
 	def getProcedures(objectName) {
 		def procedures = getProceduresBody(objectName)
 		return procedures
@@ -447,9 +453,11 @@ class PostgresDatabaseReader implements DatabaseReader {
 			pg_get_functiondef(pp.oid) as text
 		from pg_proc pp
 			inner join pg_namespace pn on (pp.pronamespace = pn.oid)
+			inner join pg_type pt on (pt.oid = pp.prorettype)
 			inner join pg_language pl on (pp.prolang = pl.oid)
 		where pl.lanname NOT IN ('c','internal') 
 			and pn.nspname NOT LIKE 'pg_%'
+			and pt.typname <> 'trigger'
 			and pn.nspname <> 'information_schema'
 		order by pp.proname
 	'''
@@ -459,9 +467,11 @@ class PostgresDatabaseReader implements DatabaseReader {
 			pg_get_functiondef(pp.oid) as text
 		from pg_proc pp
 			inner join pg_namespace pn on (pp.pronamespace = pn.oid)
+			inner join pg_type pt on (pt.oid = pp.prorettype)
 			inner join pg_language pl on (pp.prolang = pl.oid)
 		where pl.lanname NOT IN ('c','internal') 
 			and pn.nspname NOT LIKE 'pg_%'
+			and pt.typname <> 'trigger'
 			and pn.nspname <> 'information_schema'
 			and pp.proname = ?
 		order by pp.proname
@@ -484,35 +494,51 @@ class PostgresDatabaseReader implements DatabaseReader {
 	}
 
 	final static def TRIGGERS_QUERY = '''
-		SELECT trigger_name as name, action_statement as text 
-		FROM information_schema.triggers 
-		where trigger_schema = 'public'
-		order by name
+		select 
+			pp.proname as name,
+			pg_get_functiondef(pp.oid) as text
+		from pg_proc pp
+			inner join pg_namespace pn on (pp.pronamespace = pn.oid)
+			inner join pg_type pt on (pt.oid = pp.prorettype)
+			inner join pg_language pl on (pp.prolang = pl.oid)
+		where pl.lanname NOT IN ('c','internal') 
+			and pn.nspname NOT LIKE 'pg_%'
+			and pt.typname = 'trigger'
+			and pn.nspname <> 'information_schema'
+		order by pp.proname
 	'''
 	final static def TRIGGERS_QUERY_BY_NAME = '''
-		SELECT trigger_name as name, action_statement as text 
-		FROM information_schema.triggers 
-		where trigger_schema = 'public'
-		and  name = upper(?)
-		order by name
+		select 
+			pp.proname as name,
+			pg_get_functiondef(pp.oid) as text
+		from pg_proc pp
+			inner join pg_namespace pn on (pp.pronamespace = pn.oid)
+			inner join pg_type pt on (pt.oid = pp.prorettype)
+			inner join pg_language pl on (pp.prolang = pl.oid)
+		where pl.lanname NOT IN ('c','internal') 
+			and pn.nspname NOT LIKE 'pg_%'
+			and pt.typname = 'trigger'
+			and pn.nspname <> 'information_schema'
+			and pp.proname = ?
+		order by pp.proname
 	'''
 	def getTriggers(objectName) {
 		def triggers = [:]
 		def rows
 
-//		if(objectName) {
-//			rows = sql.rows(TRIGGERS_QUERY_BY_NAME, [objectName])
-//		} else {
-//			rows = sql.rows(TRIGGERS_QUERY)
-//		}
-//
-//		rows.each({
-//			def triggerName = it.name.toLowerCase()
-//			def trigger = triggers[triggerName] ?: new Trigger()
-//			trigger.name = triggerName
-//			trigger.text += it.text
-//			triggers[triggerName] = trigger
-//		})
+		if(objectName) {
+			rows = sql.rows(TRIGGERS_QUERY_BY_NAME, [objectName])
+		} else {
+			rows = sql.rows(TRIGGERS_QUERY)
+		}
+
+		rows.each({
+			def triggerName = it.name.toLowerCase()
+			def trigger = triggers[triggerName] ?: new Trigger()
+			trigger.name = triggerName
+			trigger.text = it.text
+			triggers[triggerName] = trigger
+		})
 
 		return triggers
 	}
