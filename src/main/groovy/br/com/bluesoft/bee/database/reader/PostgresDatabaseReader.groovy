@@ -428,7 +428,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 		inner join pg_type pt on (pt.oid = p.prorettype)
 		where n.nspname not like 'pg_%'
 		and n.nspname not in ('information_schema','pg_catalog','pg_toast')
-		and pt.typname <>  'trigger'
 		order by p.proname
 	'''
 	final static def PROCEDURES_NAME_QUERY_BY_NAME = '''
@@ -438,7 +437,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 		inner join pg_type pt on (pt.oid = p.prorettype)
 		where n.nspname not like 'pg_%'
 		and n.nspname not in ('information_schema','pg_catalog','pg_toast')
-		and pt.typname <>  'trigger'
 		and p.proname = ?
 		order by p.pronames	
 '''
@@ -457,7 +455,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 			inner join pg_language pl on (pp.prolang = pl.oid)
 		where pl.lanname NOT IN ('c','internal') 
 			and pn.nspname NOT LIKE 'pg_%'
-			and pt.typname <> 'trigger'
 			and pn.nspname <> 'information_schema'
 		order by pp.proname
 	'''
@@ -471,7 +468,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 			inner join pg_language pl on (pp.prolang = pl.oid)
 		where pl.lanname NOT IN ('c','internal') 
 			and pn.nspname NOT LIKE 'pg_%'
-			and pt.typname <> 'trigger'
 			and pn.nspname <> 'information_schema'
 			and pp.proname = ?
 		order by pp.proname
@@ -495,32 +491,28 @@ class PostgresDatabaseReader implements DatabaseReader {
 
 	final static def TRIGGERS_QUERY = '''
 		select 
-			pp.proname as name,
-			pg_get_functiondef(pp.oid) as text
-		from pg_proc pp
-			inner join pg_namespace pn on (pp.pronamespace = pn.oid)
-			inner join pg_type pt on (pt.oid = pp.prorettype)
-			inner join pg_language pl on (pp.prolang = pl.oid)
-		where pl.lanname NOT IN ('c','internal') 
-			and pn.nspname NOT LIKE 'pg_%'
-			and pt.typname = 'trigger'
-			and pn.nspname <> 'information_schema'
-		order by pp.proname
+			trigger_name as name, 
+			action_timing, 
+			array_to_string(array_agg(event_manipulation::text),' or ') as event_manipulation,
+			event_object_table, 
+			action_orientation, 
+			action_statement 
+		from information_schema.triggers
+		group by trigger_name, action_timing, event_object_table, action_orientation, action_statement
+		order by trigger_name, action_timing, event_object_table, action_orientation, action_statement
 	'''
 	final static def TRIGGERS_QUERY_BY_NAME = '''
 		select 
-			pp.proname as name,
-			pg_get_functiondef(pp.oid) as text
-		from pg_proc pp
-			inner join pg_namespace pn on (pp.pronamespace = pn.oid)
-			inner join pg_type pt on (pt.oid = pp.prorettype)
-			inner join pg_language pl on (pp.prolang = pl.oid)
-		where pl.lanname NOT IN ('c','internal') 
-			and pn.nspname NOT LIKE 'pg_%'
-			and pt.typname = 'trigger'
-			and pn.nspname <> 'information_schema'
-			and pp.proname = ?
-		order by pp.proname
+			trigger_name as name, 
+			action_timing, 
+			array_to_string(array_agg(event_manipulation::text),' or ') as event_manipulation,
+			event_object_table, 
+			action_orientation, 
+			action_statement 
+		from information_schema.triggers
+			where trigger_name = ?
+		group by trigger_name, action_timing, event_object_table, action_orientation, action_statement
+		order by trigger_name, action_timing, event_object_table, action_orientation, action_statement
 	'''
 	def getTriggers(objectName) {
 		def triggers = [:]
@@ -536,7 +528,12 @@ class PostgresDatabaseReader implements DatabaseReader {
 			def triggerName = it.name.toLowerCase()
 			def trigger = triggers[triggerName] ?: new Trigger()
 			trigger.name = triggerName
-			trigger.text = it.text
+			def text = ""
+			text += "CREATE TRIGGER ${it.name}\n"
+			text += "${it.action_timing} ${it.event_manipulation} ON ${it.event_object_table}\n"
+			text += "FOR EACH ${it.action_orientation}\n"
+			text += "${it.action_statement}\n"
+			trigger.text = text
 			triggers[triggerName] = trigger
 		})
 

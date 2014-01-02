@@ -41,28 +41,26 @@ public class BeePostgresSchemaCreatorAction {
 
 		out.println("generating tables...")
 		beeSchemaCreator.createTables(file, schema)
-//		
-//		out.println("generating core data...")
-//		beeSchemaCreator.createCoreData(file, schema, dataFolderPath)
-//
+		
+		out.println("generating core data...")
+		beeSchemaCreator.createCoreData(file, schema, dataFolderPath)
+
 		out.println("generating constraints...")
 		beeSchemaCreator.createPrimaryKeys(file, schema)
 		beeSchemaCreator.createUniqueKeys(file, schema)
 		beeSchemaCreator.createForeignKeys(file, schema)
-//
+
 		out.println("generating indexes...")
 		beeSchemaCreator.createIndexes(file, schema)
-//		beeSchemaCreator.createFunctionalIndexes(file, schema)
-//		beeSchemaCreator.createBitmapIndexes(file, schema)
-//
+
 		out.println("generating views...")
 		beeSchemaCreator.createViews(file, schema)
 
-		out.println("generating procedures...")
+		out.println("generating functions...")
 		beeSchemaCreator.createProcedures(file, schema)
-//
-//		out.println("generating triggers...")
-//		beeSchemaCreator.createTriggers(file, schema)
+
+		out.println("generating triggers...")
+		beeSchemaCreator.createTriggers(file, schema)
 
 		
 		def env = System.getenv()
