@@ -113,7 +113,6 @@ class DbChangeManager {
 
 		if(listaDeInstrucoes.size == 0) {
 			logger.log MESSAGE_NO_COMMANDS_IN_FILE
-			salvarExecucao(sql, arquivo, upDown)
 			return true
 		}
 

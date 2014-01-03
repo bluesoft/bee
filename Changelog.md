@@ -21,3 +21,6 @@ bug fix - Single quotes duplicated in insert into query
 bug-fix - String fields not encapsulated with single quotes when value is number
 1.41
 bug fix - schema:recreate_mysql not escaping strings in defaultValue
+1.42
+bug fix - dbchange:down executing empty down statements
+Added support for postgres (version >= 8.4)
