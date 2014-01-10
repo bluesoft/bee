@@ -1,16 +1,15 @@
 package br.com.bluesoft.bee.dbchange
 
-import groovy.sql.GroovyRowResult;
 import groovy.sql.Sql
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData
 import java.sql.SQLException
 
-import org.mockito.Mockito;
-
-import spock.lang.Specification
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.util.RDBMSUtilTest
+import spock.lang.Specification
 
 class DbChangeManagerTest extends Specification {
 
@@ -89,10 +88,10 @@ class DbChangeManagerTest extends Specification {
 		listaArquivos == RESULT
 	}
 
-	def "deve criar a tabela dbchanges caso nao exista"() {
+	def "deve criar a tabela dbchanges caso nao exista em banco oracle"() {
 
 		given:
-		def manager = new DbChangeManager()
+		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		def sql = Mock(Sql)
 		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
 
@@ -103,13 +102,14 @@ class DbChangeManagerTest extends Specification {
 		retorno == true
 	}
 	
-	def "deve criar a tabela dbchanges caso nao exista em bancos não oracle"() {
+	def "deve criar a tabela dbchanges caso nao exista em banco mysql"() {
 		
 		given:
-		def manager = new DbChangeManager()
+		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/mysqlTest.properties"), clientName: "test")
 		def sql = Mock(Sql)
+		def createTableQuery = DbchangeQueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/mysqlTest.properties"), "test")
+		
 		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
-		1 * sql.execute(DbChangeManager.CREATE_TABLE_ORACLE) >> { throw new SQLException() }
 		
 		when: "criar tabela caso nao exista"
 		def retorno = manager.criarTabelaDbchangesSeNaoExistir(sql)
@@ -117,17 +117,34 @@ class DbChangeManagerTest extends Specification {
 		then: "e retorna true"
 		retorno == true
 	}
+	
+	def "deve criar a tabela dbchanges caso nao exista em banco postgres"() {
+		
+		given:
+		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/postgresTest.properties"), clientName: "test")
+		def sql = Mock(Sql)
+		def createTableQuery = DbchangeQueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/postgresTest.properties"), "test")
+		
+		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
+		
+		when: "criar tabela caso nao exista"
+		def retorno = manager.criarTabelaDbchangesSeNaoExistir(sql)
+
+		then: "e retorna true"
+		retorno == true
+	}
+
 	
 	def "deve retornar false caso nao consiga criar a tabela dbchanges"() {
 
 		given:
 		def sql = Mock(Sql)
 		def logger = Mock(BeeWriter)
-		def manager = new DbChangeManager(logger: logger)
+		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
+		def createTableQuery = DbchangeQueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/oracleTest.properties"), "test")
 
 		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
-		1 * sql.execute(DbChangeManager.CREATE_TABLE_ORACLE) >> { throw new SQLException() }
-		1 * sql.execute(DbChangeManager.CREATE_TABLE) >> { throw new SQLException() }
+		1 * sql.execute(createTableQuery) >> { throw new SQLException() }
 		1 * logger.log(_)
 
 		when: "Ocorrer um erro ao criar a tabela"
@@ -157,25 +174,29 @@ class DbChangeManagerTest extends Specification {
 	def "deve inserir uma execucao de dbchange quando o parametro UpDown for igual a UP"() {
 		given:
 		def sql = mockSql()
-		def manager = new DbChangeManager()
 		def arquivo = "989898-test.dbchange"
+		def logger = Mock(BeeWriter)
+		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
+		def createTableQuery = DbchangeQueryDialectHelper.getInsertIntoDbchangesQuery(getProperties("/oracleTest.properties"), "test")
 
 		when: "salvar execucao de dbchange"
 			manager.salvarExecucao(sql, arquivo, UpDown.UP)
 
 		then: "deve inserir execucao e commitar"
-			1 * sql.execute(DbChangeManager.INSERT_INTO_DBCHANGES, _)
+			1 * sql.execute(createTableQuery, _)
 			2 * sql.commit()
 	}
 
 	def "deve excluir uma execucao de dbchange quando o parametro UpDown for igual a DOWN"() {
 		given:
 		def sql = mockSql()
-		def manager = new DbChangeManager()
 		def arquivo = "989898-test.dbchange"
+		def logger = Mock(BeeWriter)
+		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
+		def deleteQuery = DbchangeQueryDialectHelper.getDeleteFromDbchangesQuery(getProperties("/oracleTest.properties"), "test")
 
 		2 * sql.commit()
-		1 * sql.execute(DbChangeManager.DELETE_FROM_DBCHANGES, _)
+		1 * sql.execute(deleteQuery, _)
 
 		when: "excluir execucao de dbchange"
 		manager.salvarExecucao(sql, arquivo, UpDown.DOWN)
@@ -204,7 +225,7 @@ class DbChangeManagerTest extends Specification {
 		2 * parser.parseFile(_) >>> dbchange
 		2 * sql.rows(_,_) >> []
 
-		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser:parser, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -233,7 +254,7 @@ class DbChangeManagerTest extends Specification {
 		1 * parser.parseFile(_) >> dbchange
 		1 * sql.rows(_,_) >> []
 
-		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -261,7 +282,7 @@ class DbChangeManagerTest extends Specification {
 		1 * parser.parseFile(_) >> dbchange
 		1 * sql.rows(_,_) >> ["select bla"]
 
-		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -305,7 +326,7 @@ class DbChangeManagerTest extends Specification {
 
 		given:
 		def mensagens = []
-		def sql = Mock(Sql)
+		def sql = mockSql()
 		def parser = Mock(SQLFileParser)
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { ["abc", "xyz"]} ]
@@ -334,7 +355,7 @@ class DbChangeManagerTest extends Specification {
 
 		given:
 		def mensagens = []
-		def sql = Mock(Sql)
+		def sql = mockSql()
 		def parser = Mock(SQLFileParser)
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { ["abc", "xyz"]} ]
@@ -360,7 +381,7 @@ class DbChangeManagerTest extends Specification {
 
 		given:
 		def mensagens = []
-		def sql = Mock(Sql)
+		def sql = mockSql()
 		def parser = Mock(SQLFileParser)
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { ["abc", "xyz"]} ]
@@ -387,7 +408,7 @@ class DbChangeManagerTest extends Specification {
 
 		given:
 		def mensagens = []
-		def sql = Mock(Sql)
+		def sql = mockSql()
 		def parser = Mock(SQLFileParser)
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { ["abc", "xyz"]} ]
@@ -424,7 +445,7 @@ class DbChangeManagerTest extends Specification {
 		1 * parser.parseFile(_) >> dbchange
 		1 * sql.rows(_,_) >> ["xxx"]
 
-		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force:true)
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, configFile: getProperties("/oracleTest.properties"), clientName: "test", force:true)
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -491,7 +512,7 @@ class DbChangeManagerTest extends Specification {
 		def mensagens = []
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { [ "abc", "65564564-test.dbchange" ] } ]
-		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger)
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 
 		when: "marcar todos os dbchanges"
 		manager.markAll()
@@ -522,8 +543,34 @@ class DbChangeManagerTest extends Specification {
 	private Sql mockSql(){
 		def connection = Mock(Connection)
 		connection.autoCommit() >> false
+		def databaseMetaData = Mock(DatabaseMetaData)
+		databaseMetaData.getDriverName >> "driver"
+		connection.getMetaData() >> databaseMetaData
 		def sql = Mock(Sql)
 		sql.connection >> connection
 		return sql
 	}
+	
+	def mockDirectoryFile() {
+		def directoryFile = [list: {
+			[
+				"abc",
+				"65564564-test.dbchange",
+				"989898-test.dbchange"
+			]
+		} ]
+		return directoryFile
+	}
+	
+	def mockLogger(){
+		def mensagens = []
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		return logger
+	}
+	
+	private File getProperties(filePath) {
+		def configUrl = RDBMSUtilTest.class.getResource(filePath)
+		def configFile = new File(configUrl.toURI())
+	}
+
 }

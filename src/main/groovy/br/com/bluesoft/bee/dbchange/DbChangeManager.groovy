@@ -42,10 +42,6 @@ import br.com.bluesoft.bee.service.BeeWriter
 class DbChangeManager {
 
 	final static def SELECT_TABLE = "select * from dbchanges"
-	final static def CREATE_TABLE_ORACLE = "create table dbchanges(arquivo_timestamp number(14), arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
-	final static def CREATE_TABLE = "create table dbchanges(arquivo_timestamp bigint, arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
-	final static def INSERT_INTO_DBCHANGES = "insert into dbchanges(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?, current_timestamp)"
-	final static def DELETE_FROM_DBCHANGES = "delete from dbchanges where arquivo_timestamp = ?"
 	final static def MESSAGE_THERE_IS_NO_INSTRUCTIONS = "!!!Error: There is no ::up/::down statement in dbchange file"
 	final static def MESSAGE_NO_COMMANDS_IN_FILE = "There is no commands in the dbchange file"
 	final static def MESSAGE_DBCHANGE_ALREADY_EXECUTED = "It was not possible to execute the instructions ::up, because this dbchange was already executed"
@@ -115,6 +111,8 @@ class DbChangeManager {
 			logger.log MESSAGE_NO_COMMANDS_IN_FILE
 			return true
 		}
+		
+		criarTabelaDbchangesSeNaoExistir(sql)
 
 		def resultado
 		if (podeExecutar(arquivo, sql, upDown)) {
@@ -154,9 +152,11 @@ class DbChangeManager {
 		def timestamp = obterTimestamp(arquivo)
 
 		if(upDown == UpDown.UP) {
-			sql.execute(INSERT_INTO_DBCHANGES, [arquivo, timestamp])
+			def insertQuery = DbchangeQueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
+			sql.execute(insertQuery, [arquivo, timestamp])
 		} else {
-			sql.execute(DELETE_FROM_DBCHANGES, [timestamp])
+			def deleteQuery = DbchangeQueryDialectHelper.getDeleteFromDbchangesQuery(configFile, clientName)
+			sql.execute(deleteQuery, [timestamp])
 		}
 		
 		if (!autocommit)
@@ -164,9 +164,8 @@ class DbChangeManager {
 	}
 
 	def podeExecutar(def arquivo, def sql, def upDown) {
-
 		def timestamp = obterTimestamp(arquivo)
-		def rows = sql.rows("select * from dbchanges where arquivo_timestamp = ?", [timestamp])
+		def rows = sql.rows("select * from dbchanges where arquivo_timestamp = ?::bigint", [timestamp])
 
 		if (upDown == UpDown.UP) {
 			if(force) {
@@ -202,7 +201,6 @@ class DbChangeManager {
 		filenames.each {
 			result << [ ARQUIVO_NOME: it ]
 		}
-
 		return result
 	}
 
@@ -211,7 +209,7 @@ class DbChangeManager {
 
 		def result = null
 		if (criarTabelaDbchangesSeNaoExistir(sql)) {
-			result = sql.rows("select arquivo_nome as ARQUIVO_NOME from dbchanges order by arquivo_timestamp desc")
+			result = sql.rows('select arquivo_nome as "ARQUIVO_NOME" from dbchanges order by arquivo_timestamp desc')
 			sql.close()
 		}
 		return result
@@ -228,17 +226,13 @@ class DbChangeManager {
 			sql.execute(SELECT_TABLE)
 			tabelaDbchangesFoiCriada = true
 		} catch (SQLException ex) {
+			def createTableQuery = DbchangeQueryDialectHelper.getCreateTableDbchangesQuery(configFile, clientName)
 			try {
-				sql.execute(CREATE_TABLE_ORACLE)
+				sql.execute(createTableQuery)
 				tabelaDbchangesFoiCriada = true
 			} catch (SQLException e) {
-				try {
-					sql.execute(CREATE_TABLE)
-					tabelaDbchangesFoiCriada = true
-				} catch (Exception e2) {
-					logger.log("!!!Erro: Nao foi possivel criar a tabela dbchanges")
-					return false
-				}
+				logger.log("!!!Erro: Nao foi possivel criar a tabela dbchanges")
+				return false
 			}
 		}
 		return tabelaDbchangesFoiCriada
@@ -286,7 +280,8 @@ class DbChangeManager {
 			listaParaExecutar.each {
 			def timestamp = obterTimestamp("${it.ARQUIVO_NOME}")
 			String arquivo_nome = "${it.ARQUIVO_NOME}"
-			sql.execute(INSERT_INTO_DBCHANGES, [arquivo_nome, timestamp])
+			def insertQuery = DbchangeQueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
+			sql.execute(insertQuery, [arquivo_nome, timestamp])
 			logger.log "${it.ARQUIVO_NOME} marked as implemented"
 			}
 		} else {

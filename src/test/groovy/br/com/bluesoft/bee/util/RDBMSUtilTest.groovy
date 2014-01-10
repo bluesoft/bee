@@ -6,6 +6,7 @@ import java.text.MessageFormat;
 
 import org.junit.Test;
 import org.mockito.Mock;
+
 import br.com.bluesoft.bee.model.Options;
 import static org.junit.Assert.*;
 
@@ -16,52 +17,71 @@ class RDBMSUtilTest {
 
 	@Test
 	public void 'deve retornar o tipo Oracle'() {
-		Options options = new Options()
-		options.configFile = getProperties("/oracleTest.properties")
-		options.arguments[0] = "test"
+		def configFile = getProperties("/oracleTest.properties")
+		def clientName = "test"
 
-		RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(options)
+		RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(configFile, clientName)
 		assertNotNull(oracleDatabaseType)
-		assertEquals(RDBMS.ORACLE, oracleDatabaseType);
+		assertEquals(RDBMS.ORACLE, oracleDatabaseType)
 	}
-
+	
 	@Test
 	public void 'deve retornar o tipo Mysql'() {
-		Options options = new Options()
-		options.configFile = getProperties("/mySqlTest.properties")
-		options.arguments[0] = "test"
+		def configFile = getProperties("/mySqlTest.properties")
+		def clientName = "test"
 
-		RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(options)
+		RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(configFile, clientName)
 		assertNotNull(oracleDatabaseType)
-		assertEquals(RDBMS.MYSQL, oracleDatabaseType);
+		assertEquals(RDBMS.MYSQL, oracleDatabaseType)
 	}
 	
 	@Test
 	public void 'deve retornar o tipo Postgres'() {
-		Options options = new Options()
-		options.configFile = getProperties("/postgresTest.properties")
-		options.arguments[0] = "test"
+		def configFile = getProperties("/postgresTest.properties")
+		def clientName = "test"
 
-		RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(options)
+		RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(configFile, clientName)
 		assertNotNull(oracleDatabaseType)
-		assertEquals(RDBMS.POSTGRES, oracleDatabaseType);
+		assertEquals(RDBMS.POSTGRES, oracleDatabaseType)
 	}
 
 	@Test
 	public void 'deve Lançar Exception se o banco não for suportado'() {
-		Options options = new Options()
-		options.configFile = getProperties("/test.properties")
-		options.arguments[0] = "test"
+		def configFile = getProperties("/test.properties")
+		def clientName = "test"
 
 		try {
-			RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(options)
+			RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(configFile, clientName)
 			fail()
 		} catch (Exception e) {
 			def mensagemDeErroEsperada = MessageFormat.format(RDBMSUtil.MENSAGEM_DE_ERRO_BANCO_NAO_SUPORTADO, "river")
 			assertEquals(mensagemDeErroEsperada, e.getMessage())
 		}
 	}
+	
+	@Test
+	public void 'deve retornar o tipo do banco passando o objeto Options'() {
+		Options options = new Options()
+		options.configFile = getProperties("/mySqlTest.properties")
+		options.arguments[0] = "test"
+		
+		RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(options)
+		
+		assertEquals(RDBMS.MYSQL, oracleDatabaseType)
+	}
 
+	
+	@Test
+	public void 'deve retornar o selected database do mysql'() {
+		Options options = new Options()
+		options.configFile = getProperties("/mySqlTest.properties")
+		options.arguments[0] = "test"
+		
+		def database = RDBMSUtil.getMySqlDatabaseName(options)
+		
+		assertEquals("test", database)
+	}
+	
 	private File getProperties(filePath) {
 		def configUrl = RDBMSUtilTest.class.getResource(filePath)
 		def configFile = new File(configUrl.toURI())

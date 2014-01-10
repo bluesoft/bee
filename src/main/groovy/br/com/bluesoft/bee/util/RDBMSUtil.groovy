@@ -10,10 +10,12 @@ import br.com.bluesoft.bee.model.Options;
 public class RDBMSUtil {
 	public static final String MENSAGEM_DE_ERRO_BANCO_NAO_SUPORTADO = "Banco de dados {0} não suportado"
 
-	public static RDBMS getRDBMS(Options options){
-		def databaseReader
-		def key = options.arguments[0]
-		def config = PropertiesUtil.readDatabaseConfig(options.configFile, key)
+	public static RDBMS getRDBMS(Options options) {
+		return getRDBMS(options.configFile, options.arguments[0])
+	}
+	
+	public static RDBMS getRDBMS(configFile, clientName) {
+		def config = PropertiesUtil.readDatabaseConfig(configFile, clientName)
 		
 		def databaseType = getDataBaseType(config)
 
@@ -27,10 +29,9 @@ public class RDBMSUtil {
 			def mensagemDeErro = MessageFormat.format(MENSAGEM_DE_ERRO_BANCO_NAO_SUPORTADO, databaseType)
 			throw new IllegalArgumentException(mensagemDeErro)
 		}
-		return null;
 	}
 
-	public static String getDataBaseType(config) {
+	private static String getDataBaseType(config) {
 		def urlTirandoJdbc = config.url.substring(config.url.indexOf(":") + 1)
 		def dataBaseType = urlTirandoJdbc.substring(0, urlTirandoJdbc.indexOf(":"))
 	}
