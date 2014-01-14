@@ -338,6 +338,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
 			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
 		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key')
+		order by kcu.ordinal_position, kcu.position_in_unique_constraint
 	'''
 	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
 		select tc.table_name, tc.constraint_name, kcu.column_name, ccu.table_name as ref_table, ccu.column_name as ref_field
@@ -345,7 +346,8 @@ class PostgresDatabaseReader implements DatabaseReader {
 			left join information_schema.key_column_usage kcu on tc.constraint_catalog = kcu.constraint_catalog and tc.constraint_schema = kcu.constraint_schema and tc.constraint_name = kcu.constraint_name
 			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
 			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
-		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key') and tc.table_name = ? 
+		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key') and tc.table_name = ?
+ 		order by kcu.ordinal_position, kcu.position_in_unique_constraint
 	'''
 	private def fillCostraintsColumns(tables, objectName) {
 		def rows
