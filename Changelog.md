@@ -24,3 +24,5 @@ bug fix - schema:recreate_mysql not escaping strings in defaultValue
 1.42
 bug fix - dbchange:down executing empty down statements
 Added support for postgres (version >= 8.4)
+1.43
+bug fixes in postgres support
