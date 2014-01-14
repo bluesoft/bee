@@ -165,7 +165,8 @@ class DbChangeManager {
 
 	def podeExecutar(def arquivo, def sql, def upDown) {
 		def timestamp = obterTimestamp(arquivo)
-		def rows = sql.rows("select * from dbchanges where arquivo_timestamp = ?::bigint", [timestamp])
+		def selectQuery = DbchangeQueryDialectHelper.getSelectFromDbchangesQuery(configFile, clientName)
+		def rows = sql.rows(selectQuery, [timestamp])
 
 		if (upDown == UpDown.UP) {
 			if(force) {

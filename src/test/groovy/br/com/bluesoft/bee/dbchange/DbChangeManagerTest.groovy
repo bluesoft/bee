@@ -337,7 +337,7 @@ class DbChangeManagerTest extends Specification {
 		1 * sql.rows(_,_) >> []
 		1 * sql.executeUpdate(_) >> { throw new SQLException("Erro") }
 
-		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser:parser, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		manager.metaClass.getFile = { def a, def b -> return []}
 		manager.metaClass.salvarExecucao = { def a, def b, def c -> assert false }
 
@@ -391,7 +391,7 @@ class DbChangeManagerTest extends Specification {
 		1 * parser.parseFile(_) >> dbchange
 		1 * sql.rows(_,_) >> []
 
-		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force: true)
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser:parser, configFile: getProperties("/oracleTest.properties"), clientName: "test", force: true)
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -418,7 +418,7 @@ class DbChangeManagerTest extends Specification {
 		1 * parser.parseFile(_) >> dbchange
 		1 * sql.rows(_,_) >> ["xxx"]
 
-		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force: false)
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser:parser, configFile: getProperties("/oracleTest.properties"), clientName: "test", force: false)
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:

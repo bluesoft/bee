@@ -6,15 +6,19 @@ import br.com.bluesoft.bee.util.RDBMSUtil;
 class DbchangeQueryDialectHelper {
 	static final def String CREATE_TABLE_DBCHANGES_MYSQL = "create table dbchanges(arquivo_timestamp bigint, arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
 	static final def String CREATE_TABLE_DBCHANGES_ORACLE = "create table dbchanges(arquivo_timestamp number(14), arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
-	static final def String CREATE_TABLE_DBCHANGES_POSTGRES = 'create table dbchanges(arquivo_timestamp bigint, arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))'
+	static final def String CREATE_TABLE_DBCHANGES_POSTGRES = "create table dbchanges(arquivo_timestamp bigint, arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
 
 	static final def String INSERT_INTO_DBCHANGES_MYSQL = "insert into dbchanges(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?, current_timestamp)"
-	static final def String INSERT_INTO_DBCHANGES_ORACLE = INSERT_INTO_DBCHANGES_ORACLE
+	static final def String INSERT_INTO_DBCHANGES_ORACLE = "insert into dbchanges(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?, current_timestamp)"
 	static final def String INSERT_INTO_DBCHANGES_POSTGRES = "insert into dbchanges(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?::bigint, current_timestamp)"
 
-	static final def String DELETE_FROM_DBCHANGES_MYSQL = "delete from dbchanges where arquivo_timestamp = ?" 
-	static final def String DELETE_FROM_DBCHANGES_ORACLE = DELETE_FROM_DBCHANGES_POSTGRES
+	static final def String DELETE_FROM_DBCHANGES_MYSQL = "delete from dbchanges where arquivo_timestamp = ?"
+	static final def String DELETE_FROM_DBCHANGES_ORACLE = "delete from dbchanges where arquivo_timestamp = ?"
 	static final def String DELETE_FROM_DBCHANGES_POSTGRES = "delete from dbchanges where arquivo_timestamp = ?::bigint"
+	
+	static final def String SELECT_FROM_DBCHANGES_MYSQL = "select * from dbchanges where arquivo_timestamp = ?"
+	static final def String SELECT_FROM_DBCHANGES_ORACLE = "select * from dbchanges where arquivo_timestamp = ?"
+	static final def String SELECT_FROM_DBCHANGES_POSTGRES = "select * from dbchanges where arquivo_timestamp = ?::bigint"
 
 
 	def static getCreateTableDbchangesQuery(configFile, clientName) {
@@ -58,6 +62,21 @@ class DbchangeQueryDialectHelper {
 				break;
 			case RDBMS.POSTGRES:
 				return DELETE_FROM_DBCHANGES_POSTGRES
+				break;
+		}
+	}
+	
+	def static getSelectFromDbchangesQuery(configFile, clientName) {
+		def rdbms = RDBMSUtil.getRDBMS(configFile, clientName)
+		switch (rdbms) {
+			case RDBMS.MYSQL:
+				return SELECT_FROM_DBCHANGES_MYSQL
+				break;
+			case RDBMS.ORACLE:
+				return SELECT_FROM_DBCHANGES_ORACLE
+				break;
+			case RDBMS.POSTGRES:
+				return SELECT_FROM_DBCHANGES_POSTGRES
 				break;
 		}
 	}
