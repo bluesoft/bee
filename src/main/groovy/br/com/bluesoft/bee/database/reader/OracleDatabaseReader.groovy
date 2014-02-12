@@ -98,7 +98,7 @@ class OracleDatabaseReader implements DatabaseReader {
 
 	static final def TABLES_COLUMNS_QUERY = '''
 			select ut.table_name, column_name, data_type, nullable, 
-				   coalesce(data_precision, data_length) data_size, char_used as size_type, 
+				   coalesce(data_precision, data_length) data_size, data_precision, data_length, char_used as size_type, 
 				   coalesce(data_scale, 0) data_scale, data_default, column_id
 			from   user_tab_cols utc join user_tables ut on utc.table_name = ut.table_name
 			where  hidden_column = 'NO'
@@ -107,7 +107,7 @@ class OracleDatabaseReader implements DatabaseReader {
 		'''
 	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
 			select ut.table_name, column_name, data_type, nullable, 
-				   coalesce(data_precision, data_length) data_size, char_used as size_type, 
+				   coalesce(data_precision, data_length) data_size, data_precision, data_length, char_used as size_type, 
 				   coalesce(data_scale, 0) data_scale, data_default, column_id
 			from   user_tab_cols utc join user_tables ut on utc.table_name = ut.table_name
 			where  hidden_column = 'NO'
@@ -126,10 +126,10 @@ class OracleDatabaseReader implements DatabaseReader {
 			def table = tables[it.table_name.toLowerCase()]
 			def column = new TableColumn()
 			column.name = it.column_name.toLowerCase()
+			column.scale = getScale(it)
 			column.type = getColumnType(it.data_type)
-			column.size = it.data_size
+			column.size = getColumnSize(it)
 			column.sizeType = getColumnSizeType(it.size_type)
-			column.scale = it.data_scale
 			column.nullable = it.nullable == 'N' ? false : true
 			def defaultValue = it.data_default
 			if(defaultValue) {
@@ -156,6 +156,22 @@ class OracleDatabaseReader implements DatabaseReader {
 			return "CHAR"
 		} else {
 			return null
+		}
+	}
+	
+	private def getColumnSize(iterator) {
+		if (iterator.data_type.toUpperCase() == 'NUMBER' && iterator.data_precision == null  && iterator.data_scale == 0 && iterator.data_length == '22') {
+			return null
+		} else {
+			return iterator.data_size
+		}
+	}
+	
+	private def getScale(iterator) {
+		if (iterator.data_type.toUpperCase() == 'NUMBER' && iterator.data_precision == null  && iterator.data_scale == 0 && iterator.data_length == '22') {
+			return null
+		} else {
+			iterator.data_scale == null ? 0 : iterator.data_scale
 		}
 	}
 

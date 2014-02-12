@@ -71,7 +71,7 @@ public class OracleDatabaseReaderTableTest {
 	@Test
 	void 'it should fill columns of the table according to the database metadata'() {
 		def tables = reader.getTables()
-		assertEquals 3, tables['pessoa'].columns.size()
+		assertEquals 4, tables['pessoa'].columns.size()
 	}
 
 	@Test
@@ -98,6 +98,13 @@ public class OracleDatabaseReaderTableTest {
 		def tables = reader.getTables()
 		assertEquals 8, tables['pessoa'].columns['valor'].size
 		assertEquals 3, tables['pessoa'].columns['valor'].scale
+	}
+	
+	@Test
+	void 'it shouldnt set the data size and scale when data type is number without data_scale'() {
+		def tables = reader.getTables()
+		assertEquals null, tables['pessoa'].columns['vendas'].size
+		assertEquals null, tables['pessoa'].columns['vendas'].scale
 	}
 
 	@Test
@@ -234,8 +241,17 @@ public class OracleDatabaseReaderTableTest {
 					data_scale:3,
 					nullable:"N",
 					data_default:"5"]
+		
+		def vendas = [table_name:'PESSOA',
+					column_name:'VENDAS',
+					data_type:"NUMBER",
+					data_size:22,
+					data_scale:0,
+					data_length:"22",
+					nullable:"N",
+					data_default:"null"]
 
-		return [pessoaKey, nomeRazao, valor]
+		return [pessoaKey, nomeRazao, valor, vendas]
 	}
 
 	def createIndexes() {

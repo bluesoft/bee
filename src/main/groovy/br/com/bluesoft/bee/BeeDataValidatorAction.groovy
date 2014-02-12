@@ -154,7 +154,7 @@ public class BeeDataValidatorAction {
 		return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
 	}
 
-	private def getImporter(path) {
+	def getImporter(path) {
 		if(importer == null)
 			return new JsonImporter(path)
 		return importer

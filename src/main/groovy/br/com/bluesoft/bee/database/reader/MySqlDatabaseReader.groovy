@@ -1,8 +1,6 @@
 package br.com.bluesoft.bee.database.reader
 
-import groovy.sql.Sql;
 import br.com.bluesoft.bee.model.*
-import br.com.bluesoft.bee.service.BeeWriter;
 
 class MySqlDatabaseReader implements DatabaseReader {
 
