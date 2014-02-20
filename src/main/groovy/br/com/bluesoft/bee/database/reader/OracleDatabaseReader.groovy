@@ -126,7 +126,7 @@ class OracleDatabaseReader implements DatabaseReader {
 			def table = tables[it.table_name.toLowerCase()]
 			def column = new TableColumn()
 			column.name = it.column_name.toLowerCase()
-			column.scale = getScale(it)
+			column.scale = it.data_scale == null ? 0 : it.data_scale
 			column.type = getColumnType(it.data_type)
 			column.size = getColumnSize(it)
 			column.sizeType = getColumnSizeType(it.size_type)
@@ -160,21 +160,16 @@ class OracleDatabaseReader implements DatabaseReader {
 	}
 	
 	private def getColumnSize(iterator) {
-		if (iterator.data_type.toUpperCase() == 'NUMBER' && iterator.data_precision == null  && iterator.data_scale == 0 && iterator.data_length == '22') {
+		if (isNumericWithoutSizeEspecified(iterator)) {
 			return null
 		} else {
 			return iterator.data_size
 		}
 	}
 	
-	private def getScale(iterator) {
-		if (iterator.data_type.toUpperCase() == 'NUMBER' && iterator.data_precision == null  && iterator.data_scale == 0 && iterator.data_length == '22') {
-			return null
-		} else {
-			iterator.data_scale == null ? 0 : iterator.data_scale
-		}
+	private def isNumericWithoutSizeEspecified(iterator){
+		return iterator.data_type.toUpperCase() == 'NUMBER' && iterator.data_precision == null  && iterator.data_scale == 0 && iterator.data_length == 22
 	}
-
 
 	final static def INDEXES_QUERY = '''
 		select ui.table_name, ui.index_name, ui.index_type, uniqueness

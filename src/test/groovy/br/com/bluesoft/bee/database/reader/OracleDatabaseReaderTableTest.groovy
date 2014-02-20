@@ -104,7 +104,7 @@ public class OracleDatabaseReaderTableTest {
 	void 'it shouldnt set the data size and scale when data type is number without data_scale'() {
 		def tables = reader.getTables()
 		assertEquals null, tables['pessoa'].columns['vendas'].size
-		assertEquals null, tables['pessoa'].columns['vendas'].scale
+		assertEquals 0, tables['pessoa'].columns['vendas'].scale
 	}
 
 	@Test
@@ -247,7 +247,7 @@ public class OracleDatabaseReaderTableTest {
 					data_type:"NUMBER",
 					data_size:22,
 					data_scale:0,
-					data_length:"22",
+					data_length:22,
 					nullable:"N",
 					data_default:"null"]
 

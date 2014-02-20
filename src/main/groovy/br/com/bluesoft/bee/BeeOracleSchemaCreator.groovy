@@ -11,6 +11,11 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
 		super.createCoreData(file, schema, dataFolderPath)
 	}
 	
+	void createTables(def file, def schema) {
+		def tables = schema.tables.sort()
+		tables.each( { file << createTable(it.value) })
+	}
+	
 	def createTable(def table) {
 		def columns = []
 		table.columns.each({
@@ -19,14 +24,8 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
 		def temp = table.temporary ? " global temporary" : ""
 		def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n\n"
 	}
-
-	void createTables(def file, def schema) {
-		def tables = schema.tables.sort()
-		tables.each( { file << createTable(it.value) })
-	}
 	
 	def createColumn(def column) {
-		println "create Colummn Oracle"
 		def result = "    ${column.name} ${column.type}"
 		if(column.type in ['char', 'varchar'])
 			if(column.sizeType != null)
@@ -35,10 +34,9 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
 				result += "(${column.size})"
 				
 		if(column.type == 'number')
-			println column
 			if (column.scale > 0) {
 				result += "(${column.size}, ${column.scale})"
-			} else if (column.data_precision != null && column.data_lenght != 22) {
+			} else if (column.scale != null && column.size != null && column.size != 22) {
 				result += "(${column.size})"
 			}
 
