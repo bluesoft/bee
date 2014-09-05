@@ -44,7 +44,10 @@ public class BeeDbChangeModule implements BeeWriter {
 		"down": [2, 2],
 		"mark": [2, 2],
 		"markall": [1, 1],
-		"unmark": [2, 2]]
+		"unmark": [2, 2],
+		"find": [1, 2],
+		"open": [1, 2]
+		]
 
 	def usage() {
 		println "usage: bee <options> dbchange:action <parameters>"
@@ -56,13 +59,15 @@ public class BeeDbChangeModule implements BeeWriter {
 		println "         dbchange:mark connection file - mark a file as executed"
 		println "         dbchange:markall connection - mark All files as executed"
 		println "         dbchange:unmark connection file - unmark a file as executed"
+		println "         dbchange:find name - search file"
+		println "         dbchange:open name - open file with EDITOR"
 	}
 
 	def parseOptions(options) {
 		def action = options.actionName
 		def arguments = options.arguments
 
-		if(parameterCount[action] == null) {
+		if(parameterCount[action] == null || parameterCount[action] == 0) {
 			usage()
 			System.exit 0
 		}
@@ -97,6 +102,12 @@ public class BeeDbChangeModule implements BeeWriter {
 				break;
 			case "unmark":
 				actionRunner = new BeeDbChangeUnmarkAction(options: options, out: this)
+				break;
+			case "find":
+				actionRunner = new BeeDbChangeFindAction(options: options, out: this)
+				break;
+			case "open":
+				actionRunner = new BeeDbChangeOpenAction(options: options, out: this)
 				break;
 		}
 

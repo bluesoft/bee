@@ -56,6 +56,7 @@ class DbChangeManager {
 	File configFile
 	String path
 	String clientName
+	String fileName
 	boolean force
 	BeeWriter logger
 
@@ -192,6 +193,40 @@ class DbChangeManager {
 		logger.log "Found ${listaParaExecutar.size} file(s)"
 		listaParaExecutar.each { logger.log "${it.ARQUIVO_NOME}" }
 		return listaParaExecutar*.ARQUIVO_NOME
+	}
+
+	List<String> search() {
+		def listFiles = listarArquivos()
+		
+		if (listFiles == null) {
+			return null
+		}
+
+		listFiles = listFiles.findAll({ it.ARQUIVO_NOME.contains(fileName) ? it.ARQUIVO_NOME : null })
+
+		logger.log "Found ${listFiles.size} file(s)"
+		listFiles.each { logger.log "${it.ARQUIVO_NOME}" }
+		return listFiles*.ARQUIVO_NOME
+	}
+
+	def open() {
+		def listFiles = listarArquivos()
+		def env = System.getenv()
+		def files = ""
+		
+		if (listFiles == null) {
+			return null
+		}
+
+		listFiles = listFiles.findAll({ it.ARQUIVO_NOME.contains(fileName) ? it.ARQUIVO_NOME : null })
+			def file = new File(getDirectoryFile(), listFiles[0].ARQUIVO_NOME)
+		println file
+		if(env['EDITOR']) {
+			println "Opening with editor ${env['EDITOR']}"
+			def cmd = [env['EDITOR'], file.path]
+			new ProcessBuilder(env['EDITOR'], file.path).start()
+		}
+
 	}
 
 	def listarArquivos() {
