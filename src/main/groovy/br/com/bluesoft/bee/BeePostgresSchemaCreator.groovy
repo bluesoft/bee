@@ -2,7 +2,29 @@ package br.com.bluesoft.bee
 
 
 class BeePostgresSchemaCreator extends BeeSchemaCreator {
-	
+
+	def createColumn(def column) {
+		def result = "    ${column.name} ${column.type}"
+		if(column.type in ['char', 'varchar'])
+			if(column.sizeType != null)
+				result += "(${column.size} ${column.sizeType})"
+			else
+				result += "(${column.size})"
+
+		if(column.type == 'numeric')
+			if(column.scale > 0)
+				result += "(${column.size}, ${column.scale})"
+			else
+				result += "(${column.size})"
+
+		if(column.defaultValue)
+			result += " default ${column.defaultValue}"
+
+		if(!column.nullable)
+			result += ' not null'
+		return result
+	}
+
 	def createIndex(tableName, index) {
 		def result = "create"
 		if(index.type == 'b')
@@ -26,26 +48,25 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 				def existPrimaryKeyWithThisName = primaryKeys.findAll {it.name.equals(indexName)}.size() == 1
 				def existUniqueKeyWithThisName = uniqueKeys.findAll {it.name.equals(indexName)}.size() == 1
 				if (!existPrimaryKeyWithThisName && !existUniqueKeyWithThisName) {
-					file << createIndex(table.name, it) 
+					file << createIndex(table.name, it)
 				}
 			}
 		}
 
 		file << "\n"
 	}
-	
+
 	void createProcedures(def file, def schema) {
 		schema.procedures*.value.sort().each {
 			def procedure = "${it.text};\n\n"
 			file.append(procedure.toString(), 'utf-8')
 		}
 	}
-	
+
 	void createTriggers(def file, def schema) {
 		schema.triggers*.value.sort().each {
 			def trigger = "${it.text};\n\n"
 			file.append(trigger.toString(), 'utf-8')
 		}
 	}
-	
 }

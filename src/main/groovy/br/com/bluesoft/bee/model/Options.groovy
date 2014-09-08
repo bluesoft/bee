@@ -32,7 +32,6 @@
  */
 package br.com.bluesoft.bee.model;
 
-import java.io.File
 
 public class Options {
 	File configFile
@@ -106,6 +105,15 @@ public class Options {
 	}
 
 	private boolean validate() {
+
+		if(!configFile.isFile()) {
+			println "Could not read config file: ${configFile}"
+		}
+
+		if(!dataDir.isDirectory()) {
+			println "Cound not read data dir: %{dataDir}"
+		}
+
 		return configFile.isFile() && dataDir.isDirectory()
 	}
 }

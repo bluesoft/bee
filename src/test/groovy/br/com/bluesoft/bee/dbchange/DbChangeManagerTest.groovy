@@ -2,14 +2,14 @@ package br.com.bluesoft.bee.dbchange
 
 import groovy.sql.Sql
 
-import java.sql.Connection;
+import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.SQLException
 
+import spock.lang.Specification
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.RDBMSUtilTest
-import spock.lang.Specification
 
 class DbChangeManagerTest extends Specification {
 
@@ -37,8 +37,11 @@ class DbChangeManagerTest extends Specification {
 
 		then: "deve conter somente as instrucoes que nao foram executadas"
 		lista.size() == 2
-		
-		lista == [ "989898-test.dbchange", "989899-test.dbchange"]
+
+		lista == [
+			"989898-test.dbchange",
+			"989899-test.dbchange"
+		]
 	}
 
 	def "deve retornar false quando a lista de arquivos ja executados for nula"() {
@@ -78,7 +81,8 @@ class DbChangeManagerTest extends Specification {
 
 	def "deve listar os arquivos"() {
 		given:
-		def directoryFile = [list: { [ "abc", "65564564-test.dbchange" ] } ]
+		def directoryFile = [list: { [ "abc", "65564564-test.dbchange"
+				] } ]
 		def manager = new DbChangeManager(directoryFile: directoryFile)
 
 		when: "listar arquivos de dbchanges"
@@ -101,32 +105,32 @@ class DbChangeManagerTest extends Specification {
 		then: "e retorna true"
 		retorno == true
 	}
-	
+
 	def "deve criar a tabela dbchanges caso nao exista em banco mysql"() {
-		
+
 		given:
-		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/mysqlTest.properties"), clientName: "test")
+		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/mySqlTest.properties"), clientName: "test")
 		def sql = Mock(Sql)
-		def createTableQuery = DbchangeQueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/mysqlTest.properties"), "test")
-		
+		def createTableQuery = DbchangeQueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/mySqlTest.properties"), "test")
+
 		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
-		
+
 		when: "criar tabela caso nao exista"
 		def retorno = manager.criarTabelaDbchangesSeNaoExistir(sql)
 
 		then: "e retorna true"
 		retorno == true
 	}
-	
+
 	def "deve criar a tabela dbchanges caso nao exista em banco postgres"() {
-		
+
 		given:
 		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/postgresTest.properties"), clientName: "test")
 		def sql = Mock(Sql)
 		def createTableQuery = DbchangeQueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/postgresTest.properties"), "test")
-		
+
 		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
-		
+
 		when: "criar tabela caso nao exista"
 		def retorno = manager.criarTabelaDbchangesSeNaoExistir(sql)
 
@@ -134,7 +138,7 @@ class DbChangeManagerTest extends Specification {
 		retorno == true
 	}
 
-	
+
 	def "deve retornar false caso nao consiga criar a tabela dbchanges"() {
 
 		given:
@@ -180,11 +184,11 @@ class DbChangeManagerTest extends Specification {
 		def createTableQuery = DbchangeQueryDialectHelper.getInsertIntoDbchangesQuery(getProperties("/oracleTest.properties"), "test")
 
 		when: "salvar execucao de dbchange"
-			manager.salvarExecucao(sql, arquivo, UpDown.UP)
+		manager.salvarExecucao(sql, arquivo, UpDown.UP)
 
 		then: "deve inserir execucao e commitar"
-			1 * sql.execute(createTableQuery, _)
-			2 * sql.commit()
+		1 * sql.execute(createTableQuery, _)
+		2 * sql.commit()
 	}
 
 	def "deve excluir uma execucao de dbchange quando o parametro UpDown for igual a DOWN"() {
@@ -505,13 +509,14 @@ class DbChangeManagerTest extends Specification {
 		"132123"  | "132123-x.dbchange"
 		"0"       | "789987-teste"
 	}
-	
+
 	def "deve marcar todos os dbchanges"() {
 		given:
 		def sql = mockSql()
 		def mensagens = []
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
-		def directoryFile = [list: { [ "abc", "65564564-test.dbchange" ] } ]
+		def directoryFile = [list: { [ "abc", "65564564-test.dbchange"
+				] } ]
 		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 
 		when: "marcar todos os dbchanges"
@@ -522,14 +527,14 @@ class DbChangeManagerTest extends Specification {
 		mensagens[0] == "marking 1 file(s)"
 		mensagens[1] == "65564564-test.dbchange marked as implemented"
 	}
-	
+
 	def "se todos os arquivos já foram executados, não fazer nada quando rodar markAll" () {
 		given:
 		def sql = [execute: { instrucao -> []}, rows: { instrucao -> RESULT}, close: {} ]
 
 		def mensagens = []
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
-		def directoryFile = [list: { ["65564564-test.dbchange"] } ]
+		def directoryFile = [list: { ["65564564-test.dbchange"]} ]
 		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger)
 
 		when: "marcar todos os dbchanges"
@@ -539,7 +544,7 @@ class DbChangeManagerTest extends Specification {
 		mensagens.size() == 1
 		mensagens[0] == "All files are already marked as implemented"
 	}
-	
+
 	private Sql mockSql(){
 		def connection = Mock(Connection)
 		connection.autoCommit() >> false
@@ -550,27 +555,26 @@ class DbChangeManagerTest extends Specification {
 		sql.connection >> connection
 		return sql
 	}
-	
+
 	def mockDirectoryFile() {
 		def directoryFile = [list: {
-			[
-				"abc",
-				"65564564-test.dbchange",
-				"989898-test.dbchange"
-			]
-		} ]
+				[
+					"abc",
+					"65564564-test.dbchange",
+					"989898-test.dbchange"
+				]
+			} ]
 		return directoryFile
 	}
-	
+
 	def mockLogger(){
 		def mensagens = []
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		return logger
 	}
-	
+
 	private File getProperties(filePath) {
 		def configUrl = RDBMSUtilTest.class.getResource(filePath)
 		def configFile = new File(configUrl.toURI())
 	}
-
 }
