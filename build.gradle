@@ -39,3 +39,7 @@ jar {
 		attributes 'Implementation-Title': "${artifact}", 'Implementation-Version': "${version}"
 	}
 }
+
+applicationDistribution.from('bee.properties') {
+	into 'bin'
+}
