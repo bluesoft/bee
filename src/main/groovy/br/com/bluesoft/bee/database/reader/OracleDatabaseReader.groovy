@@ -99,19 +99,17 @@ class OracleDatabaseReader implements DatabaseReader {
 	static final def TABLES_COLUMNS_QUERY = '''
 			select ut.table_name, column_name, data_type, nullable, 
 				   coalesce(data_precision, data_length) data_size, data_precision, data_length, char_used as size_type, 
-				   coalesce(data_scale, 0) data_scale, data_default, column_id
+				   coalesce(data_scale, 0) data_scale, data_default, column_id, virtual_column
 			from   user_tab_cols utc join user_tables ut on utc.table_name = ut.table_name
 			where  hidden_column = 'NO'
-			  and  virtual_column = 'NO'
 			order  by table_name, column_id
 		'''
 	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
 			select ut.table_name, column_name, data_type, nullable, 
 				   coalesce(data_precision, data_length) data_size, data_precision, data_length, char_used as size_type, 
-				   coalesce(data_scale, 0) data_scale, data_default, column_id
+				   coalesce(data_scale, 0) data_scale, data_default, column_id, virtual_column
 			from   user_tab_cols utc join user_tables ut on utc.table_name = ut.table_name
 			where  hidden_column = 'NO'
-			  and  virtual_column = 'NO'
         and  ut.table_name = upper(?)
 			order  by table_name, column_id
 	'''
@@ -121,7 +119,7 @@ class OracleDatabaseReader implements DatabaseReader {
 			rows = sql.rows(TABLES_COLUMNS_QUERY_BY_NAME, [objectName])
 		} else {
 			rows = sql.rows(TABLES_COLUMNS_QUERY)
-		}	
+		}
 		rows.each({
 			def table = tables[it.table_name.toLowerCase()]
 			def column = new TableColumn()
@@ -131,6 +129,7 @@ class OracleDatabaseReader implements DatabaseReader {
 			column.size = getColumnSize(it)
 			column.sizeType = getColumnSizeType(it.size_type)
 			column.nullable = it.nullable == 'N' ? false : true
+			column.virtual = it.virtual_column == 'YES'
 			def defaultValue = it.data_default
 			if(defaultValue) {
 				column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()
@@ -148,7 +147,7 @@ class OracleDatabaseReader implements DatabaseReader {
 				return oracleColumnType.toLowerCase()
 		}
 	}
-	
+
 	private def getColumnSizeType(String sizeType){
 		if (sizeType == "B") {
 			return "BYTE"
@@ -158,7 +157,7 @@ class OracleDatabaseReader implements DatabaseReader {
 			return null
 		}
 	}
-	
+
 	private def getColumnSize(iterator) {
 		if (isNumericWithoutSizeEspecified(iterator)) {
 			return null
@@ -166,7 +165,7 @@ class OracleDatabaseReader implements DatabaseReader {
 			return iterator.data_size
 		}
 	}
-	
+
 	private def isNumericWithoutSizeEspecified(iterator){
 		return iterator.data_type.toUpperCase() == 'NUMBER' && iterator.data_precision == null  && iterator.data_scale == 0 && iterator.data_length == 22
 	}
