@@ -1,8 +1,5 @@
 package br.com.bluesoft.bee
 
-import br.com.bluesoft.bee.model.Options;
-import br.com.bluesoft.bee.service.BeeWriter;
-import br.com.bluesoft.bee.importer.JsonImporter
 
 class BeeOracleSchemaCreator extends BeeSchemaCreator {
 
@@ -10,12 +7,12 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
 		file.append("alter session set nls_date_format = 'yyyy-mm-dd';\n\n", 'utf-8')
 		super.createCoreData(file, schema, dataFolderPath)
 	}
-	
+
 	void createTables(def file, def schema) {
 		def tables = schema.tables.sort()
 		tables.each( { file << createTable(it.value) })
 	}
-	
+
 	def createTable(def table) {
 		def columns = []
 		table.columns.each({
@@ -24,7 +21,7 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
 		def temp = table.temporary ? " global temporary" : ""
 		def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n\n"
 	}
-	
+
 	def createColumn(def column) {
 		def result = "    ${column.name} ${column.type}"
 		if(column.type in ['char', 'varchar'])
@@ -32,7 +29,7 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
 				result += "(${column.size} ${column.sizeType})"
 			else
 				result += "(${column.size})"
-				
+
 		if(column.type == 'number')
 			if (column.scale > 0) {
 				result += "(${column.size}, ${column.scale})"
@@ -40,8 +37,12 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
 				result += "(${column.size})"
 			}
 
-		if(column.defaultValue)
-			result += " default ${column.defaultValue}"
+		if(column.virtual) {
+			result += " as (${column.defaultValue})"
+		} else {
+			if(column.defaultValue)
+				result += " default ${column.defaultValue}"
+		}
 
 		if(!column.nullable)
 			result += ' not null'
