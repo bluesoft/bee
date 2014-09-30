@@ -58,8 +58,8 @@ class PostgresDatabaseReader implements DatabaseReader {
 	def getTables(objectName) {
 		def tables = fillTables(objectName)
 		fillColumns(tables, objectName)
-		def Map<Index, String> columnIndexesMap = fillIndexes(tables, objectName)
-		fillIndexColumns(tables, objectName, columnIndexesMap)
+		fillIndexes(tables, objectName)
+		fillIndexColumns(tables, objectName)
 		fillCostraints(tables, objectName)
 		fillCostraintsColumns(tables, objectName)
 		return tables
@@ -97,23 +97,34 @@ class PostgresDatabaseReader implements DatabaseReader {
 
 
 	static final def TABLES_COLUMNS_QUERY = '''
-		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable, ic.numeric_precision as data_size, 
-			ic.numeric_scale as data_scale, ic.column_default as data_default
+		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
+		case 
+			when (ic.numeric_precision_radix is not null) then ic.numeric_precision
+			when (ic.character_maximum_length is not null) then ic.character_maximum_length 
+		end
+		as data_size,
+		ic.numeric_scale as data_scale, ic.column_default as data_default
 		from information_schema.columns ic
 		inner join information_schema.tables it on it.table_name = ic.table_name
 		where ic.table_schema not in ('pg_catalog' , 'information_schema')
 		and it.table_type = 'BASE TABLE'
-		order by ic.table_name, ic.ordinal_position
+		order by ic.table_name, ic.ordinal_position;
 		'''
+
 	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
-		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable, ic.numeric_precision as data_size, 
-			ic.numeric_scale as data_scale, ic.column_default as data_default
+		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
+		case 
+			when (ic.numeric_precision_radix is not null) then ic.numeric_precision
+			when (ic.character_maximum_length is not null) then ic.character_maximum_length 
+		end
+		as data_size,
+		ic.numeric_scale as data_scale, ic.column_default as data_default
 		from information_schema.columns ic
 		inner join information_schema.tables it on it.table_name = ic.table_name
 		where ic.table_schema not in ('pg_catalog' , 'information_schema')
 		and it.table_type = 'BASE TABLE'
-        and ic.table_name = ?
-		order by ic.table_name, ic.ordinal_position
+		and ic.table_name = ?
+		order by ic.table_name, ic.ordinal_position;
 	'''
 	private def fillColumns(tables, objectName) {
 		def rows
@@ -128,7 +139,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 			column.name = it.column_name.toLowerCase()
 			column.type = getColumnType(it.data_type)
 			column.size = it.data_size
-			column.scale = it.data_scale
+			column.scale = it.data_scale == null ? 0 : it.data_scale
 			column.nullable = it.nullable == 'N' ? false : true
 			def defaultValue = it.data_default
 			if(defaultValue) {
@@ -137,7 +148,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 			table.columns[column.name] = column
 		})
 	}
-
+	
 	private def getColumnType(String oracleColumnType){
 		switch (oracleColumnType.toLowerCase()) {
 			case "varchar2":
@@ -153,26 +164,24 @@ class PostgresDatabaseReader implements DatabaseReader {
 		    t.relname as table_name,
 		    i.relname as index_name,
 		    ix.indisunique as uniqueness,
-			'n' as index_type,
-			ix.indkey
-		from
-		    pg_class t,
-		    pg_class i,
-		    pg_index ix,
-		    pg_attribute a,
-		    pg_namespace n
+		    substring(indexdef from 'USING (.*) \\(') as index_type,
+		    ix.indkey
+		from pg_class t
+		    inner join pg_index ix on t.oid = ix.indrelid
+		    inner join pg_class i on i.oid = ix.indexrelid
+		    inner join pg_attribute a on a.attrelid = t.oid
+		    inner join pg_indexes ixd on i.relname = ixd.indexname
+		    inner join pg_namespace n on n.oid = i.relnamespace
 		where
-		    t.oid = ix.indrelid
-		    and i.oid = ix.indexrelid
-		    and a.attrelid = t.oid
-		    and t.relkind = 'r'
-		    and n.oid = i.relnamespace
-		    AND n.nspname NOT IN ('pg_catalog')
+		    t.relkind = 'r'
+		    and i.relname not in (select conname from pg_constraint)
+		    and n.nspname NOT IN ('pg_catalog')
 		group by
 		    t.relname,
 		    i.relname,
 		    ix.indisunique,
-			ix.indkey
+		    index_type,
+		    ix.indkey
 		order by
 		    t.relname,
 		    i.relname,
@@ -183,27 +192,25 @@ class PostgresDatabaseReader implements DatabaseReader {
 		    t.relname as table_name,
 		    i.relname as index_name,
 		    ix.indisunique as uniqueness,
-			'n' as index_type,
-			ix.indkey
-		from
-		    pg_class t,
-		    pg_class i,
-		    pg_index ix,
-		    pg_attribute a,
-		    pg_namespace n
+		    substring(indexdef from 'USING (.*) \\(') as index_type,
+		    ix.indkey
+		from pg_class t
+		    inner join pg_index ix on t.oid = ix.indrelid
+		    inner join pg_class i on i.oid = ix.indexrelid
+		    inner join pg_attribute a on a.attrelid = t.oid
+		    inner join pg_indexes ixd on i.relname = ixd.indexname
+		    inner join pg_namespace n on n.oid = i.relnamespace
 		where
-		    t.oid = ix.indrelid
-		    and i.oid = ix.indexrelid
-		    and a.attrelid = t.oid
-		    and t.relkind = 'r'
-		    and n.oid = i.relnamespace
-		    and n.nspname not in ('pg_catalog')
-			and t.relname = ? 
+		    t.relkind = 'r'
+		    and i.relname not in (select conname from pg_constraint)
+		    and n.nspname NOT IN ('pg_catalog')
+		    and t.relname = ?
 		group by
 		    t.relname,
 		    i.relname,
 		    ix.indisunique,
-			ix.indkey
+		    index_type,
+		    ix.indkey
 		order by
 		    t.relname,
 		    i.relname,
@@ -212,7 +219,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 
 	private def fillIndexes(tables, objectName) {
 		def rows
-		def Map<Index, String> columnIndexesMap = [:]
 		if(objectName) {
 			rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
 		} else {
@@ -223,34 +229,50 @@ class PostgresDatabaseReader implements DatabaseReader {
 			def table = tables[tableName]
 			def index = new Index()
 			index.name = it.index_name.toLowerCase()
-			index.type = it.index_type[0].toLowerCase()
+			index.type = getIndexType(it.index_type.toLowerCase())
 			index.unique = it.uniqueness == 'UNIQUE' ? true : false
 			table.indexes[index.name] = index
-			columnIndexesMap.put(index, it.indkey.toString())
 		})
-		columnIndexesMap
+
 	}
 
 	final static def INDEXES_COLUMNS_QUERY = '''
-		select t.relname as table_name, i.relname as index_name, a.attname as column_name, a.attnum 
-			from pg_class t, pg_class i, pg_index ix, pg_attribute a, pg_namespace n
-		where t.oid = ix.indrelid
-		  and i.oid = ix.indexrelid
-		  and n.oid = i.relnamespace
-		  and a.attrelid = t.oid
-		  and t.relname = ?
-		  and a.attnum = ?
+		select table_name,
+		    index_name,
+		    array_agg(column_name) as column_names
+		from (
+		    select
+		        t.relname as table_name,
+		        i.relname as index_name,
+		        a.attname as column_name,
+		        unnest(ix.indkey) as unn,
+		        a.attnum
+		    from
+		        pg_class t,
+		        pg_class i,
+		        pg_index ix,
+		        pg_attribute a
+		    where
+		        t.oid = ix.indrelid
+		        and i.oid = ix.indexrelid
+		        and a.attrelid = t.oid
+		        and a.attnum = ANY(ix.indkey)
+		        and t.relkind = 'r'
+		        and t.relname = ?
+				and i.relname = ?
+		    order by
+		        t.relname,
+		        i.relname,
+		        generate_subscripts(ix.indkey,1)) sb
+		where unn = attnum
+		group by table_name, index_name
 	'''
 	
-	private def fillIndexColumns(tables, objectName, columnIndexesMap) {
+	private def fillIndexColumns(tables, objectName) {
 		def rows = []
 		tables.each { tableKey, tableValue ->
 			tableValue.indexes.each { indexKey, indexValue ->
-				def indexMap = columnIndexesMap.find {it.key.name == indexKey}
-				def indices = indexMap.value.split(' ')
-				indices.each {
-					rows.add(sql.rows(INDEXES_COLUMNS_QUERY, [tableKey, it.toInteger()]))
-				}
+				rows.add(sql.rows(INDEXES_COLUMNS_QUERY, [tableKey, indexValue.name]))
 			}
 		}
 		
@@ -259,17 +281,19 @@ class PostgresDatabaseReader implements DatabaseReader {
 				def table = it.table_name.toLowerCase()
 				def indexName = it.index_name.toLowerCase()
 				def index = tables.get(table).indexes.get(indexName);
-				def indexColumn = new IndexColumn()
-				indexColumn.name = it.column_name.toLowerCase()
-				indexColumn.descend = true
-				index.columns << indexColumn
+				it.column_names.getArray().each { column_name ->
+					def indexColumn = new IndexColumn()
+					indexColumn.name = column_name.toLowerCase()
+					indexColumn.descend = true
+					index.columns << indexColumn
+				}
 			}
 		})
 	}
 	
 	private def getIndexType(String indexType){
 		switch (indexType) {
-			case "BTREE":
+			case "btree":
 				return "n"
 				break
 			default:

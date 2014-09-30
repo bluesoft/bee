@@ -52,6 +52,7 @@ public class BeePostgresSchemaCreatorAction {
 
 		out.println("generating indexes...")
 		beeSchemaCreator.createIndexes(file, schema)
+		beeSchemaCreator.createFunctionalIndexes(file, schema) // TODO
 
 		out.println("generating views...")
 		beeSchemaCreator.createViews(file, schema)

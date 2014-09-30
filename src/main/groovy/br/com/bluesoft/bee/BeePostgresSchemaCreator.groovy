@@ -5,17 +5,19 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
 	def createColumn(def column) {
 		def result = "    ${column.name} ${column.type}"
-		if(column.type in ['char', 'varchar'])
-			if(column.sizeType != null)
-				result += "(${column.size} ${column.sizeType})"
-			else
+		if (column.type in ['character', 'character varying', 'text']) {
+			if (column.size != null) {
 				result += "(${column.size})"
-
-		if(column.type == 'numeric')
-			if(column.scale > 0)
+			}
+		}
+		
+		if (column.type in ['decimal','numeric','serial', 'bigserial']) {
+			if (column.scale > 0) {
 				result += "(${column.size}, ${column.scale})"
-			else
+			} else if (column.size != null) {
 				result += "(${column.size})"
+			}
+		}
 
 		if(column.defaultValue)
 			result += " default ${column.defaultValue}"
@@ -27,13 +29,18 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
 	def createIndex(tableName, index) {
 		def result = "create"
-		if(index.type == 'b')
-			result += ' bitmap'
-		if(index.unique)
-			result += ' unique'
-		result += " index ${index.name} on ${tableName}(" + index.columns.join(',') + ");\n"
+		def indexType = getIndexType(index.type)
+		result += " index ${index.name} on ${tableName} USING ${indexType} (" + index.columns.join(',') + ");\n"
 
 		return result
+	}
+	
+	def getIndexType(indexType){
+		if (indexType == 'b') {
+			return ' btree'
+		} else {
+		return ' btree'
+		}
 	}
 
 	void createIndexes(def file, def schema) {
@@ -54,6 +61,11 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 		}
 
 		file << "\n"
+	}
+	
+	
+	void createFunctionalIndexes(def file, def schema) {
+		
 	}
 
 	void createProcedures(def file, def schema) {
