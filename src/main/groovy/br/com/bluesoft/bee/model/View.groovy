@@ -49,7 +49,6 @@ class View implements Validator {
 		}
 			
 		def messages = []
-
 		if (!StringUtil.compare(metadataView.text,this.text)) {
 			def message = new Message(objectName:name, level:MessageLevel.ERROR, objectType:ObjectType.VIEW, messageType:MessageType.VIEW_BODY, message:"The body of the view ${this.name} differs from metadata.")
 			messages << message

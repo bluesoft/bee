@@ -239,40 +239,79 @@ class PostgresDatabaseReader implements DatabaseReader {
 	final static def INDEXES_COLUMNS_QUERY = '''
 		select table_name,
 		    index_name,
-		    array_agg(column_name) as column_names
+		    string_to_array((column_name),',') as column_names
 		from (
 		    select
-		        t.relname as table_name,
-		        i.relname as index_name,
-		        a.attname as column_name,
-		        unnest(ix.indkey) as unn,
-		        a.attnum
+			t.relname as table_name,
+			i.relname as index_name,
+			a.attname as column_name,
+			unnest(ix.indkey) as unn,
+			a.attnum
 		    from
-		        pg_class t,
-		        pg_class i,
-		        pg_index ix,
-		        pg_attribute a
+			pg_class t,
+			pg_class i,
+			pg_index ix,
+			pg_attribute a
 		    where
-		        t.oid = ix.indrelid
-		        and i.oid = ix.indexrelid
-		        and a.attrelid = t.oid
-		        and a.attnum = ANY(ix.indkey)
-		        and t.relkind = 'r'
-		        and t.relname = ?
-				and i.relname = ?
+			t.oid = ix.indrelid
+			and i.oid = ix.indexrelid
+			and a.attrelid = t.oid
+			and a.attnum = ANY(ix.indkey)
+			and t.relkind = 'r'
+			and i.relname = ?
 		    order by
-		        t.relname,
-		        i.relname,
-		        generate_subscripts(ix.indkey,1)) sb
+			t.relname,
+			i.relname,
+			generate_subscripts(ix.indkey,1)) sb
 		where unn = attnum
-		group by table_name, index_name
+		group by table_name, index_name, column_names
+		union
+		select 
+		    table_name, index_name, string_to_array(substring(indexdef from '\\((.*)\\)'),'') as column_names
+		from (
+		    select
+			t.relname as table_name,
+			i.relname as index_name,
+			idx.indexdef as indexdef
+		    from
+			pg_class t,
+			pg_class i,
+			pg_index ix,
+			pg_indexes idx,
+			pg_attribute a
+		    where
+			t.oid = ix.indrelid
+			and i.oid = ix.indexrelid
+			and a.attrelid = t.oid
+			and t.relkind = 'r'
+			and i.relname = idx.indexname
+			and i.relname = ?
+			and i.relname not in
+			(
+			select
+			  i.relname as index_name
+			from
+			  pg_class t,
+			  pg_class i,
+			  pg_index ix,
+			  pg_attribute a
+			where
+			  t.oid = ix.indrelid
+			  and i.oid = ix.indexrelid
+			  and a.attrelid = t.oid
+			  and a.attnum = ANY(ix.indkey)
+			  and t.relkind = 'r'
+			  and i.relname = ?
+			)
+		    order by i.relname
+		) a group by table_name, index_name, indexdef;
 	'''
 	
 	private def fillIndexColumns(tables, objectName) {
 		def rows = []
 		tables.each { tableKey, tableValue ->
 			tableValue.indexes.each { indexKey, indexValue ->
-				rows.add(sql.rows(INDEXES_COLUMNS_QUERY, [tableKey, indexValue.name]))
+				rows.add(sql.rows(INDEXES_COLUMNS_QUERY, [indexValue.name, indexValue.name, indexValue.name]))
 			}
 		}
 		
@@ -442,6 +481,11 @@ class PostgresDatabaseReader implements DatabaseReader {
 			def view = new View()
 			view.name = it.view_name.toLowerCase()
 			view.text = it.text
+//			println 'before'
+//			println it.text
+//			view.text = it.text.replaceAll("\\r","\\r").replaceAll("\\n","\\n").replaceAll("\\t","\\t")
+//			println 'after'
+//			println view.text
 			views[view.name] = view
 		})
 		return views

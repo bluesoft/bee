@@ -2,7 +2,7 @@ package br.com.bluesoft.bee
 
 
 class BeePostgresSchemaCreator extends BeeSchemaCreator {
-
+	
 	def createColumn(def column) {
 		def result = "    ${column.name} ${column.type}"
 		if (column.type in ['character', 'character varying', 'text']) {
@@ -22,15 +22,21 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 		if(column.defaultValue)
 			result += " default ${column.defaultValue}"
 
-		if(!column.nullable)
+		if (!column.nullable) {
 			result += ' not null'
+		}
+		
 		return result
 	}
 
 	def createIndex(tableName, index) {
 		def result = "create"
 		def indexType = getIndexType(index.type)
-		result += " index ${index.name} on ${tableName} USING ${indexType} (" + index.columns.join(',') + ");\n"
+		if (index.columns.size() == 1 && index.columns[0].name.contains('(')) {
+				result += " index ${index.name} on ${tableName} USING ${indexType} (" + index.columns[0].name + ");\n"
+		} else {
+				result += " index ${index.name} on ${tableName} USING ${indexType} (" + index.columns.join(',') + ");\n"
+		}
 
 		return result
 	}
@@ -64,10 +70,6 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 	}
 	
 	
-	void createFunctionalIndexes(def file, def schema) {
-		
-	}
-
 	void createProcedures(def file, def schema) {
 		schema.procedures*.value.sort().each {
 			def procedure = "${it.text};\n\n"
