@@ -59,7 +59,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 		def tables = fillTables(objectName)
 		fillColumns(tables, objectName)
 		fillIndexes(tables, objectName)
-		fillIndexColumns(tables, objectName)
 		fillCostraints(tables, objectName)
 		fillCostraintsColumns(tables, objectName)
 		return tables
@@ -160,61 +159,38 @@ class PostgresDatabaseReader implements DatabaseReader {
 	}
 	
 	final static def INDEXES_QUERY = '''
-		select
-		    t.relname as table_name,
-		    i.relname as index_name,
-		    ix.indisunique as uniqueness,
-		    substring(indexdef from 'USING (.*) \\(') as index_type,
-		    ix.indkey
-		from pg_class t
-		    inner join pg_index ix on t.oid = ix.indrelid
-		    inner join pg_class i on i.oid = ix.indexrelid
-		    inner join pg_attribute a on a.attrelid = t.oid
-		    inner join pg_indexes ixd on i.relname = ixd.indexname
-		    inner join pg_namespace n on n.oid = i.relnamespace
-		where
-		    t.relkind = 'r'
-		    and i.relname not in (select conname from pg_constraint)
-		    and n.nspname NOT IN ('pg_catalog')
-		group by
-		    t.relname,
-		    i.relname,
-		    ix.indisunique,
-		    index_type,
-		    ix.indkey
-		order by
-		    t.relname,
-		    i.relname,
-		    ix.indisunique
+		select idx2.tablename as table_name,
+		       i.relname as index_name,
+		       idx.indisunique as uniqueness,
+		       am.amname as index_type,
+		       array(
+		       select pg_get_indexdef(idx.indexrelid, k + 1, true)
+		       from generate_subscripts(idx.indkey, 1) as k
+		       order by k
+		       ) as column_names
+		from pg_index as idx
+		join pg_class as i on i.oid = idx.indexrelid
+		join pg_am as am on i.relam = am.oid
+		join pg_namespace as ns on ns.oid = i.relnamespace and i.relname !~ '^(pg_|sql_)'
+		inner join pg_indexes as idx2 on idx2.indexname = i.relname
 	'''
+	
 	final static def INDEXES_QUERY_BY_NAME = '''
-		select
-		    t.relname as table_name,
-		    i.relname as index_name,
-		    ix.indisunique as uniqueness,
-		    substring(indexdef from 'USING (.*) \\(') as index_type,
-		    ix.indkey
-		from pg_class t
-		    inner join pg_index ix on t.oid = ix.indrelid
-		    inner join pg_class i on i.oid = ix.indexrelid
-		    inner join pg_attribute a on a.attrelid = t.oid
-		    inner join pg_indexes ixd on i.relname = ixd.indexname
-		    inner join pg_namespace n on n.oid = i.relnamespace
-		where
-		    t.relkind = 'r'
-		    and i.relname not in (select conname from pg_constraint)
-		    and n.nspname NOT IN ('pg_catalog')
-		    and t.relname = ?
-		group by
-		    t.relname,
-		    i.relname,
-		    ix.indisunique,
-		    index_type,
-		    ix.indkey
-		order by
-		    t.relname,
-		    i.relname,
-		    ix.indisunique
+		select idx2.tablename as table_name,
+		       i.relname as index_name,
+		       idx.indisunique as uniqueness,
+		       am.amname as index_type,
+		       array(
+		       select pg_get_indexdef(idx.indexrelid, k + 1, true)
+		       from generate_subscripts(idx.indkey, 1) as k
+		       order by k
+		       ) as column_names
+		from pg_index as idx
+		join pg_class as i on i.oid = idx.indexrelid
+		join pg_am as am on i.relam = am.oid
+		join pg_namespace as ns on ns.oid = i.relnamespace and i.relname !~ '^(pg_|sql_)'
+		inner join pg_indexes as idx2 on idx2.indexname = i.relname 
+		where idx2.tablename = ?
 	'''
 
 	private def fillIndexes(tables, objectName) {
@@ -229,105 +205,18 @@ class PostgresDatabaseReader implements DatabaseReader {
 			def table = tables[tableName]
 			def index = new Index()
 			index.name = it.index_name.toLowerCase()
-			index.type = getIndexType(it.index_type.toLowerCase())
-			index.unique = it.uniqueness == 'UNIQUE' ? true : false
+			index.type = getIndexType(it.index_type)
+			index.unique = it.uniqueness
 			table.indexes[index.name] = index
-		})
-
-	}
-
-	final static def INDEXES_COLUMNS_QUERY = '''
-		select table_name,
-		    index_name,
-		    string_to_array((column_name),',') as column_names
-		from (
-		    select
-			t.relname as table_name,
-			i.relname as index_name,
-			a.attname as column_name,
-			unnest(ix.indkey) as unn,
-			a.attnum
-		    from
-			pg_class t,
-			pg_class i,
-			pg_index ix,
-			pg_attribute a
-		    where
-			t.oid = ix.indrelid
-			and i.oid = ix.indexrelid
-			and a.attrelid = t.oid
-			and a.attnum = ANY(ix.indkey)
-			and t.relkind = 'r'
-			and i.relname = ?
-		    order by
-			t.relname,
-			i.relname,
-			generate_subscripts(ix.indkey,1)) sb
-		where unn = attnum
-		group by table_name, index_name, column_names
-		union
-		select 
-		    table_name, index_name, string_to_array(substring(indexdef from '\\((.*)\\)'),'') as column_names
-		from (
-		    select
-			t.relname as table_name,
-			i.relname as index_name,
-			idx.indexdef as indexdef
-		    from
-			pg_class t,
-			pg_class i,
-			pg_index ix,
-			pg_indexes idx,
-			pg_attribute a
-		    where
-			t.oid = ix.indrelid
-			and i.oid = ix.indexrelid
-			and a.attrelid = t.oid
-			and t.relkind = 'r'
-			and i.relname = idx.indexname
-			and i.relname = ?
-			and i.relname not in
-			(
-			select
-			  i.relname as index_name
-			from
-			  pg_class t,
-			  pg_class i,
-			  pg_index ix,
-			  pg_attribute a
-			where
-			  t.oid = ix.indrelid
-			  and i.oid = ix.indexrelid
-			  and a.attrelid = t.oid
-			  and a.attnum = ANY(ix.indkey)
-			  and t.relkind = 'r'
-			  and i.relname = ?
-			)
-		    order by i.relname
-		) a group by table_name, index_name, indexdef;
-	'''
-	
-	private def fillIndexColumns(tables, objectName) {
-		def rows = []
-		tables.each { tableKey, tableValue ->
-			tableValue.indexes.each { indexKey, indexValue ->
-				rows.add(sql.rows(INDEXES_COLUMNS_QUERY, [indexValue.name, indexValue.name, indexValue.name]))
-			}
-		}
-		
-		rows.each({
-			it.each {
-				def table = it.table_name.toLowerCase()
-				def indexName = it.index_name.toLowerCase()
-				def index = tables.get(table).indexes.get(indexName);
-				it.column_names.getArray().each { column_name ->
-					def indexColumn = new IndexColumn()
-					indexColumn.name = column_name.toLowerCase()
-					indexColumn.descend = true
-					index.columns << indexColumn
-				}
+			
+			it.column_names.getArray().each { column_name ->
+				def indexColumn = new IndexColumn()
+				indexColumn.name = column_name.toLowerCase()
+				indexColumn.descend = true
+				index.columns << indexColumn
 			}
 		})
+
 	}
 	
 	private def getIndexType(String indexType){
