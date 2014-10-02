@@ -6,7 +6,11 @@ mainClassName = "br.com.bluesoft.bee.Bee"
 
 group = 'br.com.bluesoft.bee'
 def artifact = 'bee'
+<<<<<<< HEAD
 version = '1.46'
+=======
+version = '1.47'
+>>>>>>> bugs-postgres
 
 def startScriptsDir = new File("$buildDir/scripts")
 
