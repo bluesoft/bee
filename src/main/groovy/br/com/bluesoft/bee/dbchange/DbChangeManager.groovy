@@ -32,15 +32,12 @@
  */
 package br.com.bluesoft.bee.dbchange
 
-import br.com.bluesoft.bee.service.BeeWriter
-import java.sql.SQLException
-import java.util.List
-
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.service.BeeWriter
+import java.sql.SQLException
 
 class DbChangeManager {
-
+	private final static def FILENAME_REGEX = /^([0-9]+)\-(.+)\.dbchange((\.)(.+))?$/
 	final static def SELECT_TABLE = "select * from dbchanges"
 	final static def MESSAGE_THERE_IS_NO_INSTRUCTIONS = "!!!Error: There is no ::up/::down statement in dbchange file"
 	final static def MESSAGE_NO_COMMANDS_IN_FILE = "There is no commands in the dbchange file"
@@ -179,9 +176,9 @@ class DbChangeManager {
 		}
 	}
 
-	List<String> listar() {
+	List<String> listar(String group) {
 		def listaBanco = listarInstrucoesJaExecutadas()
-		def listaArquivo = listarArquivos()
+		def listaArquivo = listarArquivos(group)
 		
 		if (listaArquivo == null || listaBanco == null) {
 			return null
@@ -229,9 +226,11 @@ class DbChangeManager {
 
 	}
 
-	def listarArquivos() {
+	def listarArquivos(def group) {
 		def directoryFile = getDirectoryFile()
-		def filenames = directoryFile.list().findAll { it ==~ /^[0-9]+\-.+\.dbchange$/ }
+		def filenames = directoryFile.list().findAll {
+			return it ==~ FILENAME_REGEX && (!group || it.endsWith(".${group}"))
+		}
 
 		def result = []
 		filenames.each {
@@ -274,11 +273,15 @@ class DbChangeManager {
 		return tabelaDbchangesFoiCriada
 	}
 
-	def createDbChangeFile(description) {
-		def filename = String.valueOf(System.currentTimeMillis()) + "-" + description +".dbchange";
+	def createDbChangeFile(description, group) {
+		def filename = "${String.valueOf(System.currentTimeMillis())}-${description}.dbchange"
+		if (group) {
+			filename += ".${group}"
+		}
 		def file = new File(getDirectoryFile(), filename)
 
 		def str = """-- ${description}
+${group ? "-- group: ${group}" : ""}
 
 ::up
 
@@ -303,10 +306,10 @@ class DbChangeManager {
 			salvarExecucao(sql, arquivo, UpDown.UP)
 	}
 	
-	def markAll() {
+	def markAll(def group) {
 		def sql = getDatabaseConnection()
 		def listaBanco = listarInstrucoesJaExecutadas()
-		def listaArquivo = listarArquivos()
+		def listaArquivo = listarArquivos(group)
 		
 		def listaParaExecutar = (listaArquivo - listaBanco)
 		listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
@@ -331,11 +334,11 @@ class DbChangeManager {
 	}
 
 	def obterTimestamp(def arquivo) {
-		if(!(arquivo ==~ /^([0-9]+)\-(.+)\.dbchange$/)) {
+		if(!(arquivo ==~ FILENAME_REGEX)) {
 			return "0"
 		}
 
-		def matcher = (arquivo =~ /^([0-9]+)\-(.+)\.dbchange$/)
+		def matcher = (arquivo =~ FILENAME_REGEX)
 		def timestamp = matcher[0][1]
 		return timestamp
 	}

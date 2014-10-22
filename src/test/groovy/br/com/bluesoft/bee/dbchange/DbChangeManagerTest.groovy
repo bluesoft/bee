@@ -1,15 +1,13 @@
 package br.com.bluesoft.bee.dbchange
 
-import groovy.sql.Sql
-
-import java.sql.Connection
-import java.sql.DatabaseMetaData
-import java.sql.SQLException
-
-import spock.lang.Specification
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.RDBMSUtilTest
+import groovy.sql.Sql
+import spock.lang.Specification
+import java.sql.Connection
+import java.sql.DatabaseMetaData
+import java.sql.SQLException
 
 class DbChangeManagerTest extends Specification {
 
@@ -41,6 +39,37 @@ class DbChangeManagerTest extends Specification {
 		lista == [
 			"989898-test.dbchange",
 			"989899-test.dbchange"
+		]
+	}
+
+	def "deve retornar uma lista com os arquivos do grupo a serem executados e na ordem"() {
+		given:
+		def mensagens = []
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def sql = [execute: { instrucao -> []}, rows: { instrucao -> [[ARQUIVO_NOME: '234234-test.dbchange.grupo']]}, close: {} ]
+		def directoryFile = [list: {
+			[
+					"abc",
+					"65564564-test.dbchange",
+					"999999-test.dbchange.grupo",
+					"989899-test.dbchange",
+					"989898-test.dbchange",
+					"234234-test.dbchange.grupo",
+					"123123-test.dbchange.grupo"
+			]
+		} ]
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger)
+		def grupo = "grupo"
+
+		when: "listar dbchanges"
+		def lista = manager.listar(grupo)
+
+		then: "deve conter somente as instrucoes que nao foram executadas"
+		lista.size() == 2
+
+		lista == [
+				"123123-test.dbchange.grupo",
+				"999999-test.dbchange.grupo"
 		]
 	}
 
@@ -90,6 +119,23 @@ class DbChangeManagerTest extends Specification {
 
 		then:
 		listaArquivos == RESULT
+	}
+
+	def "deve listar os arquivos do grupo"() {
+		given:
+		def directoryFile = [list: {[
+				"abc",
+				"65564564-test.dbchange",
+				"88726692-test.dbchange.grupo"
+		]}]
+		def manager = new DbChangeManager(directoryFile: directoryFile)
+		def grupo = "grupo"
+
+		when: "listar arquivos de dbchanges"
+		def listaArquivos = manager.listarArquivos(grupo)
+
+		then:
+		listaArquivos == [[ARQUIVO_NOME: "88726692-test.dbchange.grupo"]]
 	}
 
 	def "deve criar a tabela dbchanges caso nao exista em banco oracle"() {
@@ -526,6 +572,28 @@ class DbChangeManagerTest extends Specification {
 		mensagens.size() == 2
 		mensagens[0] == "marking 1 file(s)"
 		mensagens[1] == "65564564-test.dbchange marked as implemented"
+	}
+
+	def "deve marcar todos os dbchanges do grupo"() {
+		given:
+		def sql = mockSql()
+		def mensagens = []
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		def directoryFile = [list: {[
+				"abc",
+				"65264543-test.dbchange.grupo",
+				"65564564-test.dbchange"
+		]}]
+		def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
+		def grupo = "grupo"
+
+		when: "marcar todos os dbchanges do grupo"
+		manager.markAll(grupo)
+
+		then:
+		mensagens.size() == 2
+		mensagens[0] == "marking 1 file(s)"
+		mensagens[1] == "65264543-test.dbchange.grupo marked as implemented"
 	}
 
 	def "se todos os arquivos já foram executados, não fazer nada quando rodar markAll" () {

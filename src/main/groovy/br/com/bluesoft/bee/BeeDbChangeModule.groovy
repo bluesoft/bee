@@ -38,29 +38,32 @@ import br.com.bluesoft.bee.service.BeeWriter
 public class BeeDbChangeModule implements BeeWriter {
 
 	def parameterCount = [
-		"create": [1, 1],
-		"status": [1, 1],
+		"create": [1, 2],
+		"status": [1, 2],
 		"up": [1, 2],
 		"down": [2, 2],
 		"mark": [2, 2],
 		"markall": [1, 1],
 		"unmark": [2, 2],
 		"find": [1, 2],
-		"open": [1, 2]
+		"open": [1, 2],
+		"group_up": [2, 2],
+		"group_markall": [2, 2]
 		]
 
 	def usage() {
 		println "usage: bee <options> dbchange:action <parameters>"
 		println "Actions:"
-		println "         dbchange:create description - creates a dbchange file"
-		println "         dbchange:status connection - lists dbchanges to run"
+		println "         dbchange:create description <group> - creates a dbchange file"
+		println "         dbchange:status connection <group> - lists dbchanges to run"
 		println "         dbchange:up connection <file> - runs all pending dbchange files, or one if specified"
 		println "         dbchange:down connection file - runs a dbchange rollback action"
 		println "         dbchange:mark connection file - mark a file as executed"
-		println "         dbchange:markall connection - mark All files as executed"
+		println "         dbchange:markall connection <group> - mark all files as executed"
 		println "         dbchange:unmark connection file - unmark a file as executed"
 		println "         dbchange:find name - search file"
 		println "         dbchange:open name - open file with EDITOR"
+		println "         dbchange:group_up connection group - runs all pending dbchange files of the group"
 	}
 
 	def parseOptions(options) {
@@ -108,6 +111,9 @@ public class BeeDbChangeModule implements BeeWriter {
 				break;
 			case "open":
 				actionRunner = new BeeDbChangeOpenAction(options: options, out: this)
+				break;
+			case "group_up":
+				actionRunner = new BeeDbChangeGroupUpAction(options: options, out: this)
 				break;
 		}
 
