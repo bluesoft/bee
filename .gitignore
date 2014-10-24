@@ -9,3 +9,5 @@ build
 lib
 .DS_Store
 .groovy
+.idea/
+*.iml

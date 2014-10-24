@@ -10,10 +10,10 @@ class BeeDbChangeMarkAllAction {
 	BeeWriter out
 
 	def run() {
-		def clientName = Options.instance.arguments[0]
+		def clientName = options.arguments[0]
+		def group = options.arguments[1]
 
 		def manager = new DbChangeManager(configFile: Options.instance.configFile, path: Options.instance.dataDir.absolutePath, clientName: clientName, logger: out)
-
-		manager.markAll()
+		manager.markAll(group)
 	}
 }
