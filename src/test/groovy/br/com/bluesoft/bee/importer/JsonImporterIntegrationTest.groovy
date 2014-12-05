@@ -29,6 +29,10 @@ class JsonImporterIntegrationTest {
 		File destTriggersFolder = new File('/tmp/bee/triggers')
 		destTriggersFolder.mkdirs()
 		
+		File destUserTypesFolder = new File('/tmp/bee/usertypes')
+		destUserTypesFolder.mkdirs()
+
+		
 		File srcTablesFolder = new File(this.getClass().getResource("/tables").getFile())
 		srcTablesFolder.eachFile { 
 			new File(destTablesFolder, it.getName()) << it.getText()
@@ -54,6 +58,11 @@ class JsonImporterIntegrationTest {
 			new File(destTriggersFolder, it.getName()) << it.getText()
 		}
 		
+		File srcUserTypesFolder = new File(this.getClass().getResource('/usertypes').getFile())
+		srcUserTypesFolder.eachFile {
+			new File(destUserTypesFolder, it.getName()) << it.getText()
+		}
+
 		new File('/tmp/bee/sequences.bee') << new File(this.getClass().getResource('/sequences.bee').getFile()).getText()
 		importer = new JsonImporter()
 	}

@@ -32,6 +32,9 @@
  */
 package br.com.bluesoft.bee.util;
 
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
 
 public class StringUtil {
 
@@ -51,5 +54,11 @@ public class StringUtil {
 		def arr2 = splitString("$str2")
 
 		return arr1 == arr2
+	}
+	
+	static deleteSchemaNameFromUserTypeText(userTypeText) {
+		Pattern regex = Pattern.compile("\\\".*\\.\\\"(.*)\\\"");
+		Matcher regexMatcher = regex.matcher(userTypeText);
+		def newUserTypeText = regexMatcher.replaceFirst('$1');
 	}
 }

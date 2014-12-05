@@ -268,4 +268,8 @@ abstract class BeeSchemaCreator {
 			}
 		}
 	}
+	
+	def createUserTypes(file, schema){
+		
+	}
 }

@@ -32,6 +32,8 @@
  */
 package br.com.bluesoft.bee.importer
 
+import java.io.File;
+
 import org.codehaus.jackson.map.ObjectMapper
 
 import br.com.bluesoft.bee.model.*
@@ -49,6 +51,7 @@ class JsonImporter implements Importer {
 	File proceduresFolder
 	File packagesFolder
 	File triggersFolder
+	File userTypesFolder
 
 	JsonImporter() {
 		this(null)
@@ -62,6 +65,8 @@ class JsonImporter implements Importer {
 		this.proceduresFolder = new File(mainFolder, 'procedures')
 		this.packagesFolder = new File(mainFolder, 'packages')
 		this.triggersFolder = new File(mainFolder, 'triggers')
+		this.userTypesFolder = new File(mainFolder, 'usertypes')
+
 		this.mapper = JsonUtil.createMapper()
 	}
 
@@ -73,6 +78,7 @@ class JsonImporter implements Importer {
 		schema.procedures = importProcedures()
 		schema.packages = importPackages()
 		schema.triggers = importTriggers()
+		schema.userTypes = importUserTypes()
 		return schema
 	}
 
@@ -144,4 +150,16 @@ class JsonImporter implements Importer {
 		}
 		return triggers
 	}
+	
+	private def importUserTypes() {
+		def userTypes = [:]
+		userTypesFolder.eachFile {
+			if (it.name.endsWith(".bee")) {
+				def userType = mapper.readValue(it, UserType.class)
+				userTypes[userType.name] = userType
+			}
+		}
+		return userTypes
+	}
+
 }

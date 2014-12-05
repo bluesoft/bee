@@ -66,5 +66,6 @@ enum MessageType {
 
 	TRIGGER_BODY,
 
-	DATA_MISMATCH
+	DATA_MISMATCH, 
+	USER_TYPE_BODY
 }

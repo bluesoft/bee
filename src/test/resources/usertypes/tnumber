@@ -1,0 +1,4 @@
+{
+  name : "tnumber",
+  text : "\n  CREATE OR REPLACE TYPE TNUMBER as table of number;\n"
+}

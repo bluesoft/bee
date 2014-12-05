@@ -34,7 +34,7 @@ package br.com.bluesoft.bee.model;
 
 public enum ObjectType {
 
-	TABLE("table"), VIEW("view"), SEQUENCE("sequence"), TABLE_COLUMN("table column"), INDEX('index'), CONSTRAINT('constraint'), PROCEDURE('procedure'), PACKAGE('package'), TRIGGER('trigger')
+	TABLE("table"), VIEW("view"), SEQUENCE("sequence"), TABLE_COLUMN("table column"), INDEX('index'), CONSTRAINT('constraint'), PROCEDURE('procedure'), PACKAGE('package'), TRIGGER('trigger'), USER_TYPE('user type')
 
 	def description
 
@@ -63,6 +63,8 @@ public enum ObjectType {
 				return PACKAGE
 			case Trigger.class:
 				return TRIGGER
+			case UserType.class:
+				return USER_TYPE
 			default:
 				return null
 		}

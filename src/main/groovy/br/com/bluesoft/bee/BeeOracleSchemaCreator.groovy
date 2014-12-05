@@ -1,5 +1,10 @@
 package br.com.bluesoft.bee
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import br.com.bluesoft.bee.util.StringUtil;
+
 
 class BeeOracleSchemaCreator extends BeeSchemaCreator {
 
@@ -48,4 +53,12 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
 			result += ' not null'
 		return result
 	}
+	
+	def createUserTypes(def file, def schema) {
+		schema.userTypes.sort().each {
+			def userType = StringUtil.deleteSchemaNameFromUserTypeText(it.value.text)
+			file.append(userType.toString(), 'utf-8')
+		}
+	}
+	
 }

@@ -58,6 +58,9 @@ public class BeeOracleSchemaCreatorAction {
 
 		out.println("generating views...")
 		beeSchemaCreator.createViews(file, schema)
+		
+		out.println("generating user types...")
+		beeSchemaCreator.createUserTypes(file, schema)
 
 		out.println("generating packages...")
 		beeSchemaCreator.createPackages(file, schema)
@@ -67,6 +70,7 @@ public class BeeOracleSchemaCreatorAction {
 
 		out.println("generating triggers...")
 		beeSchemaCreator.createTriggers(file, schema)
+		
 
 		
 		def env = System.getenv()

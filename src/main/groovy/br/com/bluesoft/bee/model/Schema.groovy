@@ -45,6 +45,7 @@ class Schema {
 	Map procedures = [:]
 	Map packages = [:]
 	Map triggers = [:]
+	Map userTypes = [:]
 
 	def validateWithMetadata(Schema metadataSchema) {
 
@@ -113,6 +114,7 @@ class Schema {
 		allObjects.putAll procedures
 		allObjects.putAll packages
 		allObjects.putAll triggers
+		allObjects.putAll userTypes
 		return allObjects
 	}
 
@@ -124,6 +126,7 @@ class Schema {
 		schema.procedures.putAll procedures.findAll { it.key == objectName }
 		schema.packages.putAll packages.findAll { it.key == objectName }
 		schema.triggers.putAll triggers.findAll { it.key == objectName }
+		schema.userTypes.putAll userTypes.findAll {it.key == objectName }
 		return schema
 	}
 }
