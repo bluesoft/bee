@@ -83,6 +83,7 @@ class JsonImporter implements Importer {
 	}
 
 	private def importTables() {
+		checkIfFolderExists(tablesFolder)
 		def tables = [:]
 		tablesFolder.eachFile {
 			if (it.name.endsWith(".bee")) {
@@ -94,6 +95,7 @@ class JsonImporter implements Importer {
 	}
 
 	private def importViews() {
+		checkIfFolderExists(viewsFolder)
 		def views = [:]
 		viewsFolder.eachFile {
 			if (it.name.endsWith(".bee")) {
@@ -118,6 +120,7 @@ class JsonImporter implements Importer {
 	}
 
 	private def importProcedures() {
+		checkIfFolderExists(proceduresFolder)
 		def procedures = [:]
 		proceduresFolder.eachFile {
 			if (it.name.endsWith(".bee")) {
@@ -130,6 +133,7 @@ class JsonImporter implements Importer {
 	}
 
 	private def importPackages() {
+		checkIfFolderExists(packagesFolder)
 		def packages = [:]
 		packagesFolder.eachFile {
 			if (it.name.endsWith(".bee")) {
@@ -141,6 +145,7 @@ class JsonImporter implements Importer {
 	}
 
 	private def importTriggers() {
+		checkIfFolderExists(triggersFolder)
 		def triggers = [:]
 		triggersFolder.eachFile {
 			if (it.name.endsWith(".bee")) {
@@ -152,6 +157,7 @@ class JsonImporter implements Importer {
 	}
 	
 	private def importUserTypes() {
+		checkIfFolderExists(userTypesFolder)
 		def userTypes = [:]
 		userTypesFolder.eachFile {
 			if (it.name.endsWith(".bee")) {
@@ -160,6 +166,12 @@ class JsonImporter implements Importer {
 			}
 		}
 		return userTypes
+	}
+	
+	private def checkIfFolderExists(def directory) {
+		if (!directory.isDirectory()) {
+			directory.mkdir()
+		}
 	}
 
 }
