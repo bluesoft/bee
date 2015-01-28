@@ -159,38 +159,50 @@ class PostgresDatabaseReader implements DatabaseReader {
 	}
 	
 	final static def INDEXES_QUERY = '''
-		select idx2.tablename as table_name,
-		       i.relname as index_name,
-		       idx.indisunique as uniqueness,
-		       am.amname as index_type,
-		       array(
-		       select pg_get_indexdef(idx.indexrelid, k + 1, true)
-		       from generate_subscripts(idx.indkey, 1) as k
-		       order by k
-		       ) as column_names
-		from pg_index as idx
-		join pg_class as i on i.oid = idx.indexrelid
-		join pg_am as am on i.relam = am.oid
-		join pg_namespace as ns on ns.oid = i.relnamespace and i.relname !~ '^(pg_|sql_)'
-		inner join pg_indexes as idx2 on idx2.indexname = i.relname
+		select ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, am.amname as index_type, 
+		      pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name, 
+		      case am.amcanorder 
+		        when true then case i.indoption[(i.keys).n - 1] & 1 
+		          when 1 then 'desc' 
+		            else 'asc' 
+		          end 
+		        else null 
+		      end as descend
+		from pg_class ct 
+		join pg_namespace n on (ct.relnamespace = n.oid) 
+		join (
+		      select i.indexrelid, i.indrelid, i.indoption, i.indisunique, i.indisclustered, i.indpred, i.indexprs, 
+		      information_schema._pg_expandarray(i.indkey) as keys 
+		      from pg_catalog.pg_index i
+		     ) i on (ct.oid = i.indrelid) 
+		join pg_class ci on (ci.oid = i.indexrelid) 
+		join pg_am am on (ci.relam = am.oid)
+		where ct.relname !~ '^(pg_|sql_)'
+		order by table_name, index_name, column_name;
 	'''
 	
 	final static def INDEXES_QUERY_BY_NAME = '''
-		select idx2.tablename as table_name,
-		       i.relname as index_name,
-		       idx.indisunique as uniqueness,
-		       am.amname as index_type,
-		       array(
-		       select pg_get_indexdef(idx.indexrelid, k + 1, true)
-		       from generate_subscripts(idx.indkey, 1) as k
-		       order by k
-		       ) as column_names
-		from pg_index as idx
-		join pg_class as i on i.oid = idx.indexrelid
-		join pg_am as am on i.relam = am.oid
-		join pg_namespace as ns on ns.oid = i.relnamespace and i.relname !~ '^(pg_|sql_)'
-		inner join pg_indexes as idx2 on idx2.indexname = i.relname 
-		where idx2.tablename = ?
+		select ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, am.amname as index_type, 
+		      pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name, 
+		      case am.amcanorder 
+		        when true then case i.indoption[(i.keys).n - 1] & 1 
+		          when 1 then 'desc' 
+		            else 'asc' 
+		          end 
+		        else null 
+		      end as descend
+		from pg_class ct 
+		join pg_namespace n on (ct.relnamespace = n.oid) 
+		join (
+		      select i.indexrelid, i.indrelid, i.indoption, i.indisunique, i.indisclustered, i.indpred, i.indexprs, 
+		      information_schema._pg_expandarray(i.indkey) as keys 
+		      from pg_catalog.pg_index i
+		     ) i on (ct.oid = i.indrelid) 
+		join pg_class ci on (ci.oid = i.indexrelid) 
+		join pg_am am on (ci.relam = am.oid)
+		where ct.relname !~ '^(pg_|sql_)'
+		and  ct.relname = ? 
+		order by table_name, index_name, column_name;
 	'''
 
 	private def fillIndexes(tables, objectName) {
@@ -200,23 +212,27 @@ class PostgresDatabaseReader implements DatabaseReader {
 		} else {
 			rows = sql.rows(INDEXES_QUERY)
 		}
+		
 		rows.each({
 			def tableName = it.table_name.toLowerCase()
 			def table = tables[tableName]
-			def index = new Index()
-			index.name = it.index_name.toLowerCase()
-			index.type = getIndexType(it.index_type)
-			index.unique = it.uniqueness
-			table.indexes[index.name] = index
-			
-			it.column_names.getArray().each { column_name ->
-				def indexColumn = new IndexColumn()
-				indexColumn.name = column_name.toLowerCase()
-				indexColumn.descend = true
-				index.columns << indexColumn
+			def indexName = it.index_name.toLowerCase()
+			def indexAlreadyExists = table.indexes[indexName] ? true : false
+			def index = null;
+			if (indexAlreadyExists) {
+				index = table.indexes[indexName]
+			} else {
+				index = new Index()
+				index.name = indexName
+				index.type = getIndexType(it.index_type)
+				index.unique = it.uniqueness
+				table.indexes[index.name] = index
 			}
+			def indexColumn = new IndexColumn()
+			indexColumn.name = it.column_name.toLowerCase()
+			indexColumn.descend = it.descend.toLowerCase() == 'desc' ? true : false
+			index.columns << indexColumn
 		})
-
 	}
 	
 	private def getIndexType(String indexType){

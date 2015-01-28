@@ -32,6 +32,8 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 	def createIndex(tableName, index) {
 		def result = "create"
 		def indexType = getIndexType(index.type)
+		if (index.unique)
+			result += ' unique'
 		if (index.columns.size() == 1 && index.columns[0].name.contains('(')) {
 				result += " index ${index.name} on ${tableName} USING ${indexType} (" + index.columns[0].name + ");\n"
 		} else {
