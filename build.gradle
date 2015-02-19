@@ -6,7 +6,7 @@ mainClassName = "br.com.bluesoft.bee.Bee"
 
 group = 'br.com.bluesoft.bee'
 def artifact = 'bee'
-version = '1.49'
+version = '1.50'
 
 def startScriptsDir = new File("$buildDir/scripts")
 

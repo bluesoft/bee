@@ -68,7 +68,7 @@ class OracleDatabaseReader implements DatabaseReader {
 
 	static final def TABLES_COLUMNS_QUERY = '''
 			select ut.table_name, column_name, data_type, nullable, 
-				   coalesce(data_precision, data_length) data_size, data_precision, data_length, char_used as size_type, 
+				   coalesce(data_precision, char_length) data_size, data_precision, data_length, char_used as size_type, 
 				   coalesce(data_scale, 0) data_scale, data_default, column_id, virtual_column
 			from   user_tab_cols utc join user_tables ut on utc.table_name = ut.table_name
 			where  hidden_column = 'NO'
@@ -76,7 +76,7 @@ class OracleDatabaseReader implements DatabaseReader {
 		'''
 	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
 			select ut.table_name, column_name, data_type, nullable, 
-				   coalesce(data_precision, data_length) data_size, data_precision, data_length, char_used as size_type, 
+				   coalesce(data_precision, char_length) data_size, data_precision, data_length, char_used as size_type, 
 				   coalesce(data_scale, 0) data_scale, data_default, column_id, virtual_column
 			from   user_tab_cols utc join user_tables ut on utc.table_name = ut.table_name
 			where  hidden_column = 'NO'
