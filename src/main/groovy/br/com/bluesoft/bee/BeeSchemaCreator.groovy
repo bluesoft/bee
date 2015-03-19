@@ -17,8 +17,6 @@ abstract class BeeSchemaCreator {
 
 	def createColumn(def column) {
 		println  'BeeSchemaCreator'
-		println column.name
-		println column.type
 
 		def result = "    ${column.name} ${column.type}"
 		if(column.type in ['char', 'varchar'])
@@ -165,7 +163,7 @@ abstract class BeeSchemaCreator {
 
 	void createViews(def file, def schema) {
 		schema.views*.value.sort().each {
-			def view = "create or replace view ${it.name} as ${it.text}\n\n"
+			def view = "create or replace view ${it.name} as ${it.text};\n\n"
 			file.append(view.toString(), 'utf-8')
 		}
 	}
