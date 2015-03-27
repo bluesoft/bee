@@ -2,9 +2,11 @@ package br.com.bluesoft.bee.dbchange
 
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.util.QueryDialectHelper;
 import br.com.bluesoft.bee.util.RDBMSUtilTest
 import groovy.sql.Sql
 import spock.lang.Specification
+
 import java.sql.Connection
 import java.sql.DatabaseMetaData
 import java.sql.SQLException
@@ -157,7 +159,7 @@ class DbChangeManagerTest extends Specification {
 		given:
 		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/mySqlTest.properties"), clientName: "test")
 		def sql = Mock(Sql)
-		def createTableQuery = DbchangeQueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/mySqlTest.properties"), "test")
+		def createTableQuery = QueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/mySqlTest.properties"), "test")
 
 		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
 
@@ -173,7 +175,7 @@ class DbChangeManagerTest extends Specification {
 		given:
 		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/postgresTest.properties"), clientName: "test")
 		def sql = Mock(Sql)
-		def createTableQuery = DbchangeQueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/postgresTest.properties"), "test")
+		def createTableQuery = QueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/postgresTest.properties"), "test")
 
 		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
 
@@ -191,7 +193,7 @@ class DbChangeManagerTest extends Specification {
 		def sql = Mock(Sql)
 		def logger = Mock(BeeWriter)
 		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
-		def createTableQuery = DbchangeQueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/oracleTest.properties"), "test")
+		def createTableQuery = QueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/oracleTest.properties"), "test")
 
 		1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
 		1 * sql.execute(createTableQuery) >> { throw new SQLException() }
@@ -227,7 +229,7 @@ class DbChangeManagerTest extends Specification {
 		def arquivo = "989898-test.dbchange"
 		def logger = Mock(BeeWriter)
 		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
-		def createTableQuery = DbchangeQueryDialectHelper.getInsertIntoDbchangesQuery(getProperties("/oracleTest.properties"), "test")
+		def createTableQuery = QueryDialectHelper.getInsertIntoDbchangesQuery(getProperties("/oracleTest.properties"), "test")
 
 		when: "salvar execucao de dbchange"
 		manager.salvarExecucao(sql, arquivo, UpDown.UP)
@@ -243,7 +245,7 @@ class DbChangeManagerTest extends Specification {
 		def arquivo = "989898-test.dbchange"
 		def logger = Mock(BeeWriter)
 		def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
-		def deleteQuery = DbchangeQueryDialectHelper.getDeleteFromDbchangesQuery(getProperties("/oracleTest.properties"), "test")
+		def deleteQuery = QueryDialectHelper.getDeleteFromDbchangesQuery(getProperties("/oracleTest.properties"), "test")
 
 		2 * sql.commit()
 		1 * sql.execute(deleteQuery, _)

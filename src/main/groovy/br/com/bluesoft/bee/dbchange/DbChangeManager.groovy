@@ -34,6 +34,8 @@ package br.com.bluesoft.bee.dbchange
 
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.util.QueryDialectHelper;
+
 import java.sql.SQLException
 
 class DbChangeManager {
@@ -150,10 +152,10 @@ class DbChangeManager {
 		def timestamp = obterTimestamp(arquivo)
 
 		if(upDown == UpDown.UP) {
-			def insertQuery = DbchangeQueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
+			def insertQuery = QueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
 			sql.execute(insertQuery, [arquivo, timestamp])
 		} else {
-			def deleteQuery = DbchangeQueryDialectHelper.getDeleteFromDbchangesQuery(configFile, clientName)
+			def deleteQuery = QueryDialectHelper.getDeleteFromDbchangesQuery(configFile, clientName)
 			sql.execute(deleteQuery, [timestamp])
 		}
 		
@@ -163,7 +165,7 @@ class DbChangeManager {
 
 	def podeExecutar(def arquivo, def sql, def upDown) {
 		def timestamp = obterTimestamp(arquivo)
-		def selectQuery = DbchangeQueryDialectHelper.getSelectFromDbchangesQuery(configFile, clientName)
+		def selectQuery = QueryDialectHelper.getSelectFromDbchangesQuery(configFile, clientName)
 		def rows = sql.rows(selectQuery, [timestamp])
 
 		if (upDown == UpDown.UP) {
@@ -261,7 +263,7 @@ class DbChangeManager {
 			sql.execute(SELECT_TABLE)
 			tabelaDbchangesFoiCriada = true
 		} catch (SQLException ex) {
-			def createTableQuery = DbchangeQueryDialectHelper.getCreateTableDbchangesQuery(configFile, clientName)
+			def createTableQuery = QueryDialectHelper.getCreateTableDbchangesQuery(configFile, clientName)
 			try {
 				sql.execute(createTableQuery)
 				tabelaDbchangesFoiCriada = true
@@ -319,7 +321,7 @@ ${group ? "-- group: ${group}" : ""}
 			listaParaExecutar.each {
 			def timestamp = obterTimestamp("${it.ARQUIVO_NOME}")
 			String arquivo_nome = "${it.ARQUIVO_NOME}"
-			def insertQuery = DbchangeQueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
+			def insertQuery = QueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
 			sql.execute(insertQuery, [arquivo_nome, timestamp])
 			logger.log "${it.ARQUIVO_NOME} marked as implemented"
 			}

@@ -3,7 +3,9 @@ package br.com.bluesoft.bee.dbseed
 import groovy.sql.GroovyRowResult;
 import groovy.sql.Sql
 
+import java.io.File;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException
 
 import org.mockito.Mockito;
@@ -13,6 +15,8 @@ import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.dbchange.SQLFileParser;
 import br.com.bluesoft.bee.dbchange.UpDown;
 import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.util.QueryDialectHelper;
+import br.com.bluesoft.bee.util.RDBMSUtilTest
 
 class DbSeedManagerTest extends Specification {
 
@@ -33,7 +37,7 @@ class DbSeedManagerTest extends Specification {
 					"989898-test.dbseed"
 				]
 			} ]
-		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger)
+		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 
 		when: "listar dbseeds"
 		def lista = manager.listar()
@@ -70,7 +74,7 @@ class DbSeedManagerTest extends Specification {
 	def "deve listar as instrucoes ja executadas no banco"() {
 		given:
 		def sql = [execute: { instrucao -> []}, rows: { instrucao -> RESULT}, close: {} ]
-		def manager = new DbSeedManager(sql: sql)
+		def manager = new DbSeedManager(sql: sql, directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/oracleTest.properties"), clientName: "test")
 
 		when: "listar instrucoes ja executadas"
 		def listaBanco = manager.listarInstrucoesJaExecutadas()
@@ -91,10 +95,10 @@ class DbSeedManagerTest extends Specification {
 		listaArquivos == RESULT
 	}
 
-	def "deve criar a tabela dbseeds caso nao exista"() {
+	def "deve criar a tabela dbseeds caso nao exista em bancos oracle"() {
 
 		given:
-		def manager = new DbSeedManager()
+		def manager = new DbSeedManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		def sql = Mock(Sql)
 		1 * sql.execute(DbSeedManager.SELECT_TABLE) >> { throw new SQLException() }
 
@@ -105,11 +109,13 @@ class DbSeedManagerTest extends Specification {
 		retorno == true
 	}
 	
-	def "deve criar a tabela dbseeds caso nao exista em bancos não oracle"() {
+	def "deve criar a tabela dbseeds caso nao exista em bancos mysql"() {
 		
 		given:
-		def manager = new DbSeedManager()
+		def manager = new DbSeedManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/mySqlTest.properties"), clientName: "test")
 		def sql = Mock(Sql)
+		def createTableQuery = QueryDialectHelper.getCreateTableDbseedsQuery(getProperties("/mySqlTest.properties"), "test")
+		
 		1 * sql.execute(DbSeedManager.SELECT_TABLE) >> { throw new SQLException() }
 		1 * sql.execute(DbSeedManager.CREATE_TABLE_ORACLE) >> { throw new SQLException() }
 		
@@ -119,17 +125,36 @@ class DbSeedManagerTest extends Specification {
 		then: "e retorna true"
 		retorno == true
 	}
+	
+	def "deve criar a tabela dbseeds caso nao exista em bancos postgres"() {
+		
+		given:
+		def sql = Mock(Sql)
+		def manager = new DbSeedManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/postgresTest.properties"), clientName: "test")
+		def createTableQuery = QueryDialectHelper.getCreateTableDbseedsQuery(getProperties("/postgresTest.properties"), "test")
+		
+		1 * sql.execute(DbSeedManager.SELECT_TABLE) >> { throw new SQLException() }
+		1 * sql.execute(DbSeedManager.CREATE_TABLE_ORACLE) >> { throw new SQLException() }
+		
+		when: "criar tabela caso nao exista"
+		def retorno = manager.criarTabelaDbseedsSeNaoExistir(sql)
+
+		then: "e retorna true"
+		retorno == true
+	}
+
 	
 	def "deve retornar false caso nao consiga criar a tabela dbseeds"() {
 
 		given:
 		def sql = Mock(Sql)
 		def logger = Mock(BeeWriter)
-		def manager = new DbSeedManager(logger: logger)
+		def manager = new DbSeedManager(directoryFile: mockDirectoryFile(), logger: logger, configFile: getProperties("/postgresTest.properties"), clientName: "test")
+		def createTableQuery = QueryDialectHelper.getCreateTableDbseedsQuery(getProperties("/postgresTest.properties"), "test")
 
 		1 * sql.execute(DbSeedManager.SELECT_TABLE) >> { throw new SQLException() }
 		1 * sql.execute(DbSeedManager.CREATE_TABLE_ORACLE) >> { throw new SQLException() }
-		1 * sql.execute(DbSeedManager.CREATE_TABLE) >> { throw new SQLException() }
+		1 * sql.execute(createTableQuery) >> { throw new SQLException() }
 		1 * logger.log(_)
 
 		when: "Ocorrer um erro ao criar a tabela"
@@ -159,25 +184,31 @@ class DbSeedManagerTest extends Specification {
 	def "deve inserir uma execucao de dbseed quando o parametro UpDown for igual a UP"() {
 		given:
 		def sql = mockSql()
-		def manager = new DbSeedManager()
 		def arquivo = "989898-test.dbseed"
+		def logger = Mock(BeeWriter)
+		def manager = new DbSeedManager(directoryFile: mockDirectoryFile(), logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
+		def createTableQuery = QueryDialectHelper.getInsertIntoDbseedsQuery(getProperties("/oracleTest.properties"), "test")
+
 
 		when: "salvar execucao de dbseed"
 			manager.salvarExecucao(sql, arquivo, UpDown.UP)
 
 		then: "deve inserir execucao e commitar"
-			1 * sql.execute(DbSeedManager.INSERT_INTO_DBSEEDS, _)
+			1 * sql.execute(createTableQuery, _)
 			2 * sql.commit()
 	}
 
 	def "deve excluir uma execucao de dbseed quando o parametro UpDown for igual a DOWN"() {
 		given:
 		def sql = mockSql()
-		def manager = new DbSeedManager()
 		def arquivo = "989898-test.dbseed"
+		def logger = Mock(BeeWriter)
+		def manager = new DbSeedManager(directoryFile: mockDirectoryFile(), logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
+		def deleteQuery = QueryDialectHelper.getDeleteFromDbseedsQuery(getProperties("/oracleTest.properties"), "test")
+
 
 		2 * sql.commit()
-		1 * sql.execute(DbSeedManager.DELETE_FROM_DBSEEDS, _)
+		1 * sql.execute(deleteQuery, _)
 
 		when: "excluir execucao de dbseed"
 		manager.salvarExecucao(sql, arquivo, UpDown.DOWN)
@@ -206,7 +237,7 @@ class DbSeedManagerTest extends Specification {
 		2 * parser.parseFile(_) >>> dbseed
 		2 * sql.rows(_,_) >> []
 
-		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -235,7 +266,7 @@ class DbSeedManagerTest extends Specification {
 		1 * parser.parseFile(_) >> dbseed
 		1 * sql.rows(_,_) >> []
 
-		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -263,7 +294,7 @@ class DbSeedManagerTest extends Specification {
 		1 * parser.parseFile(_) >> dbseed
 		1 * sql.rows(_,_) >> ["select bla"]
 
-		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -290,7 +321,7 @@ class DbSeedManagerTest extends Specification {
 
 		1 * parser.parseFile(_) >> dbseed
 
-		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -318,7 +349,7 @@ class DbSeedManagerTest extends Specification {
 		1 * sql.rows(_,_) >> []
 		1 * sql.executeUpdate(_) >> { throw new SQLException("Erro") }
 
-		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
+		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		manager.metaClass.getFile = { def a, def b -> return []}
 		manager.metaClass.salvarExecucao = { def a, def b, def c -> assert false }
 
@@ -372,7 +403,7 @@ class DbSeedManagerTest extends Specification {
 		1 * parser.parseFile(_) >> dbseed
 		1 * sql.rows(_,_) >> []
 
-		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force: true)
+		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force: true, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -399,7 +430,8 @@ class DbSeedManagerTest extends Specification {
 		1 * parser.parseFile(_) >> dbseed
 		1 * sql.rows(_,_) >> ["xxx"]
 
-		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force: false)
+		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force: false, configFile: getProperties("/oracleTest.properties"), clientName: "test")
+		
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -426,7 +458,7 @@ class DbSeedManagerTest extends Specification {
 		1 * parser.parseFile(_) >> dbseed
 		1 * sql.rows(_,_) >> ["xxx"]
 
-		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force:true)
+		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser, force:true, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 		manager.metaClass.getFile = { def a, def b -> return []}
 
 		when:
@@ -493,7 +525,7 @@ class DbSeedManagerTest extends Specification {
 		def mensagens = []
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { [ "abc", "65564564-test.dbseed" ] } ]
-		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger)
+		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 
 		when: "marcar todos os dbseeds"
 		manager.markAll()
@@ -511,7 +543,7 @@ class DbSeedManagerTest extends Specification {
 		def mensagens = []
 		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
 		def directoryFile = [list: { ["65564564-test.dbseed"] } ]
-		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger)
+		def manager = new DbSeedManager(sql: sql, directoryFile: directoryFile, logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
 
 		when: "marcar todos os dbseeds"
 		manager.markAll()
@@ -524,8 +556,35 @@ class DbSeedManagerTest extends Specification {
 	private Sql mockSql(){
 		def connection = Mock(Connection)
 		connection.autoCommit() >> false
+		def databaseMetaData = Mock(DatabaseMetaData)
+		databaseMetaData.getDriverName >> "driver"
+		connection.getMetaData() >> databaseMetaData
 		def sql = Mock(Sql)
 		sql.connection >> connection
 		return sql
 	}
+	
+	def mockLogger(){
+		def mensagens = []
+		def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+		return logger
+	}
+
+	private File getProperties(filePath) {
+		def configUrl = RDBMSUtilTest.class.getResource(filePath)
+		def configFile = new File(configUrl.toURI())
+	}
+	
+	def mockDirectoryFile() {
+		def directoryFile = [list: {
+				[
+					"abc",
+					"65564564-test.dbseed",
+					"989898-test.dbseed"
+				]
+			} ]
+		return directoryFile
+	}
+
+
 }

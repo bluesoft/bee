@@ -2,22 +2,18 @@ package br.com.bluesoft.bee.dbseed
 
 import br.com.bluesoft.bee.service.BeeWriter
 import java.sql.SQLException
-import java.text.MessageFormat;
-import java.util.List
 
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.dbchange.SQLExecutor
 import br.com.bluesoft.bee.dbchange.SQLFileParser
 import br.com.bluesoft.bee.dbchange.UpDown
 import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.util.QueryDialectHelper
 
 class DbSeedManager {
 
 	final static def SELECT_TABLE = "select * from dbseeds"
 	final static def CREATE_TABLE_ORACLE = "create table dbseeds(arquivo_timestamp number(14), arquivo_nome varchar(60) not null, data_execucao date, constraint pk_dbseeds primary key (arquivo_timestamp))"
-	final static def CREATE_TABLE = "create table dbseeds(arquivo_timestamp bigint, arquivo_nome varchar(60) not null, data_execucao date, constraint pk_dbseeds primary key (arquivo_timestamp))"
-	final static def INSERT_INTO_DBSEEDS = "insert into dbseeds(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?, current_timestamp)"
-	final static def DELETE_FROM_DBSEEDS = "delete from dbseeds where arquivo_timestamp = ?"
 	final static def MESSAGE_THERE_IS_NO_INSTRUCTIONS = "!!!Error: There is no ::up/::down statement in dbseed file"
 	final static def MESSAGE_NO_COMMANDS_IN_FILE = "There is no commands in the dbseed file"
 	final static def MESSAGE_DBSEED_ALREADY_EXECUTED = "It was not possible to execute the instructions ::up, because this dbseed was already executed"
@@ -127,9 +123,11 @@ class DbSeedManager {
 		def timestamp = obterTimestamp(arquivo)
 
 		if(upDown == UpDown.UP) {
-			sql.execute(INSERT_INTO_DBSEEDS, [arquivo, timestamp])
+			def insertQuery = QueryDialectHelper.getInsertIntoDbseedsQuery(configFile, clientName)
+			sql.execute(insertQuery, [arquivo, timestamp])
 		} else {
-			sql.execute(DELETE_FROM_DBSEEDS, [timestamp])
+			def deleteQuery = QueryDialectHelper.getDeleteFromDbseedsQuery(configFile, clientName)
+			sql.execute(deleteQuery, [timestamp])
 		}
 		
 		if (!autocommit)
@@ -139,7 +137,8 @@ class DbSeedManager {
 	def podeExecutar(def arquivo, def sql, def upDown) {
 
 		def timestamp = obterTimestamp(arquivo)
-		def rows = sql.rows("select * from dbseeds where arquivo_timestamp = ?", [timestamp])
+		def selectQuery = QueryDialectHelper.getSelectFromDbseedsQuery(configFile, clientName)
+		def rows = sql.rows(selectQuery, [timestamp])
 
 		if (upDown == UpDown.UP) {
 			if(force) {
@@ -184,7 +183,8 @@ class DbSeedManager {
 
 		def result = null
 		if (criarTabelaDbseedsSeNaoExistir(sql)) {
-			result = sql.rows("select arquivo_nome as ARQUIVO_NOME from dbseeds order by arquivo_timestamp desc")
+			def listQuery = QueryDialectHelper.listDbseedsQuery(configFile, clientName)
+			result = sql.rows(listQuery)
 			sql.close()
 		}
 		return result
@@ -201,12 +201,13 @@ class DbSeedManager {
 			sql.execute(SELECT_TABLE)
 			tabelaDbseedsFoiCriada = true
 		} catch (SQLException ex) {
+			def createTableQuery = QueryDialectHelper.getCreateTableDbseedsQuery(configFile, clientName)
 			try {
 				sql.execute(CREATE_TABLE_ORACLE)
 				tabelaDbseedsFoiCriada = true
 			} catch (SQLException e) {
 				try {
-					sql.execute(CREATE_TABLE)
+					sql.execute(createTableQuery)
 					tabelaDbseedsFoiCriada = true
 				} catch (Exception e2) {
 					logger.log("!!!Erro: Nao foi possivel criar a tabela dbseeds")
@@ -259,7 +260,8 @@ class DbSeedManager {
 			listaParaExecutar.each {
 			def timestamp = obterTimestamp("${it.ARQUIVO_NOME}")
 			String arquivo_nome = "${it.ARQUIVO_NOME}"
-			sql.execute(INSERT_INTO_DBSEEDS, [arquivo_nome, timestamp])
+			def insertQuery = QueryDialectHelper.getInsertIntoDbseedsQuery(configFile, clientName)
+			sql.execute(insertQuery, [arquivo_nome, timestamp])
 			logger.log "${it.ARQUIVO_NOME} marked as implemented"
 			}
 		} else {

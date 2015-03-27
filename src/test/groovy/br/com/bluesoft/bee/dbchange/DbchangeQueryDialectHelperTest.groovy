@@ -1,5 +1,6 @@
 package br.com.bluesoft.bee.dbchange
 
+import br.com.bluesoft.bee.util.QueryDialectHelper;
 import br.com.bluesoft.bee.util.RDBMSUtilTest
 import spock.lang.Specification;
 
@@ -140,22 +141,22 @@ class DbchangeQueryDialectHelperTest extends Specification {
 	}
 
 	private getCreateQuery(File configFile, String clientName) {
-		def query = new DbchangeQueryDialectHelper().getCreateTableDbchangesQuery(configFile, clientName)
+		def query = new QueryDialectHelper().getCreateTableDbchangesQuery(configFile, clientName)
 		return query
 	}
 	
 	private getInsertQuery(File configFile, String clientName) {
-		def query = new DbchangeQueryDialectHelper().getInsertIntoDbchangesQuery(configFile, clientName)
+		def query = new QueryDialectHelper().getInsertIntoDbchangesQuery(configFile, clientName)
 		return query
 	}
 	
 	private getDeleteQuery(File configFile, String clientName) {
-		def query = new DbchangeQueryDialectHelper().getDeleteFromDbchangesQuery(configFile, clientName)
+		def query = new QueryDialectHelper().getDeleteFromDbchangesQuery(configFile, clientName)
 		return query
 	}
 	
 	private getSelectQuery(File configFile, String clientName) {
-		def query = new DbchangeQueryDialectHelper().getSelectFromDbchangesQuery(configFile, clientName)
+		def query = new QueryDialectHelper().getSelectFromDbchangesQuery(configFile, clientName)
 		return query
 	}
 
