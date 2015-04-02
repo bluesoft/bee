@@ -47,6 +47,7 @@ class JsonImporter implements Importer {
 	ObjectMapper mapper
 	File mainFolder
 	File tablesFolder
+	File sequencesFolder
 	File viewsFolder
 	File proceduresFolder
 	File packagesFolder
@@ -61,6 +62,7 @@ class JsonImporter implements Importer {
 		this.path = path ?: '/tmp/bee'
 		this.mainFolder = new File(this.path)
 		this.tablesFolder = new File(mainFolder, 'tables')
+		this.sequencesFolder = new File(mainFolder, 'sequences')
 		this.viewsFolder = new File(mainFolder, 'views')
 		this.proceduresFolder = new File(mainFolder, 'procedures')
 		this.packagesFolder = new File(mainFolder, 'packages')
@@ -108,14 +110,26 @@ class JsonImporter implements Importer {
 
 	private def importSequences() {
 		def sequences = [:]
-		File sequenceFile = new File(mainFolder, 'sequences.bee')
-		if (sequenceFile.exists()) {
-			def sequencesJSON = mapper.readTree(sequenceFile.getText())
-					sequencesJSON.getElements().each {
-				def sequence = mapper.readValue(it.toString(), Sequence.class)
-						sequences[sequence.name] = sequence
+		def sequencesFolderExists = checkIfFolderExists(sequencesFolder)
+		
+		if (sequencesFolderExists && sequencesFolder.listFiles().size() > 0) {
+			sequencesFolder.eachFile {
+				if (it.name.endsWith(".bee")) {
+					def sequence = mapper.readValue(it, Sequence.class)
+					sequences[sequence.name] = sequence
+				}
+			}
+		} else {
+			File sequenceFile = new File(mainFolder, 'sequences.bee')
+			if (sequenceFile.exists()) {
+				def sequencesJSON = mapper.readTree(sequenceFile.getText())
+								sequencesJSON.getElements().each {
+					def sequence = mapper.readValue(it.toString(), Sequence.class)
+									sequences[sequence.name] = sequence
+				}
 			}
 		}
+		
 		return sequences
 	}
 
@@ -169,9 +183,13 @@ class JsonImporter implements Importer {
 	}
 	
 	private def checkIfFolderExists(def directory) {
+		def exists = false
 		if (!directory.isDirectory()) {
 			directory.mkdir()
+		} else {
+			exists = true
 		}
+		return exists
 	}
 
 }

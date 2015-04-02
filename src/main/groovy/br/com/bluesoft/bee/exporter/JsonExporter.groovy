@@ -48,6 +48,7 @@ public class JsonExporter implements Exporter {
 
 	File mainFolder
 	File tablesFolder
+	File sequencesFolder
 	File viewsFolder
 	File proceduresFolder
 	File packagesFolder
@@ -70,6 +71,9 @@ public class JsonExporter implements Exporter {
 
 		tablesFolder = new File(mainFolder, 'tables')
 		tablesFolder.mkdir()
+		
+		sequencesFolder = new File(mainFolder, 'sequences')
+		sequencesFolder.mkdir()
 
 		viewsFolder = new File(mainFolder, 'views')
 		viewsFolder.mkdir()
@@ -91,7 +95,7 @@ public class JsonExporter implements Exporter {
 	void export() {
 		createPath()
 		createTableFiles(schema.getTables())
-		createSequenceFile(schema.getSequences())
+		createSequenceFiles(schema.getSequences())
 		createViewFiles(schema.getViews())
 		createProceduresFiles(schema.getProcedures())
 		createPackagesFiles(schema.getPackages())
@@ -111,21 +115,9 @@ public class JsonExporter implements Exporter {
 		}
 	}
 
-	void createSequenceFile(def sequences) {
-		if(sequences.size() > 0) {
-			def sequenceFile = new File(mainFolder, "sequences.bee")
-
-			def sequencesFinal = [:]
-			if(sequenceFile.exists()) {
-				def importer = new JsonImporter(mainFolder.getAbsolutePath())
-				sequencesFinal = importer.importMetaData().sequences
-			}
-
-			sequences.each{
-				sequencesFinal[it.key] = it.value
-			}
-
-			mapper.writeValue(sequenceFile, sequencesFinal)
+	void createSequenceFiles(def sequences) {
+		sequences.each {
+			mapper.writeValue(new File(sequencesFolder, "${it.value.name}.bee"), it.value)
 		}
 	}
 
