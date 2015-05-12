@@ -1,0 +1,101 @@
+$icon-font-path: "../bower_components/bootstrap-sass-official/assets/fonts/bootstrap/";
+// bower:scss
+@import "bootstrap-sass-official/assets/stylesheets/_bootstrap.scss";
+// endbower
+
+/* Space out content a bit */
+.main {
+  padding-bottom: 20px;
+  position:relative;
+  background: url(../images/bg.jpg);
+  background-size:  10px 18px;
+  border-bottom: 2px solid #F5F5F5;
+}
+
+.icon-bar {
+  background: #000;
+}
+
+$color-base: #FBBA19;
+.navbar-bee {
+  background-color: $color-base;
+  border-bottom: 3px solid;
+  border-color: $gray-dark;
+  margin-bottom: 0px;
+}
+.nav-bee {
+  &.nav .open > a,
+  &.nav .open > a:hover,
+  &.nav .open > a:focus {
+    background-color: darken($color-base, 7);
+    border-color: darken($color-base, 10);
+  }
+  .dropdown-menu {
+    background-color: $gray-dark;
+    .divider {
+      background-color: $gray;
+    }
+  }
+  li {
+    a {
+      color: #FFF;
+      &:hover, &:focus {
+        background:darken($color-base, 7);
+      }
+    }
+  }
+}
+
+.brand {
+  font-size:1.3em;
+  position: relative;
+  h1 {
+    font-weight: bold;
+    font-size: 150px;
+  }
+}
+
+.brand-image {
+  position: absolute;
+  background-image: url(../images/bee-logo.png);
+  width: 44%;
+  height: 383px;
+  background-repeat: no-repeat;
+  background-size: 100%;
+  top: -20px;
+  left: -80px;
+  z-index: 9999;
+}
+
+.footer {
+  padding-top: 19px;
+  color: #FFF;
+  border-top: 1px solid #e5e5e5;
+  background: $gray-dark;
+}
+
+
+pre {
+  @extend .prettyprint;
+}
+
+@media screen and (min-width: 1024px) {
+  .container{ width: 920px; }
+}
+
+@media screen and (max-width: 1024px) {
+  .brand h1 {
+    font-size: 105px;
+  }
+  .brand-image {
+    width: 316px;
+    left: -16px;
+    top: -16px;
+  }
+}
+
+@media screen and (max-width: 992px) {
+  .brand-image {
+      left:-62px;
+  }
+}
