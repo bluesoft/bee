@@ -1,223 +1,91 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+<!DOCTYPE html> <html class=no-js> <head> <meta charset=utf-8> <title>bee page</title> <meta name=description content=""> <meta name=viewport content="width=device-width"> <link rel="shortcut icon" href=/6adb7385.favicon.ico> <!-- Place favicon.ico and apple-touch-icon.png in the root directory --> <link rel=stylesheet href=styles/c09ac4f7.vendor.css> <link rel=stylesheet href=styles/ccb67d90.main.css> <script src=scripts/vendor/fbe20327.modernizr.js></script>  <body> <!--[if lt IE 10]>
+      <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+    <![endif]--> <div class="navbar navbar-bee navbar-static-top"> <div class=container> <div class="col-xs-12 col-sm-8 col-sm-offset-4"> <div class=navbar-header> <button type=button class="navbar-toggle collapsed" data-toggle=collapse data-target=#menu-items> <span class=sr-only>Toggle navigation</span> <span class=icon-bar></span> <span class=icon-bar></span> <span class=icon-bar></span> </button> <a class="navbar-brand visible-xs navbar-brand-bee"> </a> </div> <div id=menu-items class="collapse navbar-collapse"> <ul class="nav navbar-nav nav-bee"> <li><a href=#><i class="fa fa-home"></i> Home</a></li> <li class=dropdown> <a href=# class=dropdown-toggle data-toggle=dropdown> <i class="fa fa-hand-o-right"></i> Getting Started </a> <ul class=dropdown-menu> <li><a href=#how-to-install>Installation</a></li> <li><a href=#configuration>Configuration</a></li> <li class=divider></li> <li><a href=#schema>Schema</a></li> <li><a href=#data>Data</a></li> <li><a href=#dbchange>Dbchanges</a></li> </ul> </li> <li class=dropdown> <a href=# class=dropdown-toggle data-toggle=dropdown> <i class="fa fa-cloud-download"></i> Download </a> <ul class=dropdown-menu> <li><a href=https://github.com/bluesoft/bee/zipball/master>.zip file</a></li> <li class=divider></li> <li><a href=https://github.com/bluesoft/bee/tarball/master>.tar.gz file</a></li> </ul> </li> </ul> </div> </div> </div> </div> <div class=main> <a href=https://github.com/you><img style="position: absolute; z-index:1500; top: 0px; right: 0; border: 0" src=https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67 alt="Fork me on GitHub" data-canonical-src=https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png></a> <div class=container> <div class=brand> <div class="brand-image hidden-xs"> </div> <div class="brand-text col-sm-8 col-sm-offset-4"> <h1>BEE</h1> <h2>Database Change Manager</h2> </div> </div> </div> </div> <div class=container> <div class="box col-md-12"> <h2>Getting Started</h2> <h4> <a name=how-to-install class=anchor href=#how-to-install></a> How to Install </h4> <p>Download the binary distribution and unzip it. There are 2 folders: <code class=language-bash>bin</code> and <code class=language-bash>lib</code>. </p> <p>Put your jdbc jar into the <code class=language-bash>lib</code> folder.</p> <h4> <a name=configuration class=anchor href=#configuration></a> Configuration </h4> <p>All modules use by the file "bee.properties" by default. This file contains the database connection settings. There may be several database configurations inside this file.</p> <p>You can also specify an alternate configuration file using the -DdatabaseConfig = <code class=language-bash>&lt;file&gt;</code> .</p> <pre>
+<code class=language-bash>The file structure is as follows:
 
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+&lt;conf&gt;.driver=&lt;driver&gt;
 
-    <title>Bee by bluesoft</title>
-  </head>
+&lt;conf&gt;.url=&lt;url&gt;
 
-  <body>
-    <header>
-      <div class="inner">
-        <h1>Bee</h1>
-        <h2>database changes manager</h2>
-        <a href="https://github.com/bluesoft/bee" class="button"><small>View project on</small>GitHub</a>
-      </div>
-    </header>
+&lt;conf&gt;.user=&lt;user&gt;
 
-    <div id="content-wrapper">
-      <div class="inner clearfix">
-        <section id="main-content">
-          <h1>
-<a name="bee" class="anchor" href="#bee"><span class="octicon octicon-link"></span></a>Bee</h1>
+&lt;conf&gt;.password=&lt;password&gt;
 
-<p>A tool for managing database changes. Works with Oracle and MySQL.</p>
+&lt;conf&gt; - configuration name to be used.
+&lt;driver&gt; - jdbc driver class.
+&lt;url&gt; - url of the database connection.
+&lt;user&gt; - user connection.
+&lt;password&gt; - connection password.
+</code></pre> <strong>Example:</strong> Configuring a database called 'delta'. <pre><code class=language-yaml>delta.driver=oracle.jdbc.OracleDriver
+delta.url=jdbc:oracle:thin:@server:1111:delta
+delta.user=delta123
+delta.password=delta123
+</code></pre> <h2> <a name=schema class=anchor href=#schema><span class="octicon octicon-link"></span></a>Schema</h2> <p>The module checks the schema structure of the database, comparing with existing files in the project. These files are in the bee project, inside specific subdirectories for each type of structure.</p> <ul> <li>tables - structure of tables, indexes and constraints.</li> <li>triggers</li> <li>packages</li> <li>procedures - procedures and functions.</li> <li>views</li> <li>sequences.bee - file containing all sequences</li> </ul><h4> <a name=commands class=anchor href=#commands><span class="octicon octicon-link"></span></a>Commands</h4> <pre><code class=language-bash>To create a file
+bee schema:generate &lt;database&gt; &lt;object&gt;
 
-<p>Note: the use with ANT is deprecated, the most recent version uses MAVEN.</p>
+To create all files from a specific schema
+bee schema:generate &lt;database&gt;
 
-<h2>
-<a name="modules" class="anchor" href="#modules"><span class="octicon octicon-link"></span></a>Modules</h2>
+To validate one file
+bee schema:validate &lt;database&gt; &lt;object&gt;
 
-<ul>
-<li>Schema - Validation of the structures of the tables, indexes, packages, etc.</li>
-<li>Data - Validation of core data tables.</li>
-<li>Dbchange - Execute some change on tables, like "ruby migrations".</li>
-</ul><h2>
-<a name="how-to-install" class="anchor" href="#how-to-install"><span class="octicon octicon-link"></span></a>How to Install</h2>
+To validate all files
+bee schema:validate &lt;database&gt;
 
-<p>Download the binary distribution and unzip it. There are 2 folders: <code>bin</code> and <code>lib</code>.</p>
+To create a MySql DDL script from local structure files. Will create a file named `bee.sql`
+bee schema:recreate_mysql &lt;object&gt;
 
-<p>Put your jdbc jar into the <code>lib</code> folder.</p>
+To create a Oracle DDL script from local structure files. Will create a file named `bee.sql`
+bee schema:recreate_oracle &lt;object&gt;
+</code></pre> <h2> <a name=data class=anchor href=#data> </a> Data </h2> <p>This module checks the 'core' data from the database.</p> <p>Core data files are in the directory bee/data, and use a CSV format.</p> <h4> <a name=commands-1 class=anchor href=#commands-1><span class="octicon octicon-link"></span></a>Commands</h4> <pre><code class=language-bash>To create a data file
+bee data:generate &lt;database&gt; &lt;object&gt;
 
-<h2>
-<a name="configuration" class="anchor" href="#configuration"><span class="octicon octicon-link"></span></a>Configuration</h2>
+To validate all core tables
+bee data:validate &lt;database&gt;
 
-<p>All modules use by the file "bee.properties" by default. This file contains the database connection settings. There may be several database configurations inside this file.</p>
-
-<p>You can also specify an alternate configuration file using the -DdatabaseConfig = <code>&lt;file&gt;</code>.</p>
-
-<pre><code> The file structure is as follows: 
-
-      &lt;conf&gt;.driver=&lt;driver&gt;
-
-      &lt;conf&gt;.url=&lt;url&gt;
-
-      &lt;conf&gt;.user=&lt;user&gt;
-
-      &lt;conf&gt;.password=&lt;password&gt;
-
-      &lt;conf&gt; - configuration name to be used.
-      &lt;driver&gt; - jdbc driver class.
-      &lt;url&gt; - url of the database connection.
-      &lt;user&gt; - user connection.
-      &lt;password&gt; - connection password.
-
-  Example:
-        Configuring a database called 'delta'.
-              delta.driver=oracle.jdbc.OracleDriver
-              delta.url=jdbc:oracle:thin:@server:1111:delta
-              delta.user=delta123
-              delta.password=delta123
-</code></pre>
-
-<h2>
-<a name="schema" class="anchor" href="#schema"><span class="octicon octicon-link"></span></a>Schema</h2>
-
-<p>The module checks the schema structure of the database, comparing with existing files in the project. These files are in the bee project, inside specific subdirectories for each type of structure.</p>
-
-<ul>
-<li>tables - structure of tables, indexes and constraints.</li>
-<li>triggers</li>
-<li>packages</li>
-<li>procedures - procedures and functions.</li>
-<li>views</li>
-<li>sequences.bee - file containing all sequences</li>
-</ul><h3>
-<a name="commands" class="anchor" href="#commands"><span class="octicon octicon-link"></span></a>Commands</h3>
-
-<pre><code>  To create a file
-     bee schema:generate &lt;database&gt; &lt;object&gt;
-
-  To create all files from a specific schema
-     bee schema:generate &lt;database&gt;
-
-  To validate one file
-     bee schema:validate &lt;database&gt; &lt;object&gt;
-
-  To validate all files
-     bee schema:validate &lt;database&gt;
-
-  To create a MySql DDL script from local structure files. Will create a file named `bee.sql`
-     bee schema:recreate_mysql &lt;object&gt;
-
-  To create a Oracle DDL script from local structure files. Will create a file named `bee.sql`
-     bee schema:recreate_oracle &lt;object&gt;
-</code></pre>
-
-<h2>
-<a name="data" class="anchor" href="#data"><span class="octicon octicon-link"></span></a>Data</h2>
-
-<p>This module checks the 'core' data from the database.</p>
-
-<p>Core data files are in the directory bee/data, and use a CSV format.</p>
-
-<h3>
-<a name="commands-1" class="anchor" href="#commands-1"><span class="octicon octicon-link"></span></a>Commands</h3>
-
-<pre><code>    To create a data file
-        bee data:generate &lt;database&gt; &lt;object&gt;
-
-    To validate all core tables
-        bee data:validate &lt;database&gt;
-
-    To validate one core table
-        bee data:validate &lt;database&gt; &lt;object&gt;
-</code></pre>
-
-<h2>
-<a name="dbchange" class="anchor" href="#dbchange"><span class="octicon octicon-link"></span></a>Dbchange</h2>
-
-<p>The Dbchange module performs the task of changing the database, following the concepts of ruby migrations. The update module will check which scripts to be executed and then execute them in chronological order.</p>
-
-<p>Each file represents one or more changes in the database and the file name follows the format:</p>
-
-<pre><code>  code timestamp + description + .dbchange
-</code></pre>
-
-<p>The contents of the file consists of comments, update scripts and rollback scripts. Example:</p>
-
-<pre><code>-- comment script
-
+To validate one core table
+bee data:validate &lt;database&gt; &lt;object&gt;
+</code></pre> <h2> <a name=dbchange class=anchor href=#dbchange><span class="octicon octicon-link"></span></a>Dbchange</h2> <p>The Dbchange module performs the task of changing the database, following the concepts of ruby migrations. The update module will check which scripts to be executed and then execute them in chronological order.</p> <p>Each file represents one or more changes in the database and the file name follows the format:</p> <pre><code class=language-bash>code timestamp + description + .dbchange
+</code></pre> <p>The contents of the file consists of comments, update scripts and rollback scripts. Example:</p> <pre><code class=language-bash>-- comment script
 ::up
 
-    command to update the database;
-    command to update the database;
-    command to update the database;
+command to update the database;
+command to update the database;
+command to update the database;
 
 
 ::down
 
-    command to reverse the database;
-    command to reverse the database;
-    command to reverse the database;
-</code></pre>
+command to reverse the database;
+command to reverse the database;
+command to reverse the database;
+</code></pre> <p>Note: when there is no rollback commands section: down should be removed, including its header. This will indicate there is no way to reverse the script.</p> <h4> <a name=commands-2 class=anchor href=#commands-2><span class="octicon octicon-link"></span></a>Commands</h4> <pre>
+<code class=language-bash>To create a dbchange
+bee dbchange:create &lt;description of file&gt;
 
-<p>Note:  when there is no rollback commands section: down should be removed, including its header. This will indicate there is no way to reverse the script.</p>
+To verify the status of dbchanges in database (dbchanges implemented and not implemented).
+bee dbchange:status &lt;database&gt;
 
-<h3>
-<a name="commands-2" class="anchor" href="#commands-2"><span class="octicon octicon-link"></span></a>Commands</h3>
+To apply all dbchanges
+bee dbchange:up &lt;database&gt;
 
-<pre><code>    To create a dbchange
-        bee dbchange:create &lt;description of file&gt;
+To apply one dbchange (up)
+bee dbchange:up &lt;database&gt; &lt;name of file&gt; Example: 1311201110120100-easter_egg.dbchange
 
-    To verify the status of dbchanges in database (dbchanges implemented and not implemented).
-        bee dbchange:status &lt;database&gt;
+To apply one dbchange (down)
+bee dbchange:down &lt;database&gt; &lt;name of file&gt;
 
-    To apply all dbchanges
-        bee dbchange:up &lt;database&gt;
+To mark a dbchange as implemented
+bee dbchange:mark &lt;database&gt; &lt;name of file&gt;
 
-    To apply one dbchange (up)
-        bee dbchange:up &lt;database&gt; &lt;name of file&gt; Example: 1311201110120100-easter_egg.dbchange
+To mark all dbchanges as implemented
+bee dbchange:markall &lt;database&gt;
 
-    To apply one dbchange (down)
-        bee dbchange:down &lt;database&gt; &lt;name of file&gt;
-
-    To mark a dbchange as implemented
-        bee dbchange:mark &lt;database&gt; &lt;name of file&gt;
-
-    To mark all dbchanges as implemented
-        bee dbchange:markall &lt;database&gt;
-
-    To unmark a dbchange as implemented (or mark as not implemented)
-        bee dbchange:unmark &lt;database&gt; &lt;name of file&gt;
-</code></pre>
-
-<h2>
-<a name="known-issues" class="anchor" href="#known-issues"><span class="octicon octicon-link"></span></a>Known Issues</h2>
-
-<ul>
-<li>The <code>dbschema:generate</code> and <code>dbchema:validate</code> only works on Oracle and MySql databases</li>
-<li>Windows .bat script doesn't scan for lib jars, so you need to set the CLASSPATH variable manually.</li>
-</ul>
-        </section>
-
-        <aside id="sidebar">
-          <a href="https://github.com/bluesoft/bee/zipball/master" class="button">
-            <small>Download</small>
-            .zip file
-          </a>
-          <a href="https://github.com/bluesoft/bee/tarball/master" class="button">
-            <small>Download</small>
-            .tar.gz file
-          </a>
-
-          <p class="repo-owner"><a href="https://github.com/bluesoft/bee"></a> is maintained by <a href="https://github.com/bluesoft">bluesoft</a>.</p>
-
-          <p>This page was generated by <a href="pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
-        </aside>
-      </div>
-    </div>
-
-  
-  </body>
-</html>
+To unmark a dbchange as implemented (or mark as not implemented)
+bee dbchange:unmark &lt;database&gt; &lt;name of file&gt;
+</code></pre> </div> </div>   <div class=footer> <div class=container> <p> BEE development is mantained by <a href="http://carreiras.bluesoft.com.br/" target=_blank>Bluesoft</a> </p> </div> </div> <script src=scripts/17387ebf.vendor.js></script> <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. --> <script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+      function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+      e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+      e.src='//www.google-analytics.com/analytics.js';
+      r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+      ga('create','UA-XXXXX-X');ga('send','pageview');</script> <script src=scripts/d41d8cd9.main.js></script>  
