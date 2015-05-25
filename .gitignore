@@ -11,3 +11,4 @@ lib
 .groovy
 .idea/
 *.iml
+*.swp
