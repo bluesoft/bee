@@ -1,4 +1,4 @@
 language: groovy
 
 script:
-  gradle test
+  - gradle test
