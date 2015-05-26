@@ -1,2 +1,4 @@
 language: groovy
 
+script:
+  gradle test
