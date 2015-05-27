@@ -1,4 +1,10 @@
 language: groovy
 
-script:
-  - gradle test
+jdk:
+  - oraclejdk7
+
+env:
+  - TERM=dumb
+
+after_success:
+  - ./gradlew cobertura coveralls

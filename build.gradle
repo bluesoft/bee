@@ -1,6 +1,14 @@
-apply plugin: 'eclipse'
-apply plugin: 'groovy'
+
+plugins {
+    id 'groovy'
+    id 'eclipse'
+    id 'net.saliman.cobertura' version '2.2.5'
+    id 'com.github.kt3k.coveralls' version '2.0.1'
+    id 'com.jfrog.bintray' version '0.5'
+}
+
 apply plugin:'application'
+
 
 mainClassName = "br.com.bluesoft.bee.Bee"
 
@@ -43,3 +51,5 @@ jar {
 applicationDistribution.from('bee.properties') {
 	into 'bin'
 }
+
+cobertura.coverageFormats = ['html', 'xml', 'json']
