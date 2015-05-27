@@ -52,4 +52,4 @@ applicationDistribution.from('bee.properties') {
 	into 'bin'
 }
 
-cobertura.coverageFormats = ['html', 'xml', 'json']
+cobertura.coverageFormats = ['html', 'xml']
