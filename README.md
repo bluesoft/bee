@@ -1,9 +1,12 @@
 # Bee [![Build Status](https://travis-ci.org/bluesoft/bee.svg)](https://travis-ci.org/bluesoft/bee) [![Coverage Status](https://coveralls.io/repos/bluesoft/bee/badge.svg)](https://coveralls.io/r/bluesoft/bee)
 
-A tool for managing database changes.
+Bee is a tool for managing database changes.
 
 
-See the [documentation][1]
+## How Bee can help you ?
+See the [documentation](http://bluesoft.github.io/bee)
 
+## Contributing
 
-  [1]: http://bluesoft.github.io/bee
+Feel free to contributing with project. Start reading our [contributing guide](https://github.com/bluesoft/contributing)
+
