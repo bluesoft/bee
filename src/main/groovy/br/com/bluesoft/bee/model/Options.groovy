@@ -99,7 +99,12 @@ public class Options {
 
 	private boolean parseModule(def module) {
 		if(module.contains("upgrade")) {
-			moduleName = module.split(":")[0]
+			def args = module.split(":")
+			moduleName = args[0]
+
+			if(args.size() > 1)
+				actionName = (args[1] == "y") ? args[1] : null
+
 			return true
 		}
 
@@ -107,7 +112,7 @@ public class Options {
 			return false
 
 		moduleName = module.split(":")[0]
-		actionName = module.contains("upgrade") ? "" : module.split(":")[1]
+		actionName = module.split(":")[1]
 	}
 
 	private boolean validate() {

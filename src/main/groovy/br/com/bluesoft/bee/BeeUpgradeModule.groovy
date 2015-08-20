@@ -79,7 +79,15 @@ public class BeeUpgradeModule implements BeeWriter {
 		}
 
 		println "New version found: bee-" + getLatestVersion()
-		def input  = System.console().readLine("Do you want to continue? [Y/n] ")
+
+		def input = ""
+		if(options.actionName == "y") {
+			println "Do you want to continue? [Y/n] y"
+			input = "y"
+		} else {
+			input  = System.console().readLine("Do you want to continue? [Y/n] ")
+		}
+
 		def option = (input == null || input == "") ? "y" : input
 
 		if(option.toLowerCase() != "y") {
