@@ -56,6 +56,9 @@ class Bee {
 			case "data":
 				runner = new BeeDataModule()
 				break;
+			case "upgrade":
+				runner = new BeeUpgradeModule()
+				break;
 			default:
 				options.usage()
 				System.exit(0)

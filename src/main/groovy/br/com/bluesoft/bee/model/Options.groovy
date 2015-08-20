@@ -66,6 +66,7 @@ public class Options {
 		println "         data"
 		println "         dbchange"
 		println "         dbseed"
+		println "         upgrade"
 	}
 
 	boolean parse(def args) {
@@ -97,11 +98,16 @@ public class Options {
 	}
 
 	private boolean parseModule(def module) {
+		if(module.contains("upgrade")) {
+			moduleName = module.split(":")[0]
+			return true
+		}
+
 		if(!module.contains(":"))
 			return false
 
 		moduleName = module.split(":")[0]
-		actionName = module.split(":")[1]
+		actionName = module.contains("upgrade") ? "" : module.split(":")[1]
 	}
 
 	private boolean validate() {
