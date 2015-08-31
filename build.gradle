@@ -1,14 +1,30 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'net.saliman:gradle-cobertura-plugin:2.2.6'
+    }
+}
 
 plugins {
     id 'groovy'
     id 'eclipse'
-    id 'net.saliman.cobertura' version '2.2.5'
+    id 'net.saliman.cobertura' version '2.2.6'
     id 'com.github.kt3k.coveralls' version '2.0.1'
     id 'com.jfrog.bintray' version '0.5'
 }
 
 apply plugin:'application'
+apply plugin: 'cobertura'
 
+cobertura {
+    coverageFormats = ['html', 'xml']
+    coverageIgnoreTrivial = true
+    coverageIgnores = ['org.slf4j.Logger.*']
+    coverageReportDir = new File("$buildDir/reports/cobertura")
+}
 
 mainClassName = "br.com.bluesoft.bee.Bee"
 
@@ -52,4 +68,4 @@ applicationDistribution.from('bee.properties') {
 	into 'bin'
 }
 
-cobertura.coverageFormats = ['html', 'xml']
+test.finalizedBy(project.tasks.cobertura)
