@@ -5,21 +5,22 @@ buildscript {
     }
     dependencies {
         classpath 'net.saliman:gradle-cobertura-plugin:2.2.6'
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.4.0'
     }
 }
 
 plugins {
     id 'groovy'
     id 'eclipse'
-    id 'net.saliman.cobertura' version '2.2.6'
-    id 'com.github.kt3k.coveralls' version '2.0.1'
     id 'com.jfrog.bintray' version '0.5'
 }
 
 apply plugin:'application'
 apply plugin: 'cobertura'
+apply plugin: 'com.github.kt3k.coveralls'
 
 cobertura {
+    coverageSourceDirs = sourceSets.main.groovy.srcDirs
     coverageFormats = ['html', 'xml']
     coverageIgnoreTrivial = true
     coverageIgnores = ['org.slf4j.Logger.*']
@@ -69,3 +70,4 @@ applicationDistribution.from('bee.properties') {
 }
 
 test.finalizedBy(project.tasks.cobertura)
+project.tasks.generateCoberturaReport.finalizedBy(project.tasks.coveralls)
