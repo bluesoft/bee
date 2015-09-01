@@ -70,4 +70,4 @@ applicationDistribution.from('bee.properties') {
 }
 
 test.finalizedBy(project.tasks.cobertura)
-project.tasks.cobertura.finalizedBy(project.tasks.coveralls)
+project.tasks.generateCoberturaReport.finalizedBy(project.tasks.coveralls)
