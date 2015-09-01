@@ -2,7 +2,6 @@
 
 Bee is a tool for managing database changes.
 
-
 ## How Bee can help you ?
 See the [documentation](http://bluesoft.github.io/bee)
 
