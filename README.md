@@ -4,10 +4,10 @@
 
 Bee is a tool for managing database changes.
 
-## How Bee can help you ?
+## How can Bee help you ?
 See the [documentation](http://bluesoft.github.io/bee)
 
 ## Contributing
 
-Feel free to contributing with project. Start reading our [contributing guide](https://github.com/bluesoft/contributing)
+Feel free to contributing with the project. Start reading our [contributing guide](https://github.com/bluesoft/contributing)
 
