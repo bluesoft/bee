@@ -233,7 +233,7 @@ abstract class BeeSchemaCreator {
 							def fieldValue = columnValue.toString()
 							params.add(fieldValue)
 							def columnType = columnTypes[index2]
-							def isString = columnType == 'varchar' || columnType == 'varchar2'
+							def isString = columnType == 'varchar' || columnType == 'varchar2' || columnType == 'character' || columnType == 'character varying' || columnType == 'text'
 							def isDate = columnType == 'date'
 							def isNotNumber = !fieldValue?.isNumber() 
 							if (isNotNumber && !isDate || isString) {
