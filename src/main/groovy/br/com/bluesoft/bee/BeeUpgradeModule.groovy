@@ -149,12 +149,10 @@ public class BeeUpgradeModule implements BeeWriter {
 		def source = TMPDIR + '/bee-' + version
 
 		File dest = new File(inst_dir)
-
-		BeeFileUtils.removeDir(dest)
-		BeeFileUtils.createDir(dest)
-
 		File src = new File(source)
+
 		BeeFileUtils.copyFolder(src, dest)
+		BeeFileUtils.removeOldBees(dest)
 	}
 	
 	def static getAppPath() {

@@ -78,6 +78,22 @@ public class BeeFileUtils {
 		dir.delete()
 	}
 	
+	def static removeOldBees(File dir) {
+		def libfolder =  new File(dir.getPath(), "/lib")
+
+		if(libfolder.isDirectory()) {
+			String[] files = libfolder.list()
+
+			for(String file: files) {
+				File f  = new File(libfolder, file)
+
+				if (f.getName().matches("bee-[0-9]+\\.[0-9]+\\.jar")) {
+					if (f.getName() != "bee-" + BeeVersionModule.getLatestVersion() + ".jar") f.delete()
+				}
+			}
+		}
+	}
+
 	def static copyFolder(File source, File destination) {
 		InputStream  is
 		OutputStream out
@@ -92,6 +108,8 @@ public class BeeFileUtils {
 				copyFolder(src_file, dest_file)
 			}
 		} else {
+			if (destination.exists()) destination.delete()
+
 			try {
 				destination.getParentFile().mkdirs()
 
