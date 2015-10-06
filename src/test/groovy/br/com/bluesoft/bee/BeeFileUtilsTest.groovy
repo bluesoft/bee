@@ -37,4 +37,31 @@ public class BeeFileUtilsTest extends Specification {
 		then:""
 		tempFile.exists() ==  false
 	}
+
+	@Test
+	def "deve remover todos os arquivos cuja versão seja diferente de getLatestVersion"() {
+		setup:""
+		GroovyMock(BeeVersionModule, global: true)
+		BeeVersionModule.getLatestVersion()  >> "1.3"
+
+		def tempFolder    = temporaryFolder.newFolder()
+		def tempLibFolder = new File(tempFolder.getPath(), "lib")
+		tempLibFolder.mkdirs()
+
+		def bee1 = new File(tempLibFolder.getPath(), "bee-1.1.jar")
+		def bee2 = new File(tempLibFolder.getPath(), "bee-1.2.jar")
+		def bee3 = new File(tempLibFolder.getPath(), "bee-1.3.jar")
+
+		bee1.createNewFile()
+		bee2.createNewFile()
+		bee3.createNewFile()
+
+		when:""
+		BeeFileUtils.removeOldBees(tempFolder)
+
+		then:""
+		bee1.exists() == false
+		bee2.exists() == false
+		bee3.exists() == true
+	}
 }
