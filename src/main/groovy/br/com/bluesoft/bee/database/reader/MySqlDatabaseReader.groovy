@@ -75,7 +75,6 @@ class MySqlDatabaseReader implements DatabaseReader {
 		if(uc.extra='on update CURRENT_TIMESTAMP', 'on update CURRENT_TIMESTAMP', null) as onUpdateCurrentTimestamp,
 		uc.column_default as data_default, uc.ordinal_position as column_id
 		from information_schema.columns uc
-		inner join information_schema.tables ut on uc.table_name = ut.table_name
 		where uc.table_schema = ?  
 		group by table_name, column_name
 		order by table_name, uc.ordinal_position
@@ -86,7 +85,6 @@ class MySqlDatabaseReader implements DatabaseReader {
 		if(uc.extra='on update CURRENT_TIMESTAMP', 'on update CURRENT_TIMESTAMP', null) as onUpdateCurrentTimestamp,
 		uc.column_default as data_default, uc.ordinal_position as column_id
 		from information_schema.columns uc
-		inner join information_schema.tables ut on uc.table_name = ut.table_name
 		where uc.table_schema = ?  
 		and uc.table_name = ?
 		group by table_name, column_name
@@ -120,15 +118,15 @@ class MySqlDatabaseReader implements DatabaseReader {
 
 	final static def INDEXES_QUERY = '''
 		select ui.table_name, ui.index_name, ui.index_type, ui.non_unique as uniqueness FROM information_schema.statistics ui
-		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name
-		where ui.table_schema = ? 
+		left join (select constraint_name, constraint_type from information_schema.table_constraints where table_schema = ?) tc on ui.index_name = tc.constraint_name
+		where ui.table_schema = ?
 		and tc.constraint_type is null
 		group by ui.table_name, ui.index_name, ui.index_type, ui.non_unique
 		order by ui.table_name, ui.index_name
 	'''
 	final static def INDEXES_QUERY_BY_NAME = '''
 		select ui.table_name, ui.index_name, ui.index_type, ui.non_unique as uniqueness FROM information_schema.statistics ui
-		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name
+		left join (select constraint_name, constraint_type from information_schema.table_constraints where table_schema = ?) tc on ui.index_name = tc.constraint_name
 		where ui.table_schema = ? 
 		and tc.constraint_type is null
 		and  ui.table_name = ?
@@ -139,9 +137,9 @@ class MySqlDatabaseReader implements DatabaseReader {
 	private def fillIndexes(tables, objectName) {
 		def rows
 		if(objectName) {
-			rows = sql.rows(INDEXES_QUERY_BY_NAME, [schema, objectName])
+			rows = sql.rows(INDEXES_QUERY_BY_NAME, [schema, schema, objectName])
 		} else {
-			rows = sql.rows(INDEXES_QUERY, [schema])
+			rows = sql.rows(INDEXES_QUERY, [schema, schema])
 		}
 		rows.each({
 			def tableName = it.table_name
@@ -165,11 +163,11 @@ class MySqlDatabaseReader implements DatabaseReader {
 	}
 
 	final static def INDEXES_COLUMNS_QUERY = '''
-		select ui.table_name, ui.index_name, ui.column_name, c.column_default as data_default, 'asc' as descend 
+		select ui.table_name, ui.index_name, ui.column_name, c.column_default as data_default, 'asc' as descend
 		from information_schema.statistics ui
-		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
-		inner join information_schema.columns c on c.column_name = ui.column_name
-		where ui.table_schema = ? 
+		left join (select constraint_name, constraint_type from information_schema.table_constraints where table_schema = ?) tc on ui.index_name = tc.constraint_name
+		inner join (select column_name, column_default from information_schema.columns where table_schema = ?) c on c.column_name = ui.column_name
+		where ui.table_schema = ?
 		and tc.constraint_type is null
 		group by ui.index_name, ui.column_name
 		order by ui.index_name, ui.seq_in_index
@@ -177,8 +175,8 @@ class MySqlDatabaseReader implements DatabaseReader {
 	final static def INDEXES_COLUMNS_QUERY_BY_NAME = '''
 		select ui.table_name, ui.index_name, ui.column_name, c.column_default as data_default, 'asc' as descend 
 		from information_schema.statistics ui
-		left join information_schema.table_constraints tc on ui.index_name = tc.constraint_name 
-		inner join information_schema.columns c on c.column_name = ui.column_name
+		left join (select constraint_name, constraint_type from information_schema.table_constraints where table_schema = ?) tc on ui.index_name = tc.constraint_name
+		inner join (select column_name, column_default from information_schema.columns where table_schema = ?) c on c.column_name = ui.column_name
 		where ui.table_schema = ? 
 		and tc.constraint_type is null
 		and ui.table_name = ?
@@ -188,9 +186,9 @@ class MySqlDatabaseReader implements DatabaseReader {
 	private def fillIndexColumns(tables, objectName) {
 		def rows
 		if(objectName) {
-			rows = sql.rows(INDEXES_COLUMNS_QUERY_BY_NAME , [schema, objectName])
+			rows = sql.rows(INDEXES_COLUMNS_QUERY_BY_NAME , [schema, schema, schema, objectName])
 		} else {
-			rows = sql.rows(INDEXES_COLUMNS_QUERY, [schema])
+			rows = sql.rows(INDEXES_COLUMNS_QUERY, [schema, schema, schema])
 		}
 
 		rows.each({
@@ -209,32 +207,32 @@ class MySqlDatabaseReader implements DatabaseReader {
 	final static def CONSTRAINTS_QUERY = '''
 		select kcu.table_name, kcu.constraint_name, tc.constraint_type, kcu.referenced_table_name as ref_table, if(tc.constraint_type in ('PRIMARY KEY', 'UNIQUE'),tc.constraint_name,null) as index_name, rc.delete_rule
 		from information_schema.key_column_usage kcu
-		inner join information_schema.table_constraints tc on tc.table_schema = kcu.table_schema and tc.table_name = kcu.table_name and kcu.constraint_name = tc.constraint_name
-		inner join information_schema.columns c on c.table_name = kcu.table_name and c.column_name = kcu.column_name
-		left join information_schema.referential_constraints rc on rc.table_name = tc.table_name and  rc.constraint_name = tc.constraint_name
-		where kcu.constraint_schema = ?
-		and c.extra != 'auto_increment'		
+		inner join (select table_schema, table_name, constraint_name, constraint_type from information_schema.table_constraints where table_schema = ?) tc on tc.table_name = kcu.table_name and kcu.constraint_name = tc.constraint_name
+		inner join (select table_name, column_name, extra from information_schema.columns where table_schema = ?) c on c.table_name = kcu.table_name and c.column_name = kcu.column_name
+		left join (select table_name, constraint_name, delete_rule from information_schema.referential_constraints where constraint_schema = ?) rc on rc.table_name = tc.table_name and  rc.constraint_name = tc.constraint_name
+		where kcu.table_schema = ?
+		and c.extra != 'auto_increment'
 		group by kcu.table_name, kcu.constraint_name, tc.constraint_type
-		order by kcu.table_name, kcu.constraint_name, tc.constraint_type;				
+		order by kcu.table_name, kcu.constraint_name, tc.constraint_type
 	'''
 	final static def CONSTRAINTS_QUERY_BY_NAME = '''
 		select kcu.table_name, kcu.constraint_name, tc.constraint_type, kcu.referenced_table_name as ref_table, if(tc.constraint_type in ('PRIMARY KEY', 'UNIQUE'),tc.constraint_name,null) as index_name, rc.delete_rule
 		from information_schema.key_column_usage kcu
-		inner join information_schema.table_constraints tc on tc.table_schema = kcu.table_schema and tc.table_name = kcu.table_name and kcu.constraint_name = tc.constraint_name
-		inner join information_schema.columns c on c.table_name = kcu.table_name and c.column_name = kcu.column_name
-		left join information_schema.referential_constraints rc on rc.table_name = tc.table_name and  rc.constraint_name = tc.constraint_name
-		where kcu.constraint_schema = ?
+		inner join (select table_schema, table_name, constraint_name, constraint_type from information_schema.table_constraints where table_schema = ?) tc on tc.table_name = kcu.table_name and kcu.constraint_name = tc.constraint_name
+		inner join (select table_name, column_name, extra from information_schema.columns where table_schema = ?) c on c.table_name = kcu.table_name and c.column_name = kcu.column_name
+		left join (select table_name, constraint_name, delete_rule from information_schema.referential_constraints where constraint_schema = ?) rc on rc.table_name = tc.table_name and  rc.constraint_name = tc.constraint_name
+		where kcu.table_schema = ?
 		and kcu.table_name = ?
 		and c.extra != 'auto_increment'		
 		group by kcu.table_name, kcu.constraint_name, tc.constraint_type
-		order by kcu.table_name, kcu.constraint_name, tc.constraint_type;				
+		order by kcu.table_name, kcu.constraint_name, tc.constraint_type
 	'''
 	private def fillConstraints(tables, objectName) {
 		def rows
 		if(objectName) {
-			rows = sql.rows(CONSTRAINTS_QUERY_BY_NAME, [schema, objectName])
+			rows = sql.rows(CONSTRAINTS_QUERY_BY_NAME, [schema, schema, schema, schema, objectName])
 		} else {
-			rows = sql.rows(CONSTRAINTS_QUERY,[schema])
+			rows = sql.rows(CONSTRAINTS_QUERY,[schema, schema, schema, schema])
 		}
 
 		rows.each({
@@ -270,29 +268,29 @@ class MySqlDatabaseReader implements DatabaseReader {
 	final static def CONSTRAINTS_COLUMNS_QUERY = '''
 		select kcu.table_name, kcu.constraint_name, kcu.column_name, kcu.referenced_column_name as ref_column_name
 		from information_schema.key_column_usage kcu
-		inner join information_schema.columns c on c.column_name = kcu.column_name and c.table_name = kcu.table_name		
+		inner join (select column_name, table_name, extra from information_schema.columns where table_schema = ?) c on c.column_name = kcu.column_name and c.table_name = kcu.table_name
 		where kcu.table_schema = ?
 		and c.extra != 'auto_increment'
-		group by kcu.table_name, kcu.constraint_name, kcu.column_name				
+		group by kcu.table_name, kcu.constraint_name, kcu.column_name
 		order by kcu.table_name, kcu.constraint_name, kcu.ordinal_position;
 	'''
 	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
 		select kcu.table_name, kcu.constraint_name, kcu.column_name, kcu.referenced_column_name as ref_column_name
 		from information_schema.key_column_usage kcu
-		inner join information_schema.columns c on c.column_name = kcu.column_name and c.table_name = kcu.table_name		
+		inner join (select column_name, table_name, extra from information_schema.columns where table_schema = ?) c on c.column_name = kcu.column_name and c.table_name = kcu.table_name
 		where kcu.table_schema = ?
 		and kcu.table_name = ?
 		and c.extra != 'auto_increment'
 		group by kcu.table_name, kcu.constraint_name, kcu.column_name				
-		order by kcu.table_name, kcu.constraint_name, kcu.ordinal_position;
+		order by kcu.table_name, kcu.constraint_name, kcu.ordinal_position
 	'''
 	
 	private def fillConstraintsColumns(tables, objectName) {
 		def rows
 		if(objectName) {
-			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY_BY_NAME, [schema,objectName])
+			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY_BY_NAME, [schema, schema,objectName])
 		} else {
-			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY, [schema])
+			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY, [schema, schema])
 		}
 		rows.each({
 			def tableName = it.table_name
