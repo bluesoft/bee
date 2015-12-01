@@ -36,6 +36,8 @@ import java.io.File;
 import br.com.bluesoft.bee.service.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 public class BeeUpgradeModule implements BeeWriter {
 	static private String TMPDIR  = System.getProperty("java.io.tmpdir") + "/bee-upgrade"
@@ -114,7 +116,20 @@ public class BeeUpgradeModule implements BeeWriter {
 	}
 
 	def static getLatestVersion() {
-		return BeeVersionModule.getLatestVersion()
+		def version_latest = BeeVersionModule.getLatestVersion()
+
+		def m = version_latest ==~ /^([0-9]+)\.([0-9]+)$/
+		assert m instanceof Boolean
+
+		if (!m) {
+			def msg = "Fatal error: latest release name does not match the name pattern: N.N, e.g. 15.12.\n"
+			msg += "Please open an issue with this output: https://github.com/bluesoft/bee/issues\n"
+			msg += "Exiting.\n"
+
+			die(msg)
+		}
+
+		return version_latest
 	}
 
 	def static isLatestVersion() {
@@ -132,7 +147,6 @@ public class BeeUpgradeModule implements BeeWriter {
 
 		BeeFileUtils.downloadFile(url_download, local_file)
 	}
-
 
 	def static applyChanges() {
 		String app_path = getAppPath()
@@ -160,6 +174,11 @@ public class BeeUpgradeModule implements BeeWriter {
 		String inst_dir = app_path.replaceAll("lib/bee-[0-9]+\\.[0-9]+\\.jar", "")
 
 		return inst_dir
+	}
+
+	def static die(String msg) {
+		println msg
+		System.exit 1
 	}
 
 	void log(String msg) {

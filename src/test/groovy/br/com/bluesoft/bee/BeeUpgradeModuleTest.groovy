@@ -37,11 +37,10 @@ public class BeeUpgradeModuleTest extends Specification {
 		then:""
 		isLatest == false
 	}
-	
+
 	@Test
 	def "deve pegar a última versão e ela deve ser igual à versão retornada no módulo BeeVersionModule"() {
 		given:""
-		GroovyMock(BeeVersionModule, global: true)
 		def beeVersionLatest = BeeVersionModule.getLatestVersion()
 
 		when:""
@@ -49,6 +48,23 @@ public class BeeUpgradeModuleTest extends Specification {
 		def beeUpgradeLatest = upgrade.getLatestVersion()
 
 		then:""
-		 beeUpgradeLatest == beeVersionLatest
+		beeUpgradeLatest == beeVersionLatest
+	}
+
+	@Test
+	def "deve abortar a execução porque o nome do release está fora do padrão"() {
+		given:""
+		GroovyMock(BeeVersionModule, global: true)
+		BeeVersionModule.getLatestVersion() >> "v1.1"
+
+		GroovyMock(System, global: true)
+		System.exit() >> 1
+
+		when:""
+		BeeUpgradeModule upgrade = new BeeUpgradeModule()
+		def version = upgrade.getLatestVersion()
+
+		then:""
+		assert 1
 	}
 }
