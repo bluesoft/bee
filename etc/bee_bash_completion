@@ -1,0 +1,41 @@
+
+_bee()
+{
+    local cur prev opts
+    _get_comp_words_by_ref -n : cur prev
+
+    COMPREPLY=()
+    opts="${opts} schema:generate schema:validate schema:recreate_mysql schema:recreate_oracle"
+    opts="${opts} data:generate data:validate"
+    opts="${opts} dbchange:create dbchange:status dbchange:up dbchange:down dbchange:mark dbchange:markall dbchange:unmark"
+    opts="${opts} dbseed:create dbseed:status dbseed:up dbseed:down dbseed:mark dbseed:markall dbseed:unmark"
+    opts="${opts} upgrade upgrade:y"
+
+    case "${prev}" in
+        schema:*)
+            return 0
+            ;;
+        data:*)
+            return 0
+            ;;
+        dbchange:*)
+            return 0
+            ;;
+        dbseed:*)
+            return 0
+            ;;
+        upgrade*)
+            return 0
+            ;;
+        *)
+        ;;
+    esac
+
+    COMPREPLY=( $( compgen -W "${opts}" -- ${cur} ) )
+    __ltrim_colon_completions "$cur" "$prev"
+
+    return 0
+}
+
+complete -F _bee bee
+

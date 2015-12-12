@@ -7,8 +7,10 @@ Bee is a tool for managing database changes.
 ## How can Bee help you ?
 See the [documentation](http://bluesoft.github.io/bee)
 
-easy install with brew:
+Easy install with brew:
 `brew install bee`
+
+We have Bash completion for the lazy. You just need to save the file `etc/bee_bash_completion` in this repository as `/etc/bash_completion.d/bee` and run `. /etc/bash_completion`
 
 ## Contributing
 
