@@ -10,7 +10,13 @@ See the [documentation](http://bluesoft.github.io/bee)
 Easy install with brew:
 `brew install bee`
 
-We have Bash completion for the lazy. You just need to save the file `etc/bee_bash_completion` in this repository as `/etc/bash_completion.d/bee` and run `. /etc/bash_completion`
+## Completion files for the lazy:
+
+If you are using Bash:
+  Save the file `etc/bee_bash_completion` as `/etc/bash_completion.d/bee` and run `. /etc/bash_completion`.
+
+If you are using Fish:
+  Save the file `etc/bee_fish_completion` as `$HOME/.config/fish/completions/bee.fish`.
 
 ## Contributing
 
