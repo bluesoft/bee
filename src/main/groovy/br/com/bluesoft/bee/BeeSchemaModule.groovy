@@ -45,6 +45,7 @@ public class BeeSchemaModule implements BeeWriter {
 		println "         schema:recreate_mysql [object] - build a MySql DDL script"
 		println "         schema:recreate_oracle [object] - build a Oracle DDL script"
 		println "         schema:recreate_postgres [object] - build a Postgres DDL script"
+		println "         schema:recreate_redshift [object] - build a Redshift DDL script"
 		println "         schema:check - validate structure correctness"
 	}
 
@@ -68,6 +69,9 @@ public class BeeSchemaModule implements BeeWriter {
 				break;
 			case "recreate_postgres":
 				actionRunner = new BeePostgresSchemaCreatorAction(options: options, out: this)
+				break;
+			case "recreate_redshift":
+				actionRunner = new BeeRedshiftSchemaCreatorAction(options: options, out: this)
 				break;
 			case "check":
 				actionRunner = new BeeSchemaCheckerAction(options: options, out: this)

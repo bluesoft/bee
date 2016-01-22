@@ -13,21 +13,28 @@ public class RDBMSUtil {
 	public static RDBMS getRDBMS(Options options) {
 		return getRDBMS(options.configFile, options.arguments[0])
 	}
-	
+
 	public static RDBMS getRDBMS(configFile, clientName) {
 		def config = PropertiesUtil.readDatabaseConfig(configFile, clientName)
-		
-		def databaseType = getDataBaseType(config)
 
-		if (databaseType.equals("mysql")) {
-			return RDBMS.MYSQL
-		} else if(databaseType.equals("oracle")) {
-			return RDBMS.ORACLE
-		} else if(databaseType.equals("postgresql")) {
-			return RDBMS.POSTGRES
-		} else {
-			def mensagemDeErro = MessageFormat.format(MENSAGEM_DE_ERRO_BANCO_NAO_SUPORTADO, databaseType)
-			throw new IllegalArgumentException(mensagemDeErro)
+		def databaseType = getDataBaseType(config)
+		switch (databaseType) {
+			case "mysql":
+				return RDBMS.MYSQL;
+				break;
+			case "oracle":
+				return RDBMS.ORACLE;
+				break;
+			case "postgresql":
+				return RDBMS.POSTGRES;
+				break;
+			case "redshift":
+				return RDBMS.REDSHIFT;
+				break;
+			default:
+				def mensagemDeErro = MessageFormat.format(MENSAGEM_DE_ERRO_BANCO_NAO_SUPORTADO, databaseType);
+				throw new IllegalArgumentException(mensagemDeErro);
+				break;
 		}
 	}
 
@@ -35,7 +42,7 @@ public class RDBMSUtil {
 		def urlTirandoJdbc = config.url.substring(config.url.indexOf(":") + 1)
 		def dataBaseType = urlTirandoJdbc.substring(0, urlTirandoJdbc.indexOf(":"))
 	}
-	
+
 	public static String getMySqlDatabaseName(Options options) {
 		def key = options.arguments[0]
 		def config = PropertiesUtil.readDatabaseConfig(options.configFile, key)

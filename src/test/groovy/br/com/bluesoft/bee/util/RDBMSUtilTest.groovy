@@ -24,7 +24,7 @@ class RDBMSUtilTest {
 		assertNotNull(oracleDatabaseType)
 		assertEquals(RDBMS.ORACLE, oracleDatabaseType)
 	}
-	
+
 	@Test
 	public void 'deve retornar o tipo Mysql'() {
 		def configFile = getProperties("/mySqlTest.properties")
@@ -43,6 +43,16 @@ class RDBMSUtilTest {
 		RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(configFile, clientName)
 		assertNotNull(oracleDatabaseType)
 		assertEquals(RDBMS.POSTGRES, oracleDatabaseType)
+	}
+
+	@Test
+	public void 'deve retornar o tipo Redshift'() {
+		def configFile = getProperties("/redshiftTest.properties")
+		def clientName = "test"
+
+		RDBMS oracleDatabaseType = RDBMSUtil.getRDBMS(configFile, clientName)
+		assertNotNull(oracleDatabaseType)
+		assertEquals(RDBMS.REDSHIFT, oracleDatabaseType)
 	}
 
 	@Test
