@@ -26,3 +26,5 @@ bug fix - dbchange:down executing empty down statements
 Added support for postgres (version >= 8.4)
 1.43
 bug fixes in postgres support
+1.58
+bug fix in oracle indexes read 
