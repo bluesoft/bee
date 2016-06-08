@@ -78,7 +78,7 @@ class DbChangeManager {
 			return false
 		}
 
-		def sql = getDatabaseConnection()
+		sql = getDatabaseConnection()
 		if (sql == null) {
 			logger.log(MESSAGE_COULD_NOT_GET_CONNECTION)
 			return false
