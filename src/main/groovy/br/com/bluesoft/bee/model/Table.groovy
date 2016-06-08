@@ -78,7 +78,7 @@ class Table implements Validator {
 		}
 		aditionalDatabaseColumns.each {
 			def messageText = "The table ${name} has the additional column ${it}.";
-			def message = new Message(objectName:"${name}.${it}", level:MessageLevel.WARNING, objectType:ObjectType.TABLE_COLUMN, messageType:MessageType.PRESENCE, message:messageText)
+			def message = new Message(objectName:"${name}.${it}", level:MessageLevel.ERROR, objectType:ObjectType.TABLE_COLUMN, messageType:MessageType.PRESENCE, message:messageText)
 			messages << message
 		}
 		return messages
@@ -95,7 +95,7 @@ class Table implements Validator {
 		}
 		aditionalDatabaseIndexes.each {
 			def messageText = "The table ${name} has the additional index ${it}.";
-			def message = new Message(objectName:"${it}", level:MessageLevel.WARNING, objectType:ObjectType.INDEX, messageType:MessageType.PRESENCE, message:messageText)
+			def message = new Message(objectName:"${it}", level:MessageLevel.ERROR, objectType:ObjectType.INDEX, messageType:MessageType.PRESENCE, message:messageText)
 			messages << message
 		}
 		return messages
@@ -112,7 +112,7 @@ class Table implements Validator {
 		}
 		aditionalDatabaseConstraints.each {
 			def messageText = "The table ${name} has the additional constraint ${it}.";
-			def message = new Message(objectName:"${it}", level:MessageLevel.WARNING, objectType:ObjectType.CONSTRAINT, messageType:MessageType.PRESENCE, message:messageText)
+			def message = new Message(objectName:"${it}", level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.PRESENCE, message:messageText)
 			messages << message
 		}
 		return messages

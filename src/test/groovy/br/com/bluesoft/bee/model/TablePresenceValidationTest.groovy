@@ -51,8 +51,8 @@ class TablePresenceValidationTest  extends spock.lang.Specification {
 		def message = messages[0]
 		message.message == 'The table people has the additional column name.'
 		
-		and: "the messages should have warning level"
-		message.level == MessageLevel.WARNING
+		and: "the messages should have error level"
+		message.level == MessageLevel.ERROR
 		
 		and: "the error type should be presence"
 		message.messageType == MessageType.PRESENCE
@@ -85,8 +85,8 @@ class TablePresenceValidationTest  extends spock.lang.Specification {
 		def additionalIndexMessage = messages.find { it.objectName == 'idx_pessoa_name' }
 		additionalIndexMessage.message == 'The table people has the additional index idx_pessoa_name.'
 		
-		and: "the messages should have warning level"
-		additionalIndexMessage.level == MessageLevel.WARNING
+		and: "the messages should have error level"
+		additionalIndexMessage.level == MessageLevel.ERROR
 		
 		and: "the error type should be presence in both messages"
 		messages.findAll { it.messageType == MessageType.PRESENCE }.size() == 2
@@ -119,8 +119,8 @@ class TablePresenceValidationTest  extends spock.lang.Specification {
 		def additionalConstraintMessage = messages.find { it.objectName == 'fk_tipo_pessoa' }
 		additionalConstraintMessage.message == 'The table people has the additional constraint fk_tipo_pessoa.'
 		
-		and: "the messages should have warning level"
-		additionalConstraintMessage.level == MessageLevel.WARNING
+		and: "the messages should have error level"
+		additionalConstraintMessage.level == MessageLevel.ERROR
 		
 		and: "the error type should be presence in both messages"
 		messages.findAll { it.messageType == MessageType.PRESENCE }.size() == 2  
