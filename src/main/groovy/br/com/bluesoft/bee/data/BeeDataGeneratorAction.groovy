@@ -30,76 +30,62 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee
+package br.com.bluesoft.bee.data;
 
-import br.com.bluesoft.bee.data.BeeDataModule
-import br.com.bluesoft.bee.dbchange.BeeDbChangeModule
-import br.com.bluesoft.bee.dbseed.BeeDbSeedModule
-import br.com.bluesoft.bee.schema.BeeSchemaModule
-import br.com.bluesoft.bee.upgrade.BeeUpgradeModule
+import br.com.bluesoft.bee.database.ConnectionInfo
+import br.com.bluesoft.bee.database.reader.*
+import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.util.CsvUtil
 
-import java.util.jar.*
 
-import br.com.bluesoft.bee.model.Options
+public class BeeDataGeneratorAction {
+	DatabaseReader databaseReader
 
-class Bee {
+	BeeWriter out
+	def options
 
-	static def cliBuilder
+	def sql
 
-	static getRunner(options) {
-		def runner = null
+	public void run() {
+		def clientName = options.arguments[0]
+		def objectName = options.arguments[1]
+		def path = options.dataDir.canonicalPath
 
-		switch(options.moduleName) {
-			case "dbchange":
-				runner = new BeeDbChangeModule()
-				break;
-			case "dbseed":
-				runner = new BeeDbSeedModule()
-				break;
-			case "schema":
-				runner = new BeeSchemaModule()
-				break;
-			case "data":
-				runner = new BeeDataModule()
-				break;
-			case "upgrade":
-				runner = new BeeUpgradeModule()
-				break;
-			default:
-				options.usage()
-				System.exit(0)
+		def sql
+		try {
+			out.log "Connecting to the database..."
+			sql = getDatabaseConnection(clientName)
+		} catch (e){
+			throw new Exception("It was not possible to connect to the database.",e)
 		}
 
-		return runner
+		try {
+			out.log "Extracting the table data ..."
+			def schema = new JsonImporter(path).importMetaData()
+			def table = schema.tables[objectName]
+			def data = new TableDataReader(sql).getData(table)
+
+			def dir = new File(path, "data")
+			if(!dir.exists() || !dir.isDirectory())
+				dir.mkdirs()
+
+			def filename = objectName.toLowerCase() + ".csv"
+
+			def file = new File(dir, filename)
+			file.delete()
+
+			CsvUtil.write file, data
+		} catch(e) {
+			out.log e.toString()
+			throw new Exception("Error importing database metadata.",e)
+		}
 	}
 
-	static getVersion() {
-		def resources = Thread.currentThread().getContextClassLoader().getResources(JarFile.MANIFEST_NAME)
-		def version = "test"
-
-		resources.each {
-			Manifest manifest = new Manifest(it.openStream())
-			if(manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_TITLE] == 'bee') {
-				version = manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_VERSION]
-			}
+	def getDatabaseConnection(clientName) {
+		if(sql != null) {
+			return sql
 		}
-
-		return version
-	}
-
-	static main(args) {
-		def version = getVersion()
-		println "Bee - v. ${version} - Bluesoft (2013) - GPL - All rights reserved"
-		Options options = Options.instance
-		if(!options.parse(args)) {
-			options.usage()
-			System.exit(1)
-		}
-		def runner = getRunner(options)
-		if(runner == null) {
-			usage()
-			System.exit 0
-		}
-		runner.run(options)
+		return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
 	}
 }
