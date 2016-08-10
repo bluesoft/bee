@@ -1,5 +1,6 @@
-package br.com.bluesoft.bee;
+package br.com.bluesoft.bee
 
+import br.com.bluesoft.bee.upgrade.BeeVersionModule;
 import org.junit.Test;
 
 import spock.lang.Specification;

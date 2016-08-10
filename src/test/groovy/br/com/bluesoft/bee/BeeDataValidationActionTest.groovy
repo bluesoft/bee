@@ -1,5 +1,6 @@
 package br.com.bluesoft.bee
 
+import br.com.bluesoft.bee.data.BeeDataValidatorAction
 import org.junit.Before;
 import org.junit.Test;
 

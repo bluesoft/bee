@@ -1,10 +1,9 @@
-package br.com.bluesoft.bee;
+package br.com.bluesoft.bee
 
-import spock.lang.Specification;
-import org.junit.Rule
+import br.com.bluesoft.bee.upgrade.BeeUpgradeModule
+import br.com.bluesoft.bee.upgrade.BeeVersionModule;
+import spock.lang.Specification
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito;
 
 public class BeeUpgradeModuleTest extends Specification {
 
