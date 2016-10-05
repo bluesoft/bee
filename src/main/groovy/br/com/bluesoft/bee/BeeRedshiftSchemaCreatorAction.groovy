@@ -34,7 +34,7 @@ public class BeeRedshiftSchemaCreatorAction {
 		if(file.exists())
 			file.delete()
 
-		beeSchemaCreator = new BeePostgresSchemaCreator()
+		beeSchemaCreator = new BeeRedshiftSchemaCreator()
 
 		out.println("generating tables...")
 		beeSchemaCreator.createTables(file, schema)

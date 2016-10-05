@@ -4,12 +4,8 @@ import java.text.SimpleDateFormat;
 
 import br.com.bluesoft.bee.util.CsvUtil
 
-
-
-
-
 abstract class BeeSchemaCreator {
-	
+
 	void createSequences(def file, def schema) {
 		schema.sequences*.value.each { file << "create sequence ${it.name};\n" }
 		file << "\n"
@@ -24,7 +20,7 @@ abstract class BeeSchemaCreator {
 				result += "(${column.size} ${column.sizeType})"
 			else
 				result += "(${column.size})"
-				
+
 		if(column.type == 'number')
 			if(column.scale > 0)
 				result += "(${column.size}, ${column.scale})"
@@ -42,7 +38,7 @@ abstract class BeeSchemaCreator {
 	def createTable(def table) {
 		def columns = []
 		table.columns.each({
-			columns << createColumn(it.value) 
+			columns << createColumn(it.value)
 		})
 		def temp = table.temporary ? " global temporary" : ""
 		def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n\n"
@@ -79,7 +75,7 @@ abstract class BeeSchemaCreator {
 		def result = ""
 
 		constraints.each {
-			result += "alter table ${table.name} add constraint ${it.name} unique(" + it.columns.join(',') + ");\n" 
+			result += "alter table ${table.name} add constraint ${it.name} unique(" + it.columns.join(',') + ");\n"
 		}
 
 		return result
@@ -182,7 +178,7 @@ abstract class BeeSchemaCreator {
 			def text = []
 			it.text.eachLine { text << it }
 			def text2 = text[1..text.size()-1].join("\n")
-			def procedure = "create or replace ${text2}\n/\n\n" 
+			def procedure = "create or replace ${text2}\n/\n\n"
 			file.append(procedure.toString(), 'utf-8')
 		}
 	}
@@ -193,7 +189,7 @@ abstract class BeeSchemaCreator {
 			file.append(trigger.toString(), 'utf-8')
 		}
 	}
-	
+
 	void createCoreData(def file, def schema, def dataFolderPath) {
 		def listFiles = dataFolderPath.listFiles()
 		listFiles.each {
@@ -211,10 +207,10 @@ abstract class BeeSchemaCreator {
 						columns[it.value.name] = it.value.type
 								columnNames << it.value.name
 					}
-				
+
 					def counterColumnNames = 1
 					def counterValue = 1
-	
+
 					def query = new StringBuilder()
 					for (int i = 0; i < fileData.size; i++) {
 						query << "insert into ${tableName} ("
@@ -235,7 +231,7 @@ abstract class BeeSchemaCreator {
 							def columnType = columnTypes[index2]
 							def isString = columnType == 'varchar' || columnType == 'varchar2'
 							def isDate = columnType == 'date'
-							def isNotNumber = !fieldValue?.isNumber() 
+							def isNotNumber = !fieldValue?.isNumber()
 							if (isNotNumber && !isDate || isString) {
 								fieldValue = fieldValue.replaceAll("\'", "\''")
 								if (fieldValue != 'null') {
@@ -266,8 +262,8 @@ abstract class BeeSchemaCreator {
 			}
 		}
 	}
-	
+
 	def createUserTypes(file, schema){
-		
+
 	}
 }

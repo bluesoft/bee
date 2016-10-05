@@ -50,6 +50,9 @@ class TableColumn {
 	String autoIncrement
 	String onUpdateCurrentTimestamp
 	Boolean virtual = false
+	String encoding
+	Boolean distkey
+	Integer sortkey
 
 	def messageTemplate = 'The {0} of the column {1} of the table {2} should be {3} but it is {4}'
 
@@ -82,6 +85,18 @@ class TableColumn {
 
 		if (metadataColumn.onUpdateCurrentTimestamp != this.onUpdateCurrentTimestamp) {
 			messages << createMessage(table.name, metadataColumn, MessageType.ON_UPDATE_CURRENT_TIMESTAMP, 'onUpdateCurrentTimestamp')
+		}
+
+		if (metadataColumn.encoding != this.encoding) {
+			messages << createMessage(table.name, metadataColumn, MessageType.STRUCTURE, 'encoding')
+		}
+
+		if (metadataColumn.distkey != this.distkey) {
+			messages << createMessage(table.name, metadataColumn, MessageType.STRUCTURE, 'distkey')
+		}
+
+		if (metadataColumn.sortkey != this.sortkey) {
+			messages << createMessage(table.name, metadataColumn, MessageType.STRUCTURE, 'sortkey')
 		}
 
 		return messages

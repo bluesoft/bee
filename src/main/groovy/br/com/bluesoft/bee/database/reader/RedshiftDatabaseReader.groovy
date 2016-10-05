@@ -101,13 +101,17 @@ class RedshiftDatabaseReader implements DatabaseReader {
 			when (ic.character_maximum_length is not null) then ic.character_maximum_length
 		end
 		as data_size,
-		ic.numeric_scale as data_scale, ic.column_default as data_default
+		ic.numeric_scale as data_scale, ic.column_default as data_default,
+		encoding,
+		distkey,
+		sortkey
 		from information_schema.columns ic
 		inner join information_schema.tables it on it.table_name = ic.table_name
+		inner join pg_table_def ptd on ptd.tablename = it.table_name and ptd."column" = ic.column_name
 		where ic.table_schema not in ('pg_catalog' , 'information_schema')
 		and it.table_type = 'BASE TABLE'
 		order by ic.table_name, ic.ordinal_position;
-		'''
+	'''
 
 	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
 		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
@@ -116,14 +120,19 @@ class RedshiftDatabaseReader implements DatabaseReader {
 			when (ic.character_maximum_length is not null) then ic.character_maximum_length
 		end
 		as data_size,
-		ic.numeric_scale as data_scale, ic.column_default as data_default
+		ic.numeric_scale as data_scale, ic.column_default as data_default,
+		encoding,
+		distkey,
+		sortkey
 		from information_schema.columns ic
 		inner join information_schema.tables it on it.table_name = ic.table_name
+		inner join pg_table_def ptd on ptd.tablename = it.table_name and ptd."column" = ic.column_name
 		where ic.table_schema not in ('pg_catalog' , 'information_schema')
 		and it.table_type = 'BASE TABLE'
 		and ic.table_name = ?
 		order by ic.table_name, ic.ordinal_position;
 	'''
+
 	private def fillColumns(tables, objectName) {
 		def rows
 		if(objectName) {
@@ -139,6 +148,9 @@ class RedshiftDatabaseReader implements DatabaseReader {
 			column.size = it.data_size
 			column.scale = it.data_scale == null ? 0 : it.data_scale
 			column.nullable = it.nullable == 'N' ? false : true
+			column.encoding = it.encoding
+			column.distkey = it.distkey
+			column.sortkey = it.sortkey
 			def defaultValue = it.data_default
 			if(defaultValue) {
 				column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()
