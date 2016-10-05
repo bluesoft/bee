@@ -30,76 +30,58 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee
+package br.com.bluesoft.bee.schema
 
-import br.com.bluesoft.bee.data.BeeDataModule
-import br.com.bluesoft.bee.dbchange.BeeDbChangeModule
-import br.com.bluesoft.bee.dbseed.BeeDbSeedModule
-import br.com.bluesoft.bee.schema.BeeSchemaModule
-import br.com.bluesoft.bee.upgrade.BeeUpgradeModule
-
-import java.util.jar.*
-
+import br.com.bluesoft.bee.database.ConnectionInfo
+import br.com.bluesoft.bee.database.reader.DatabaseReaderChanger;
+import br.com.bluesoft.bee.database.reader.OracleDatabaseReader
+import br.com.bluesoft.bee.exporter.JsonExporter
 import br.com.bluesoft.bee.model.Options
+import br.com.bluesoft.bee.model.Schema
+import br.com.bluesoft.bee.service.BeeWriter
 
-class Bee {
 
-	static def cliBuilder
+class BeeSchemaGeneratorAction {
 
-	static getRunner(options) {
-		def runner = null
+	Options options
+	BeeWriter out
 
-		switch(options.moduleName) {
-			case "dbchange":
-				runner = new BeeDbChangeModule()
-				break;
-			case "dbseed":
-				runner = new BeeDbSeedModule()
-				break;
-			case "schema":
-				runner = new BeeSchemaModule()
-				break;
-			case "data":
-				runner = new BeeDataModule()
-				break;
-			case "upgrade":
-				runner = new BeeUpgradeModule()
-				break;
-			default:
-				options.usage()
-				System.exit(0)
-		}
+	def sql
 
-		return runner
+	public boolean validateParameters() {
+		return options.arguments.size() >= 1
 	}
 
-	static getVersion() {
-		def resources = Thread.currentThread().getContextClassLoader().getResources(JarFile.MANIFEST_NAME)
-		def version = "test"
+	public void run(){
 
-		resources.each {
-			Manifest manifest = new Manifest(it.openStream())
-			if(manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_TITLE] == 'bee') {
-				version = manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_VERSION]
-			}
+		def clientName = options.arguments[0]
+		def objectName = options.arguments[1]
+
+		try {
+			out.log "Connecting to the database..."
+			sql = getDatabaseConnection(clientName)
+		} catch (e){
+			throw new Exception("It was not possible to connect to the database.",e)
 		}
 
-		return version
+		try {
+			out.log "Extracting the metadata..."
+			def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
+			def Schema schema = databaseReader.getSchema(objectName)
+			if(objectName)
+				schema = schema.filter(objectName)
+			def exporter = new JsonExporter(schema, options.dataDir.canonicalPath)
+			exporter.export();
+		} catch(e) {
+			e.printStackTrace()
+			throw new Exception("Error importing database metadata.",e)
+		}
 	}
 
-	static main(args) {
-		def version = getVersion()
-		println "Bee - v. ${version} - Bluesoft (2015) - GPL - All rights reserved"
-		Options options = Options.instance
-		if(!options.parse(args)) {
-			options.usage()
-			System.exit(1)
+	def getDatabaseConnection(clientName) {
+		if(sql != null) {
+			return sql
 		}
-		def runner = getRunner(options)
-		if(runner == null) {
-			usage()
-			System.exit 0
-		}
-		runner.run(options)
+		return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
 	}
 }

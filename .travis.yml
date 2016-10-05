@@ -5,6 +5,3 @@ jdk:
 
 env:
   - TERM=dumb
-
-after_success:
-  - ./gradlew cobertura coveralls

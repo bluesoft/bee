@@ -146,7 +146,7 @@ class OracleDatabaseReader implements DatabaseReader {
 		select ui.table_name, ui.index_name, ui.index_type, uniqueness
 		from   user_indexes ui
 			   left join user_constraints uc on ui.index_name = uc.index_name
-		where  uc.index_name is null
+	    where  (uc.index_name is null or (uc.index_name is not null and uc.index_name != uc.constraint_name))
 		  and  index_type <> 'LOB'
 		order  by table_name, index_name
 	'''
@@ -154,7 +154,7 @@ class OracleDatabaseReader implements DatabaseReader {
 		select ui.table_name, ui.index_name, ui.index_type, uniqueness
 		from   user_indexes ui
 			   left join user_constraints uc on ui.index_name = uc.index_name
-		where  uc.index_name is null
+		where  (uc.index_name is null or (uc.index_name is not null and uc.index_name != uc.constraint_name))
 		  and  index_type <> 'LOB'
 		  and  ui.table_name = upper(?)
 		order  by table_name, index_name
@@ -186,7 +186,7 @@ class OracleDatabaseReader implements DatabaseReader {
 			   join user_indexes ui on ui.index_name = uic.index_name
 			   left join user_constraints uc on uic.index_name = uc.index_name
 			   join user_tab_cols utc on (uic.column_name = utc.column_name and uic.table_name = utc.table_name)
-		where  uc.index_name is null
+	    where  (uc.index_name is null or (uc.index_name is not null and uc.index_name != uc.constraint_name))
 		order  by uic.index_name, uic.column_position
 	'''
 	final static def INDEXES_COLUMNS_QUERY_BY_NAME = '''
@@ -196,7 +196,7 @@ class OracleDatabaseReader implements DatabaseReader {
 			   join user_indexes ui on ui.index_name = uic.index_name
 			   left join user_constraints uc on uic.index_name = uc.index_name
 			   join user_tab_cols utc on (uic.column_name = utc.column_name and uic.table_name = utc.table_name)
-		where  uc.index_name is null
+		where  (uc.index_name is null or (uc.index_name is not null and uc.index_name != uc.constraint_name))
 		  and  ui.table_name = upper(?)
 		order  by uic.index_name, uic.column_position
 	'''

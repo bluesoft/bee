@@ -30,76 +30,56 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee
+package br.com.bluesoft.bee.upgrade
 
-import br.com.bluesoft.bee.data.BeeDataModule
-import br.com.bluesoft.bee.dbchange.BeeDbChangeModule
-import br.com.bluesoft.bee.dbseed.BeeDbSeedModule
-import br.com.bluesoft.bee.schema.BeeSchemaModule
-import br.com.bluesoft.bee.upgrade.BeeUpgradeModule
+import br.com.bluesoft.bee.Bee;
+import br.com.bluesoft.bee.service.*
 
-import java.util.jar.*
+public class BeeVersionModule {
 
-import br.com.bluesoft.bee.model.Options
+	def static getLatestVersion() {
+		def latest_url = getLatestVersionURL()
+		def url_split  = latest_url.split("/") 
 
-class Bee {
-
-	static def cliBuilder
-
-	static getRunner(options) {
-		def runner = null
-
-		switch(options.moduleName) {
-			case "dbchange":
-				runner = new BeeDbChangeModule()
-				break;
-			case "dbseed":
-				runner = new BeeDbSeedModule()
-				break;
-			case "schema":
-				runner = new BeeSchemaModule()
-				break;
-			case "data":
-				runner = new BeeDataModule()
-				break;
-			case "upgrade":
-				runner = new BeeUpgradeModule()
-				break;
-			default:
-				options.usage()
-				System.exit(0)
-		}
-
-		return runner
-	}
-
-	static getVersion() {
-		def resources = Thread.currentThread().getContextClassLoader().getResources(JarFile.MANIFEST_NAME)
-		def version = "test"
-
-		resources.each {
-			Manifest manifest = new Manifest(it.openStream())
-			if(manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_TITLE] == 'bee') {
-				version = manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_VERSION]
-			}
-		}
+		def version = url_split[url_split.size() - 1]
 
 		return version
 	}
 
-	static main(args) {
-		def version = getVersion()
-		println "Bee - v. ${version} - Bluesoft (2015) - GPL - All rights reserved"
-		Options options = Options.instance
-		if(!options.parse(args)) {
-			options.usage()
-			System.exit(1)
+	def static getLatestVersionURL() {
+		String url_latest = "https://github.com/bluesoft/bee/releases/latest"
+		InputStream is
+		URLConnection con
+
+		try {
+			con = new URL(url_latest).openConnection()
+			con.connect()
+
+			is = con.getInputStream()
+			String latest_url = con.getURL() 
+
+			return latest_url
+
+		} catch (Exception e) {
+			println "fatal: error while downloading"
+			e.printStackTrace()
+
+		} finally {
+			try {
+				is.close()
+			} catch (IOException ioe) {
+				ioe.printStackTrace()
+			}
 		}
-		def runner = getRunner(options)
-		if(runner == null) {
-			usage()
-			System.exit 0
-		}
-		runner.run(options)
+	}
+
+	def static getLatestDownloadURL() {
+		String version = getLatestVersion()
+		
+		return 'https://github.com/bluesoft/bee/releases/download/' + version + '/bee-' + version + '.zip'
+	}
+
+	def static getCurrentVersion() {
+		return Bee.getVersion();
 	}
 }
