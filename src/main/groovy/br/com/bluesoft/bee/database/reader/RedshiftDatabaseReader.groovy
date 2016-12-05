@@ -46,11 +46,7 @@ class RedshiftDatabaseReader implements DatabaseReader {
 	Schema getSchema(objectName = null) {
 		def schema = new Schema()
 		schema.tables = getTables(objectName)
-		schema.sequences = getSequences(objectName)
 		schema.views = getViews(objectName)
-		schema.procedures = getProcedures(objectName)
-		schema.packages = getPackages(objectName)
-		schema.triggers = getTriggers(objectName)
 		return schema
 	}
 
@@ -58,8 +54,6 @@ class RedshiftDatabaseReader implements DatabaseReader {
 	def getTables(objectName) {
 		def tables = fillTables(objectName)
 		fillColumns(tables, objectName)
-		//fillCostraints(tables, objectName)
-		//fillCostraintsColumns(tables, objectName)
 		return tables
 	}
 
@@ -144,7 +138,7 @@ class RedshiftDatabaseReader implements DatabaseReader {
 			def table = tables[it.table_name.toLowerCase()]
 			def column = new TableColumn()
 			column.name = it.column_name.toLowerCase()
-			column.type = getColumnType(it.data_type)
+			column.type = it.data_type.toLowerCase()
 			column.size = it.data_size
 			column.scale = it.data_scale == null ? 0 : it.data_scale
 			column.nullable = it.nullable == 'N' ? false : true
@@ -157,132 +151,6 @@ class RedshiftDatabaseReader implements DatabaseReader {
 			}
 			table.columns[column.name] = column
 		})
-	}
-
-	private def getColumnType(String oracleColumnType){
-		switch (oracleColumnType.toLowerCase()) {
-			case "varchar2":
-				return "varchar"
-				break
-			default:
-				return oracleColumnType.toLowerCase()
-		}
-	}
-
-	final static def CONSTRAINTS_QUERY = '''
-		select tc.table_name, tc.constraint_name, ccu.table_name as ref_table, tc.constraint_type, rc.delete_rule as delete_rule, 'enabled' as status
-		from information_schema.table_constraints tc
-			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
-			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
-		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key')
-	'''
-	final static def CONSTRAINTS_QUERY_BY_NAME = '''
-		select tc.table_name, tc.constraint_name, ccu.table_name as ref_table, tc.constraint_type, rc.delete_rule as delete_rule, 'enabled' as status
-		from information_schema.table_constraints tc
-			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
-			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
-		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key') and tc.table_name = ?
-	'''
-	private def fillCostraints(tables, objectName) {
-		def rows
-		if(objectName) {
-			rows = sql.rows(CONSTRAINTS_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(CONSTRAINTS_QUERY)
-		}
-
-		rows.each({
-			def tableName = it.table_name.toLowerCase()
-			def table = tables[tableName]
-
-			def constraint = new Constraint()
-			constraint.name = it.constraint_name.toLowerCase()
-			constraint.refTable = it.ref_table?.toLowerCase()
-			constraint.type = getConstraintType(it.constraint_type.toLowerCase())
-			def onDelete = it.delete_rule?.toLowerCase()
-			constraint.onDelete = onDelete == 'no action' ? null : onDelete
-			def status = it.status?.toLowerCase()
-			constraint.status = status
-			table.constraints[constraint.name] = constraint
-		})
-	}
-
-	private getConstraintType(constraint_type) {
-		switch (constraint_type) {
-			case "primary key":
-				return "P"
-				break
-			case "unique":
-				return "U"
-				break
-			case "foreign key":
-				return "R"
-				break
-			default:
-				return constraint_type
-		}
-	}
-
-	final static def CONSTRAINTS_COLUMNS_QUERY = '''
-		select tc.table_name, tc.constraint_name, kcu.column_name, ccu.table_name as ref_table, ccu.column_name as ref_field
-		from information_schema.table_constraints tc
-			left join information_schema.key_column_usage kcu on tc.constraint_catalog = kcu.constraint_catalog and tc.constraint_schema = kcu.constraint_schema and tc.constraint_name = kcu.constraint_name
-			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
-			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
-		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key')
-		order by kcu.ordinal_position, kcu.position_in_unique_constraint
-	'''
-	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
-		select tc.table_name, tc.constraint_name, kcu.column_name, ccu.table_name as ref_table, ccu.column_name as ref_field
-		from information_schema.table_constraints tc
-			left join information_schema.key_column_usage kcu on tc.constraint_catalog = kcu.constraint_catalog and tc.constraint_schema = kcu.constraint_schema and tc.constraint_name = kcu.constraint_name
-			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
-			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
-		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key') and tc.table_name = ?
- 		order by kcu.ordinal_position, kcu.position_in_unique_constraint
-	'''
-	private def fillCostraintsColumns(tables, objectName) {
-		def rows
-		if(objectName) {
-			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY)
-		}
-		rows.each({
-			def tableName = it.table_name.toLowerCase()
-			def table = tables[tableName]
-			def constraint = table.constraints[it.constraint_name.toLowerCase()]
-			constraint.columns << it.column_name.toLowerCase()
-		})
-	}
-
-	final static def SEQUENCES_QUERY = '''
-			select c.relname as sequence_name, '1' as min_value
-			from pg_class c
-			where c.relkind = 'S'
-			order by c.relname
-		'''
-	final static def SEQUENCES_QUERY_BY_NAME = '''
-			select c.relname as sequence_name, '1' as min_value
-			from pg_class c
-			where c.relkind = 'S' and c.relname = upper(?)
-			order by c.relname
-		'''
-	def getSequences(objectName){
-		def sequences = [:]
-		def rows
-		if(objectName) {
-			rows = sql.rows(SEQUENCES_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(SEQUENCES_QUERY)
-		}
-		rows.each({
-			def sequence = new Sequence()
-			sequence.name = it.sequence_name.toLowerCase()
-			sequence.minValue = it.min_value
-			sequences[sequence.name] = sequence
-		})
-		return sequences
 	}
 
 	final static def VIEWS_QUERY = '''
@@ -318,25 +186,5 @@ class RedshiftDatabaseReader implements DatabaseReader {
 			views[view.name] = view
 		})
 		return views
-	}
-
-	def getProcedures(objectName) {
-		def procedures = getProceduresBody(objectName)
-		return procedures
-	}
-
-	def getProceduresBody(objectName) {
-		def procedures = [:]
-		return procedures
-	}
-
-	def getTriggers(objectName) {
-		def triggers = [:]
-		return triggers
-	}
-
-	def getPackages(objectName) {
-		def packages = [:]
-		return packages
 	}
 }
