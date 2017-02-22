@@ -61,13 +61,13 @@ public class BeeSchemaModule implements BeeWriter {
 				actionRunner = new BeeSchemaValidatorAction(options: options, out: this)
 				break;
 			case "recreate_mysql":
-				actionRunner = new BeeMySqlSchemaCreatorAction(options: options, out: this)
+				actionRunner = new BeeMySqlSchemaCreatorAction(options: options, out: this, outputfile: "bee.sql")
 				break;
 			case "recreate_oracle":
-				actionRunner = new BeeOracleSchemaCreatorAction(options: options, out: this)
+				actionRunner = new BeeOracleSchemaCreatorAction(options: options, out: this, outputfile: "bee.sql")
 				break;
 			case "recreate_postgres":
-				actionRunner = new BeePostgresSchemaCreatorAction(options: options, out: this)
+				actionRunner = new BeePostgresSchemaCreatorAction(options: options, out: this, outputfile: "bee.sql")
 				break;
 			case "check":
 				actionRunner = new BeeSchemaCheckerAction(options: options, out: this)

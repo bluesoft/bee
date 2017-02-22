@@ -12,8 +12,8 @@ class BeeMySqlSchemaCreatorAction {
 	BeeSchemaCreator beeSchemaCreator
 
 	def importer
-
-	//TODO types, outputfile
+	String outputfile
+	//TODO types
 
 	public boolean validateParameters() {
 		return true
@@ -29,7 +29,7 @@ class BeeMySqlSchemaCreatorAction {
 		if(objectName)
 			schema = schema.filter(objectName)
 
-		def file = new File('bee.sql')
+		def file = new File(outputfile)
 		if(file.exists())
 			file.delete()
 
