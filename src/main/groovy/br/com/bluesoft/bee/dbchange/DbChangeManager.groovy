@@ -111,7 +111,7 @@ class DbChangeManager {
 			logger.log MESSAGE_NO_COMMANDS_IN_FILE
 			return true
 		}
-		
+
 		criarTabelaDbchangesSeNaoExistir(sql)
 
 		def resultado
@@ -141,7 +141,7 @@ class DbChangeManager {
 
 	def salvarExecucao(def sql, def arquivo, def upDown) {
 		boolean autocommit = sql.connection.getAutoCommit()
-		
+
 		if (!autocommit)
 			sql.commit()
 
@@ -158,7 +158,7 @@ class DbChangeManager {
 			def deleteQuery = QueryDialectHelper.getDeleteFromDbchangesQuery(configFile, clientName)
 			sql.execute(deleteQuery, [timestamp])
 		}
-		
+
 		if (!autocommit)
 			sql.commit()
 	}
@@ -181,12 +181,13 @@ class DbChangeManager {
 	List<String> listar(String group) {
 		def listaBanco = listarInstrucoesJaExecutadas()
 		def listaArquivo = listarArquivos(group)
-		
+
 		if (listaArquivo == null || listaBanco == null) {
 			return null
 		}
 
-		def listaParaExecutar = (listaArquivo - listaBanco)
+		def listaParaExecutar = listaArquivo
+		listaParaExecutar.removeAll(listaBanco)
 		listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
 
 		logger.log "Found ${listaParaExecutar.size} file(s)"
@@ -196,7 +197,7 @@ class DbChangeManager {
 
 	List<String> search() {
 		def listFiles = listarArquivos()
-		
+
 		if (listFiles == null) {
 			return null
 		}
@@ -212,7 +213,7 @@ class DbChangeManager {
 		def listFiles = listarArquivos()
 		def env = System.getenv()
 		def files = ""
-		
+
 		if (listFiles == null) {
 			return null
 		}
@@ -307,15 +308,15 @@ ${group ? "-- group: ${group}" : ""}
 		if(podeExecutar(arquivo, sql, UpDown.UP))
 			salvarExecucao(sql, arquivo, UpDown.UP)
 	}
-	
+
 	def markAll(def group) {
 		def sql = getDatabaseConnection()
 		def listaBanco = listarInstrucoesJaExecutadas()
 		def listaArquivo = listarArquivos(group)
-		
+
 		def listaParaExecutar = (listaArquivo - listaBanco)
 		listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
-		
+
 		if (listaParaExecutar.size > 0) {
 			logger.log "marking ${listaParaExecutar.size} file(s)"
 			listaParaExecutar.each {
