@@ -89,7 +89,7 @@ class Bee {
 
 	static main(args) {
 		def version = getVersion()
-		println "Bee - v. ${version} - Bluesoft (2015) - GPL - All rights reserved"
+		println "Bee - v. ${version} - Bluesoft (2013-2017) - GPL - All rights reserved"
 		Options options = Options.instance
 		if(!options.parse(args)) {
 			options.usage()
