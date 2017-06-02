@@ -38,7 +38,7 @@ import br.com.bluesoft.bee.model.message.MessageType
 
 
 class Schema {
-
+	String databaseVersion
 	Map tables = [:]
 	Map views = [:]
 	Map sequences = [:]

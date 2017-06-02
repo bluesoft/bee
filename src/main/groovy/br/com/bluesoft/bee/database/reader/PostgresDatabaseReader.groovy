@@ -34,6 +34,7 @@ package br.com.bluesoft.bee.database.reader
 
 
 import br.com.bluesoft.bee.model.*
+import br.com.bluesoft.bee.util.VersionHelper
 
 class PostgresDatabaseReader implements DatabaseReader {
 
@@ -45,7 +46,8 @@ class PostgresDatabaseReader implements DatabaseReader {
 
 	Schema getSchema(objectName = null) {
 		def schema = new Schema()
-		schema.tables = getTables(objectName)
+		schema.databaseVersion = getDatabaseVersion()
+		schema.tables = getTables(objectName, schema.databaseVersion)
 		schema.sequences = getSequences(objectName)
 		schema.views = getViews(objectName)
 		schema.procedures = getProcedures(objectName)
@@ -54,11 +56,20 @@ class PostgresDatabaseReader implements DatabaseReader {
 		return schema
 	}
 
+	def getDatabaseVersion() {
+		def databaseVersion = null
+		try {
+			databaseVersion = sql.rows('show server_version')[0].get('server_version')
+		} catch (Exception e) {
+			databaseVersion = sql.rows("select setting from pg_settings where name = 'server_version'")[0].get('setting')
+		}
+		return databaseVersion		
+	}
 
-	def getTables(objectName) {
+	def getTables(objectName, databaseVersion) {
 		def tables = fillTables(objectName)
 		fillColumns(tables, objectName)
-		fillIndexes(tables, objectName)
+		fillIndexes(tables, objectName, databaseVersion)
 		fillCostraints(tables, objectName)
 		fillCostraintsColumns(tables, objectName)
 		return tables
@@ -205,14 +216,43 @@ class PostgresDatabaseReader implements DatabaseReader {
 		order by table_name, index_name, column_name;
 	'''
 
-	private def fillIndexes(tables, objectName) {
-		def rows
-		if(objectName) {
-			rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(INDEXES_QUERY)
-		}
-		
+	final static def INDEXES_QUERY_9_6 = '''
+		select ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, am.amname as index_type, 
+		      pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name, 
+			  case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
+		from pg_class ct 
+		join pg_namespace n on (ct.relnamespace = n.oid) 
+		join (
+		      select i.indexrelid, i.indrelid, i.indoption, i.indisunique, i.indisclustered, i.indpred, i.indexprs, 
+		      information_schema._pg_expandarray(i.indkey) as keys 
+		      from pg_catalog.pg_index i
+		     ) i on (ct.oid = i.indrelid) 
+		join pg_class ci on (ci.oid = i.indexrelid) 
+		join pg_am am on (ci.relam = am.oid)
+		where ct.relname !~ '^(pg_|sql_)'
+		order by table_name, index_name, column_name;
+	'''	
+
+	final static def INDEXES_QUERY_BY_NAME_9_6 = '''
+		select ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, am.amname as index_type, 
+		      pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name, 
+			  case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
+		from pg_class ct 
+		join pg_namespace n on (ct.relnamespace = n.oid) 
+		join (
+		      select i.indexrelid, i.indrelid, i.indoption, i.indisunique, i.indisclustered, i.indpred, i.indexprs, 
+		      information_schema._pg_expandarray(i.indkey) as keys 
+		      from pg_catalog.pg_index i
+		     ) i on (ct.oid = i.indrelid) 
+		join pg_class ci on (ci.oid = i.indexrelid) 
+		join pg_am am on (ci.relam = am.oid)
+		where ct.relname !~ '^(pg_|sql_)'
+		and  ct.relname = ? 
+		order by table_name, index_name, column_name;
+	'''	
+	
+	private def fillIndexes(tables, objectName, databaseVersion) {
+		def rows = queryIndexesInInformationSchema(objectName, databaseVersion)
 		rows.each({
 			def tableName = it.table_name.toLowerCase()
 			def table = tables[tableName]
@@ -233,6 +273,39 @@ class PostgresDatabaseReader implements DatabaseReader {
 			indexColumn.descend = it.descend.toLowerCase() == 'desc' ? true : false
 			index.columns << indexColumn
 		})
+	}
+	
+	private queryIndexesInInformationSchema(objectName, databaseVersion){
+		def rows = null
+		if  (databaseVersion != null) {
+			if (objectName) {
+				if (VersionHelper.isNewerThan9_6(databaseVersion)) {
+					rows = sql.rows(INDEXES_QUERY_BY_NAME_9_6, [objectName])
+				} else {
+					rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
+				}
+				} else {
+				if (VersionHelper.isNewerThan9_6(databaseVersion)) {
+					rows = sql.rows(INDEXES_QUERY_9_6)
+				} else {
+					rows = sql.rows(INDEXES_QUERY)
+				}
+			}
+		} else {
+			if (objectName) {
+				try {
+					rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
+				} catch (Exception e) {
+					rows = sql.rows(INDEXES_QUERY_BY_NAME_9_6, [objectName])
+				}
+			} else {
+				try {
+					rows = sql.rows(INDEXES_QUERY)
+				} catch (Exception e) {
+					rows = sql.rows(INDEXES_QUERY_9_6)
+				}
+			}
+		}
 	}
 	
 	private def getIndexType(String indexType){
@@ -386,11 +459,6 @@ class PostgresDatabaseReader implements DatabaseReader {
 			def view = new View()
 			view.name = it.view_name.toLowerCase()
 			view.text = it.text
-//			println 'before'
-//			println it.text
-//			view.text = it.text.replaceAll("\\r","\\r").replaceAll("\\n","\\n").replaceAll("\\t","\\t")
-//			println 'after'
-//			println view.text
 			views[view.name] = view
 		})
 		return views
