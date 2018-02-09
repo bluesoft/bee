@@ -55,6 +55,7 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
 	def createUserTypes(def file, def schema) {
 		schema.userTypes.sort().each {
 			def userType = StringUtil.deleteSchemaNameFromUserTypeText(it.value.text)
+			userType += "/\n"
 			file.append(userType.toString(), 'utf-8')
 		}
 	}

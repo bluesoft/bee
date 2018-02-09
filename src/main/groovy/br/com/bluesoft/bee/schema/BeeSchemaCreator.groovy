@@ -2,6 +2,7 @@ package br.com.bluesoft.bee.schema
 
 import java.text.SimpleDateFormat;
 
+import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.CsvUtil
 
 
@@ -205,23 +206,33 @@ abstract class BeeSchemaCreator {
 				def columnNames = []
 				def columns = [:]
 				def columnTypes = [:]
-
+				def isVirtualColumn =[:]
+				def numberOfVirtualColumns = 0
+				
 				if (table != null) {
 					table.columns.each{
 						columns[it.value.name] = it.value.type
-								columnNames << it.value.name
+						columnNames << it.value.name
+						isVirtualColumn[it.value.name] = it.value.virtual
+						if (it.value.virtual) {
+							numberOfVirtualColumns++
+						}
 					}
 				
 					def counterColumnNames = 1
 					def counterValue = 1
+					
 	
 					def query = new StringBuilder()
 					for (int i = 0; i < fileData.size; i++) {
 						query << "insert into ${tableName} ("
 						columnNames.eachWithIndex {columName, index ->
-							query << columName
+							def isVirtual = isVirtualColumn[columName]
+							if (!isVirtual) {
+								query << columName
+							}
 							columnTypes[index] = columns[columName]
-							if(counterColumnNames < (columnNames.size())) {
+							if ( (counterColumnNames + numberOfVirtualColumns) < (columnNames.size()) ) {
 								query << ", "
 							}
 							counterColumnNames++
@@ -233,25 +244,29 @@ abstract class BeeSchemaCreator {
 							def fieldValue = columnValue.toString()
 							params.add(fieldValue)
 							def columnType = columnTypes[index2]
+							def columnName = columnNames[index2]
+							def isVirtual = isVirtualColumn[columnName]
 							def isString = columnType == 'varchar' || columnType == 'varchar2' || columnType == 'character' || columnType == 'character varying' || columnType == 'text'
 							def isDate = columnType == 'date'
-							def isNotNumber = !fieldValue?.isNumber() 
-							if (isNotNumber && !isDate || isString) {
-								fieldValue = fieldValue.replaceAll("\'", "\''")
-								if (fieldValue != 'null') {
+							def isNotNumber = !fieldValue?.isNumber()
+							if (!isVirtual) {
+								if (isNotNumber && !isDate || isString) {
+									fieldValue = fieldValue.replaceAll("\'", "\''")
+									if (fieldValue != 'null') {
+										fieldValue = "\'" + fieldValue + "\'"
+									}
+								}
+								if (isDate && fieldValue != 'null') {
+									fieldValue = fieldValue.replaceAll("\'", "")
+									SimpleDateFormat inputSdf = new SimpleDateFormat('yyyy-MM-dd')
+									SimpleDateFormat outputSdf = new SimpleDateFormat('yyyy-MM-dd')
+									def date = inputSdf.parse(fieldValue);
+									fieldValue = outputSdf.format(date)
 									fieldValue = "\'" + fieldValue + "\'"
 								}
-							}
-							if (isDate && fieldValue != 'null') {
-								fieldValue = fieldValue.replaceAll("\'", "")
-								SimpleDateFormat inputSdf = new SimpleDateFormat('yyyy-MM-dd')
-								SimpleDateFormat outputSdf = new SimpleDateFormat('yyyy-MM-dd')
-								def date = inputSdf.parse(fieldValue);
-								fieldValue = outputSdf.format(date)
-								fieldValue = "\'" + fieldValue + "\'"
-							}
-							query << fieldValue
-							if (counterValue < (columnNames.size())) {
+								query << fieldValue
+						    }
+							if ( (counterValue + numberOfVirtualColumns) < (columnNames.size()) ) {
 								query << ", "
 							}
 							counterValue++
