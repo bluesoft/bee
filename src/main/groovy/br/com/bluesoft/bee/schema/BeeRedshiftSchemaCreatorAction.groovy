@@ -1,4 +1,4 @@
-package br.com.bluesoft.bee
+package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options

@@ -1,4 +1,4 @@
-package br.com.bluesoft.bee
+package br.com.bluesoft.bee.schema
 
 import java.text.SimpleDateFormat;
 import br.com.bluesoft.bee.util.CsvUtil
