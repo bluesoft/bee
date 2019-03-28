@@ -265,18 +265,24 @@ class OracleDatabaseReader implements DatabaseReader {
 	}
 
 	final static def CONSTRAINTS_COLUMNS_QUERY = '''
-		select ucc.table_name, ucc.constraint_name, ucc.column_name
+        select ucc.table_name, ucc.constraint_name, ucc.column_name, 
+               case uc2.constraint_type when 'P' then '' else ucc2.column_name end ref_column_name
 		from   user_cons_columns ucc
 			   join user_constraints uc on ucc.constraint_name = uc.constraint_name
 			   join user_tables ut on uc.table_name = ut.table_name
+               left join user_constraints uc2 on uc.r_constraint_name = uc2.constraint_name
+               left join user_cons_columns ucc2 on (uc2.constraint_name = ucc2.constraint_name and ucc.position = ucc2.position)
 		where  uc.constraint_type <> 'C'
 		order  by ucc.table_name, ucc.constraint_name, ucc.position
 	'''
 	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
-		select ucc.table_name, ucc.constraint_name, ucc.column_name
+        select ucc.table_name, ucc.constraint_name, ucc.column_name, 
+               case uc2.constraint_type when 'P' then '' else ucc2.column_name end ref_column_name
 		from   user_cons_columns ucc
 			   join user_constraints uc on ucc.constraint_name = uc.constraint_name
 			   join user_tables ut on uc.table_name = ut.table_name
+               left join user_constraints uc2 on uc.r_constraint_name = uc2.constraint_name
+               left join user_cons_columns ucc2 on (uc2.constraint_name = ucc2.constraint_name and ucc.position = ucc2.position)
 		where  uc.constraint_type <> 'C'
 		  and  uc.table_name = upper(?)
 		order  by ucc.table_name, ucc.constraint_name, ucc.position
@@ -293,6 +299,9 @@ class OracleDatabaseReader implements DatabaseReader {
 			def table = tables[tableName]
 			def constraint = table.constraints[it.constraint_name.toLowerCase()]
 			constraint.columns << it.column_name.toLowerCase()
+			if(it.ref_column_name) {
+				constraint.refColumns << it.ref_column_name.toLowerCase()
+			}
 		})
 	}
 
