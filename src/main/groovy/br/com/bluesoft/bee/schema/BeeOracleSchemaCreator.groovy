@@ -51,7 +51,21 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
 			result += ' not null'
 		return result
 	}
-	
+
+	def createForeignKey(table) {
+		def constraints = table.constraints.findAll { it.value.type == 'R' }*.value
+
+		def result = ""
+
+		constraints.each {
+			def onDelete = it.onDelete ? "on delete ${it.onDelete} " : ""
+			def refColumns = it.refColumns ? "(" + it.refColumns.join(',') + ") " : ""
+			result += "alter table ${table.name} add constraint ${it.name} foreign key (" + it.columns.join(',') + ") references ${it.refTable} ${refColumns}${onDelete}${it.status};\n"
+		}
+
+		return result
+	}
+
 	def createUserTypes(def file, def schema) {
 		schema.userTypes.sort().each {
 			def userType = StringUtil.deleteSchemaNameFromUserTypeText(it.value.text)
