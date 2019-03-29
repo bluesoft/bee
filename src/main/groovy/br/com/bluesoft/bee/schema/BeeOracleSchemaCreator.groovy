@@ -60,7 +60,8 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
 		constraints.each {
 			def onDelete = it.onDelete ? "on delete ${it.onDelete} " : ""
 			def refColumns = it.refColumns ? "(" + it.refColumns.join(',') + ") " : ""
-			result += "alter table ${table.name} add constraint ${it.name} foreign key (" + it.columns.join(',') + ") references ${it.refTable} ${refColumns}${onDelete}${it.status};\n"
+			def disabled = it.status == "disabled" ? "disable" : ""
+			result += "alter table ${table.name} add constraint ${it.name} foreign key (" + it.columns.join(',') + ") references ${it.refTable} ${refColumns}${onDelete}${disabled};\n"
 		}
 
 		return result
