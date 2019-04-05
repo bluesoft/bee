@@ -99,7 +99,8 @@ class JsonImporter implements Importer {
 	private def importViews() {
 		checkIfFolderExists(viewsFolder)
 		def views = [:]
-		viewsFolder.eachFile {
+		def files = viewsFolder.listFiles().sort { it.name }
+		files.each {
 			if (it.name.endsWith(".bee")) {
 				def view = mapper.readValue(it, View.class)
 				views[view.name] = view

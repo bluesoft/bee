@@ -163,7 +163,7 @@ abstract class BeeSchemaCreator {
 	}
 
 	void createViews(def file, def schema) {
-		schema.views*.value.sort().each {
+		schema.views*.value.each {
 			def view = "create or replace view ${it.name} as ${it.text};\n\n"
 			file.append(view.toString(), 'utf-8')
 		}
@@ -194,90 +194,106 @@ abstract class BeeSchemaCreator {
 			file.append(trigger.toString(), 'utf-8')
 		}
 	}
+
+	void createCsvData(def file, def csvFile, def schema) {
+		def tableName = csvFile.name.split('\\.')[0]
+		def fileData = CsvUtil.read(csvFile)
+		def table = schema.tables[tableName]
+		def columnNames = []
+		def columns = [:]
+		def columnTypes = [:]
+		def isVirtualColumn =[:]
+		def numberOfVirtualColumns = 0
+
+		if (table != null) {
+			table.columns.each{
+				columns[it.value.name] = it.value.type
+				columnNames << it.value.name
+				isVirtualColumn[it.value.name] = it.value.virtual
+				if (it.value.virtual) {
+					numberOfVirtualColumns++
+				}
+			}
+
+			def counterColumnNames = 1
+			def counterValue = 1
+
+
+			def query = new StringBuilder()
+			for (int i = 0; i < fileData.size; i++) {
+				query << "insert into ${tableName} ("
+				columnNames.eachWithIndex {columName, index ->
+					def isVirtual = isVirtualColumn[columName]
+					if (!isVirtual) {
+						query << columName
+					}
+					columnTypes[index] = columns[columName]
+					if ( (counterColumnNames + numberOfVirtualColumns) < (columnNames.size()) ) {
+						query << ", "
+					}
+					counterColumnNames++
+				}
+				query << ") "
+				query << "values ("
+				def params = []
+				fileData[i].eachWithIndex { columnValue, index2 ->
+					def fieldValue = columnValue.toString()
+					params.add(fieldValue)
+					def columnType = columnTypes[index2]
+					def columnName = columnNames[index2]
+					def isVirtual = isVirtualColumn[columnName]
+					def isString = columnType == 'varchar' || columnType == 'varchar2' || columnType == 'character' || columnType == 'character varying' || columnType == 'text'
+					def isDate = columnType == 'date'
+					def isNotNumber = !fieldValue?.isNumber()
+					if (!isVirtual) {
+						if (isNotNumber && !isDate || isString) {
+							fieldValue = fieldValue.replaceAll("\'", "\''")
+							if (fieldValue != 'null') {
+								fieldValue = "\'" + fieldValue + "\'"
+							}
+						}
+						if (isDate && fieldValue != 'null') {
+							fieldValue = fieldValue.replaceAll("\'", "")
+							SimpleDateFormat inputSdf = new SimpleDateFormat('yyyy-MM-dd')
+							SimpleDateFormat outputSdf = new SimpleDateFormat('yyyy-MM-dd')
+							def date = inputSdf.parse(fieldValue);
+							fieldValue = outputSdf.format(date)
+							fieldValue = "\'" + fieldValue + "\'"
+						}
+						query << fieldValue
+					}
+					if ( (counterValue + numberOfVirtualColumns) < (columnNames.size()) ) {
+						query << ", "
+					}
+					counterValue++
+				}
+				query << ");\n"
+				counterColumnNames = 1
+				counterValue = 1
+			}
+			query << "commit;\n"
+			file.append(query.toString(), 'utf-8')
+		}
+	}
+
+	void createScriptData(def file, def csvFile, def schema) {
+		def lines = csvFile.readLines()
+		lines.each {
+			file.append(it, "utf-8")
+			file.append("\n", "utf-8")
+		}
+	}
 	
 	void createCoreData(def file, def schema, def dataFolderPath) {
 		def listFiles = dataFolderPath.listFiles()
 		listFiles.each {
-			if(it.name.endsWith(".csv")) {
-				def tableName = it.name[0..-5]
-				def csvFile = new File(dataFolderPath, tableName + ".csv")
-				def fileData = CsvUtil.read(csvFile)
-				def table = schema.tables[tableName]
-				def columnNames = []
-				def columns = [:]
-				def columnTypes = [:]
-				def isVirtualColumn =[:]
-				def numberOfVirtualColumns = 0
-				
-				if (table != null) {
-					table.columns.each{
-						columns[it.value.name] = it.value.type
-						columnNames << it.value.name
-						isVirtualColumn[it.value.name] = it.value.virtual
-						if (it.value.virtual) {
-							numberOfVirtualColumns++
-						}
-					}
-				
-					def counterColumnNames = 1
-					def counterValue = 1
-					
-	
-					def query = new StringBuilder()
-					for (int i = 0; i < fileData.size; i++) {
-						query << "insert into ${tableName} ("
-						columnNames.eachWithIndex {columName, index ->
-							def isVirtual = isVirtualColumn[columName]
-							if (!isVirtual) {
-								query << columName
-							}
-							columnTypes[index] = columns[columName]
-							if ( (counterColumnNames + numberOfVirtualColumns) < (columnNames.size()) ) {
-								query << ", "
-							}
-							counterColumnNames++
-						}
-						query << ") "
-						query << "values ("
-						def params = []
-						fileData[i].eachWithIndex { columnValue, index2 ->
-							def fieldValue = columnValue.toString()
-							params.add(fieldValue)
-							def columnType = columnTypes[index2]
-							def columnName = columnNames[index2]
-							def isVirtual = isVirtualColumn[columnName]
-							def isString = columnType == 'varchar' || columnType == 'varchar2' || columnType == 'character' || columnType == 'character varying' || columnType == 'text'
-							def isDate = columnType == 'date'
-							def isNotNumber = !fieldValue?.isNumber()
-							if (!isVirtual) {
-								if (isNotNumber && !isDate || isString) {
-									fieldValue = fieldValue.replaceAll("\'", "\''")
-									if (fieldValue != 'null') {
-										fieldValue = "\'" + fieldValue + "\'"
-									}
-								}
-								if (isDate && fieldValue != 'null') {
-									fieldValue = fieldValue.replaceAll("\'", "")
-									SimpleDateFormat inputSdf = new SimpleDateFormat('yyyy-MM-dd')
-									SimpleDateFormat outputSdf = new SimpleDateFormat('yyyy-MM-dd')
-									def date = inputSdf.parse(fieldValue);
-									fieldValue = outputSdf.format(date)
-									fieldValue = "\'" + fieldValue + "\'"
-								}
-								query << fieldValue
-						    }
-							if ( (counterValue + numberOfVirtualColumns) < (columnNames.size()) ) {
-								query << ", "
-							}
-							counterValue++
-						}
-						query << ");\n"
-						counterColumnNames = 1
-						counterValue = 1
-					}
-					query << "commit;\n"
-					file.append(query.toString(), 'utf-8')
-				}
+			if(it.name.endsWith(".csv") || it.name.endsWith(".csv_")) {
+				createCsvData(file, it, schema)
+			}
+		}
+		listFiles.each {
+			if(it.name.endsWith(".script")) {
+				createScriptData(file, it, schema)
 			}
 		}
 	}
