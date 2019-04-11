@@ -285,13 +285,22 @@ abstract class BeeSchemaCreator {
 	}
 	
 	void createCoreData(def file, def schema, def dataFolderPath) {
-		def listFiles = dataFolderPath.listFiles()
-		listFiles.each {
-			if(it.name.endsWith(".csv") || it.name.endsWith(".csv_")) {
+		def dataFolder = new File(dataFolderPath, 'data')
+		def dataFolderFiles = dataFolder.listFiles()
+		def seedsFolder = new File(dataFolderPath, 'dbseeds')
+		def seedsFolderFiles = seedsFolder.listFiles()
+
+		dataFolderFiles.each {
+			if(it.name.endsWith(".csv")) {
 				createCsvData(file, it, schema)
 			}
 		}
-		listFiles.each {
+		seedsFolderFiles.each {
+			if(it.name.endsWith(".csv")) {
+				createCsvData(file, it, schema)
+			}
+		}
+		seedsFolderFiles.each {
 			if(it.name.endsWith(".script")) {
 				createScriptData(file, it, schema)
 			}

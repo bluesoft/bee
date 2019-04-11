@@ -42,7 +42,7 @@ public class BeeOracleSchemaCreatorAction {
 		beeSchemaCreator.createTables(file, schema)
 		
 		out.println("generating core data...")
-		beeSchemaCreator.createCoreData(file, schema, dataFolderPath)
+		beeSchemaCreator.createCoreData(file, schema, options.dataDir.absolutePath)
 
 		out.println("generating constraints...")
 		beeSchemaCreator.createPrimaryKeys(file, schema)
