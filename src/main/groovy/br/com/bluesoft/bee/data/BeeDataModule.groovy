@@ -30,54 +30,29 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.data;
+package br.com.bluesoft.bee.data
 
-import br.com.bluesoft.bee.service.*
+import br.com.bluesoft.bee.runner.ActionRunner
+import br.com.bluesoft.bee.runner.BeeModule
 
+public class BeeDataModule extends BeeModule {
 
-public class BeeDataModule implements BeeWriter {
+    def usage() {
+        println "usage: bee <options> data:action <options>"
+        println "Actions:"
+        println "         data:generate connection object - generates an entire schema data or single object, if specified"
+        println "         data:validate connection [object] - validates an entire schema data or single object, if specified"
+    }
 
-	def usage() {
-		println "usage: bee <options> data:action <options>"
-		println "Actions:"
-		println "         data:generate connection object - generates an entire schema data or single object, if specified"
-		println "         data:validate connection [object] - validates an entire schema data or single object, if specified"
-	}
-
-	def parseOptions(options) {
-		def arguments = options.arguments
-		if(arguments.size < 1) {
-			usage()
-			System.exit 0
-		}
-
-		def action = options.actionName
-
-		def actionRunner = null
-		switch(action) {
-			case "generate":
-				if(arguments.size < 2) {
-					usage()
-					System.exit 0
-				}
-				actionRunner = new BeeDataGeneratorAction(options: options, out: this)
-				break
-			case "validate":
-				actionRunner = new BeeDataValidatorAction(options: options, out: this)
-				break;
-		}
-
-		return actionRunner
-	}
-
-	def run(options) {
-		def actionRunner = parseOptions(options)
-		if(actionRunner)
-			if(!actionRunner.run())
-				System.exit(1)
-	}
-
-	void log(String msg) {
-		println msg
-	}
+    @Override
+    protected ActionRunner getRunner(Object action, Object options, Object out) {
+        switch (action) {
+            case "generate":
+                return new BeeDataGeneratorAction(options: options, out: this)
+                break
+            case "validate":
+                return new BeeDataValidatorAction(options: options, out: this)
+                break
+        }
+    }
 }

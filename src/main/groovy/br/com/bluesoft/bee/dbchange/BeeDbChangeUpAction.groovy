@@ -1,16 +1,10 @@
 package br.com.bluesoft.bee.dbchange
 
-import br.com.bluesoft.bee.dbchange.DbChangeManager
-import br.com.bluesoft.bee.dbchange.UpDown
-import br.com.bluesoft.bee.model.Options
-import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.runner.ActionRunnerParameterValidate
 
+class BeeDbChangeUpAction extends ActionRunnerParameterValidate {
 
-class BeeDbChangeUpAction {
-	Options options
-	BeeWriter out
-
-	def run() {
+	boolean run() {
 		def clientName = options.arguments[0]
 		def migrationId = options.arguments[1]
 
@@ -22,5 +16,6 @@ class BeeDbChangeUpAction {
 			def lista = manager.listar()
 			manager.executarVariasDbChanges(lista, UpDown.UP)
 		}
+		true
 	}
 }

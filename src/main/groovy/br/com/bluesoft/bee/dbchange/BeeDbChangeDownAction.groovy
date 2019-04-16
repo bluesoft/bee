@@ -1,21 +1,20 @@
 package br.com.bluesoft.bee.dbchange
 
-import br.com.bluesoft.bee.dbchange.DbChangeManager
-import br.com.bluesoft.bee.dbchange.UpDown
-import br.com.bluesoft.bee.model.Options
-import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.runner.ActionRunnerParameterValidate
 
+class BeeDbChangeDownAction extends ActionRunnerParameterValidate {
 
-class BeeDbChangeDownAction {
+    boolean run() {
+        def clientName = options.arguments[0]
+        def migrationId = options.arguments[1]
 
-	Options options
-	BeeWriter out
+        def manager = new DbChangeManager(configFile: options.configFile, path: options.dataDir.absolutePath, logger: out, clientName: clientName)
+        manager.executarDbChange(migrationId, UpDown.DOWN)
+        true
+    }
 
-	def run() {
-		def clientName = options.arguments[0]
-		def migrationId = options.arguments[1]
-
-		def manager = new DbChangeManager(configFile: options.configFile, path: options.dataDir.absolutePath, logger: out, clientName: clientName)
-		manager.executarDbChange(migrationId, UpDown.DOWN)
-	}
+    @Override
+    int minParameters() {
+        return 2
+    }
 }

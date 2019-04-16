@@ -1,17 +1,19 @@
 package br.com.bluesoft.bee.dbseed
 
 import br.com.bluesoft.bee.dbseed.DbSeedManager
-import br.com.bluesoft.bee.model.Options
-import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.runner.ActionRunnerParameterValidate
 
+class BeeDbSeedCreateAction extends ActionRunnerParameterValidate {
 
-class BeeDbSeedCreateAction {
-	Options options
-	BeeWriter out
-
-	def run() {
+	boolean run() {
 		def description = options.arguments[0]
 
 		new DbSeedManager(configFile: options.configFile, path: options.dataDir.absolutePath, logger: out).createDbSeedFile(description)
+		true
+	}
+
+	@Override
+	int maxParameters() {
+		return 1
 	}
 }

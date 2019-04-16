@@ -6,19 +6,19 @@ abstract class BeeModule implements BeeWriter {
 
     abstract def usage()
 
+    protected abstract ActionRunner getRunner(action, options, out);
+
     def parseOptions(options) {
         def action = options.actionName
         def actionRunner = getRunner(action, options, this);
 
         if (!actionRunner.validateParameters()) {
-            usage();
+            usage()
             System.exit 0
         }
 
         return actionRunner
     }
-
-    protected abstract ActionRunner getRunner(action, options, out);
 
     def run(options) {
         def actionRunner = parseOptions(options)
