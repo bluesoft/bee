@@ -95,17 +95,17 @@ public class BeeDataValidatorAction implements ActionRunner {
 
         if (objectName) {
             def file = new File(dataPath, objectName + ".csv")
-			if (file.exists() && schema.tables[objectName]) {
-				files = [objectName]
-			}
+            if (file.exists() && schema.tables[objectName]) {
+                files = [objectName]
+            }
         } else {
             def listFiles = dataPath.listFiles()
             listFiles.each {
                 if (it.name.endsWith(".csv")) {
                     def tableName = it.name[0..-5]
-					if (schema.tables[tableName]) {
-						files << tableName
-					}
+                    if (schema.tables[tableName]) {
+                        files << tableName
+                    }
                 }
             }
         }
@@ -164,8 +164,8 @@ public class BeeDataValidatorAction implements ActionRunner {
 
     def getImporter(path) {
         if (importer == null) {
-			return new JsonImporter(path)
-		}
+            return new JsonImporter(path)
+        }
         return importer
     }
 }
