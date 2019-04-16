@@ -39,10 +39,11 @@ import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.model.message.MessageLevel
+import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.service.MessagePrinter
 
-class BeeSchemaValidatorAction {
+class BeeSchemaValidatorAction implements ActionRunner{
 
 	Options options
 	BeeWriter out

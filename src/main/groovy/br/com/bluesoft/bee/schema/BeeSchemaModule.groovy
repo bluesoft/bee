@@ -31,11 +31,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
 
-package br.com.bluesoft.bee.schema;
+package br.com.bluesoft.bee.schema
 
-import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.runner.ActionRunner
+import br.com.bluesoft.bee.runner.BeeModule;
 
-public class BeeSchemaModule implements BeeWriter {
+public class BeeSchemaModule extends BeeModule {
 
 	def usage() {
 		println "usage: bee <options> schema:action <parameters>"
@@ -48,52 +49,30 @@ public class BeeSchemaModule implements BeeWriter {
 		println "         schema:check - validate structure correctness"
 	}
 
-	def parseOptions(options) {
-		def arguments = options.arguments
-		def action = options.actionName
-		def actionRunner = null
-
-		switch(action) {
+	protected ActionRunner getRunner(action, options, out) {
+		switch (action) {
 			case "generate":
-				actionRunner = new BeeSchemaGeneratorAction(options: options, out: this)
+				return new BeeSchemaGeneratorAction(options: options, out: this)
 				break
 			case "validate":
-				actionRunner = new BeeSchemaValidatorAction(options: options, out: this)
-				break;
+				return new BeeSchemaValidatorAction(options: options, out: this)
+				break
 			case "recreate_mysql":
-				actionRunner = new BeeMySqlSchemaCreatorAction(options: options, out: this)
-				break;
+				return new BeeMySqlSchemaCreatorAction(options: options, out: this)
+				break
 			case "recreate_oracle":
-				actionRunner = new BeeOracleSchemaCreatorAction(options: options, out: this)
-				break;
+				return new BeeOracleSchemaCreatorAction(options: options, out: this)
+				break
 			case "recreate_postgres":
-				actionRunner = new BeePostgresSchemaCreatorAction(options: options, out: this)
-				break;
+				return new BeePostgresSchemaCreatorAction(options: options, out: this)
+				break
 			case "check":
-				actionRunner = new BeeSchemaCheckerAction(options: options, out: this)
-				break;
+				return new BeeSchemaCheckerAction(options: options, out: this)
+				break
 
 			default:
-				usage();
+				usage()
 				System.exit 0
 		}
-
-		if(!actionRunner.validateParameters()) {
-			usage();
-			System.exit 0
-		}
-
-		return actionRunner
-	}
-
-	def run(options) {
-		def actionRunner = parseOptions(options)
-		if(actionRunner)
-			if(!actionRunner.run())
-				System.exit(1)
-	}
-
-	void log(String msg) {
-		println msg
 	}
 }

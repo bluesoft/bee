@@ -2,9 +2,10 @@ package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options
+import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 
-public class BeeOracleSchemaCreatorAction {
+public class BeeOracleSchemaCreatorAction  implements ActionRunner {
 
 	Options options
 	BeeWriter out
@@ -18,7 +19,7 @@ public class BeeOracleSchemaCreatorAction {
 		return true
 	}
 
-	public void run() {
+	public boolean run() {
 
 		def objectName = options.arguments[0]
 		def dataFolderPath = new File(options.dataDir.absolutePath, 'data')
@@ -77,6 +78,7 @@ public class BeeOracleSchemaCreatorAction {
 			def cmd = [env['EDITOR'], file.path]
 			new ProcessBuilder(env['EDITOR'], file.path).start()
 		}
+		return true
 	}
 
 	private def getImporter() {
