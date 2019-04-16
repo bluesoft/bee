@@ -89,7 +89,7 @@ class Bee {
 
 	static main(args) {
 		def version = getVersion()
-		println "Bee - v. ${version} - Bluesoft (2013-2019) - GPL - All rights reserved"
+		println "Bee - v. ${version} - Bluesoft (2013-" + Calendar.getInstance().get(Calendar.YEAR) + ") - GPL - All rights reserved"
 		Options options = Options.instance
 		if(!options.parse(args)) {
 			options.usage()
