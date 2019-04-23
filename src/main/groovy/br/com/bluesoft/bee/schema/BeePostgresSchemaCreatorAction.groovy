@@ -22,7 +22,6 @@ public class BeePostgresSchemaCreatorAction {
 	public void run() {
 
 		def objectName = options.arguments[0]
-		def dataFolderPath = new File(options.dataDir.absolutePath, 'data')
 
 		out.log('importing schema metadata from the reference files')
 		def schema = getImporter().importMetaData()
@@ -43,7 +42,7 @@ public class BeePostgresSchemaCreatorAction {
 		beeSchemaCreator.createTables(file, schema)
 		
 		out.println("generating core data...")
-		beeSchemaCreator.createCoreData(file, schema, dataFolderPath)
+		beeSchemaCreator.createCoreData(file, schema, options.dataDir)
 
 		out.println("generating constraints...")
 		beeSchemaCreator.createPrimaryKeys(file, schema)
