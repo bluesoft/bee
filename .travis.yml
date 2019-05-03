@@ -1,11 +1,8 @@
 language: groovy
-
-addons:
-  apt:
-    packages:
-    - openjdk-8-jre-headless
-    - oracle-java8-set-default
-
-
-env:
-  - TERM=dumb
+jdk:
+- oraclejdk8
+cache:
+  directories:
+before_install:
+- jdk_switcher use oraclejdk8
+- java -version
