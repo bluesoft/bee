@@ -32,8 +32,10 @@
  */
 package br.com.bluesoft.bee.dbchange
 
+import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.runner.BeeModule
+import br.com.bluesoft.bee.service.BeeWriter
 
 public class BeeDbChangeModule extends BeeModule {
 
@@ -53,7 +55,7 @@ public class BeeDbChangeModule extends BeeModule {
     }
 
     @Override
-    protected ActionRunner getRunner(Object action, Object options, Object out) {
+    protected ActionRunner getRunner(String action, Options options, BeeWriter out) {
         switch (action) {
             case "create":
                 return new BeeDbChangeCreateAction(options: options, out: this)

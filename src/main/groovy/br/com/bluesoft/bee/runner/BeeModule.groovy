@@ -1,12 +1,13 @@
 package br.com.bluesoft.bee.runner
 
+import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.service.BeeWriter
 
 abstract class BeeModule implements BeeWriter {
 
     abstract def usage()
 
-    protected abstract ActionRunner getRunner(action, options, out);
+    protected abstract ActionRunner getRunner(String action, Options options, BeeWriter out);
 
     def parseOptions(options) {
         def action = options.actionName

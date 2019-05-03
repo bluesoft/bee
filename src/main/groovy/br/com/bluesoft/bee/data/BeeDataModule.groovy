@@ -32,10 +32,12 @@
  */
 package br.com.bluesoft.bee.data
 
+import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.runner.BeeModule
+import br.com.bluesoft.bee.service.BeeWriter
 
-public class BeeDataModule extends BeeModule {
+class BeeDataModule extends BeeModule {
 
     def usage() {
         println "usage: bee <options> data:action <options>"
@@ -45,7 +47,7 @@ public class BeeDataModule extends BeeModule {
     }
 
     @Override
-    protected ActionRunner getRunner(Object action, Object options, Object out) {
+    protected ActionRunner getRunner(String action, Options options, BeeWriter out) {
         switch (action) {
             case "generate":
                 return new BeeDataGeneratorAction(options: options, out: this)

@@ -33,8 +33,10 @@
 
 package br.com.bluesoft.bee.schema
 
+import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.runner.ActionRunner
-import br.com.bluesoft.bee.runner.BeeModule;
+import br.com.bluesoft.bee.runner.BeeModule
+import br.com.bluesoft.bee.service.BeeWriter;
 
 public class BeeSchemaModule extends BeeModule {
 
@@ -49,7 +51,7 @@ public class BeeSchemaModule extends BeeModule {
 		println "         schema:check - validate structure correctness"
 	}
 
-	protected ActionRunner getRunner(action, options, out) {
+	protected ActionRunner getRunner(String action, Options options, BeeWriter out) {
 		switch (action) {
 			case "generate":
 				return new BeeSchemaGeneratorAction(options: options, out: this)

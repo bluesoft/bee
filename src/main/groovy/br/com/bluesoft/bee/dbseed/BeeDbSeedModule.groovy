@@ -1,7 +1,9 @@
 package br.com.bluesoft.bee.dbseed
 
+import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.runner.BeeModule
+import br.com.bluesoft.bee.service.BeeWriter
 
 public class BeeDbSeedModule extends BeeModule {
 
@@ -18,7 +20,7 @@ public class BeeDbSeedModule extends BeeModule {
     }
 
     @Override
-    protected ActionRunner getRunner(Object action, Object options, Object out) {
+    protected ActionRunner getRunner(String action, Options options, BeeWriter out) {
         switch (action) {
             case "create":
                 return new BeeDbSeedCreateAction(options: options, out: this)
