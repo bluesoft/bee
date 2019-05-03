@@ -4,6 +4,7 @@ addons:
   apt:
     packages:
     - openjdk-8-jre-headless
+    - oracle-java8-set-default
 
 
 env:
