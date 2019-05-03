@@ -1,7 +1,10 @@
 language: groovy
 
-jdk:
-  - oraclejdk9
+addons:
+  apt:
+    packages:
+    - openjdk-8-jre-headless
+
 
 env:
   - TERM=dumb
