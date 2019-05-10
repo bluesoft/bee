@@ -1,8 +1,7 @@
 language: groovy
+
 jdk:
 - openjdk8
-cache:
-  directories:
-before_install:
-- jdk_switcher use openjdk8
-- java -version
+
+env:
+- TERM=dumb
