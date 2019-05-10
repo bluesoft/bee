@@ -30,104 +30,64 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.dbchange;
+package br.com.bluesoft.bee.dbchange
 
+import br.com.bluesoft.bee.model.Options
+import br.com.bluesoft.bee.runner.ActionRunner
+import br.com.bluesoft.bee.runner.BeeModule
 import br.com.bluesoft.bee.service.BeeWriter
 
+public class BeeDbChangeModule extends BeeModule {
 
-public class BeeDbChangeModule implements BeeWriter {
+    def usage() {
+        println "usage: bee <options> dbchange:action <parameters>"
+        println "Actions:"
+        println "         dbchange:create description <group> - creates a dbchange file"
+        println "         dbchange:status connection <group> - lists dbchanges to run"
+        println "         dbchange:up connection <file> - runs all pending dbchange files, or one if specified"
+        println "         dbchange:down connection file - runs a dbchange rollback action"
+        println "         dbchange:mark connection file - mark a file as executed"
+        println "         dbchange:markall connection <group> - mark all files as executed"
+        println "         dbchange:unmark connection file - unmark a file as executed"
+        println "         dbchange:find name - search file"
+        println "         dbchange:open name - open file with EDITOR"
+        println "         dbchange:group_up connection group - runs all pending dbchange files of the group"
+    }
 
-	def parameterCount = [
-		"create": [1, 2],
-		"status": [1, 2],
-		"up": [1, 2],
-		"down": [2, 2],
-		"mark": [2, 2],
-		"markall": [1, 1],
-		"unmark": [2, 2],
-		"find": [1, 2],
-		"open": [1, 2],
-		"group_up": [2, 2],
-		"group_markall": [2, 2]
-		]
+    @Override
+    protected ActionRunner getRunner(String action, Options options, BeeWriter out) {
+        switch (action) {
+            case "create":
+                return new BeeDbChangeCreateAction(options: options, out: this)
+                break
+            case "status":
+                return new BeeDbChangeStatusAction(options: options, out: this)
+                break
+            case "up":
+                return new BeeDbChangeUpAction(options: options, out: this)
+                break
+            case "down":
+                return new BeeDbChangeDownAction(options: options, out: this)
+                break
+            case "mark":
+                return new BeeDbChangeMarkAction(options: options, out: this)
+                break
+            case "markall":
+                return new BeeDbChangeMarkAllAction(options: options, out: this)
+                break
+            case "unmark":
+                return new BeeDbChangeUnmarkAction(options: options, out: this)
+                break
+            case "find":
+                return new BeeDbChangeFindAction(options: options, out: this)
+                break
+            case "open":
+                return new BeeDbChangeOpenAction(options: options, out: this)
+                break
+            case "group_up":
+                return new BeeDbChangeGroupUpAction(options: options, out: this)
+                break
+        }
+    }
 
-	def usage() {
-		println "usage: bee <options> dbchange:action <parameters>"
-		println "Actions:"
-		println "         dbchange:create description <group> - creates a dbchange file"
-		println "         dbchange:status connection <group> - lists dbchanges to run"
-		println "         dbchange:up connection <file> - runs all pending dbchange files, or one if specified"
-		println "         dbchange:down connection file - runs a dbchange rollback action"
-		println "         dbchange:mark connection file - mark a file as executed"
-		println "         dbchange:markall connection <group> - mark all files as executed"
-		println "         dbchange:unmark connection file - unmark a file as executed"
-		println "         dbchange:find name - search file"
-		println "         dbchange:open name - open file with EDITOR"
-		println "         dbchange:group_up connection group - runs all pending dbchange files of the group"
-	}
-
-	def parseOptions(options) {
-		def action = options.actionName
-		def arguments = options.arguments
-
-		if(parameterCount[action] == null || parameterCount[action] == 0) {
-			usage()
-			System.exit 0
-		}
-
-		def min = parameterCount[action][0]
-		def max = parameterCount[action][1]
-
-		if(arguments.size > max || arguments.size < min) {
-			usage()
-			System.exit 0
-		}
-
-		def actionRunner = null
-		switch(action) {
-			case "create":
-				actionRunner = new BeeDbChangeCreateAction(options: options, out: this)
-				break;
-			case "status":
-				actionRunner = new BeeDbChangeStatusAction(options: options, out: this)
-				break;
-			case "up":
-				actionRunner = new BeeDbChangeUpAction(options: options, out: this)
-				break;
-			case "down":
-				actionRunner = new BeeDbChangeDownAction(options: options, out: this)
-				break;
-			case "mark":
-				actionRunner = new BeeDbChangeMarkAction(options: options, out: this)
-				break;
-			case "markall":
-				actionRunner = new BeeDbChangeMarkAllAction(options: options, out: this)
-				break;
-			case "unmark":
-				actionRunner = new BeeDbChangeUnmarkAction(options: options, out: this)
-				break;
-			case "find":
-				actionRunner = new BeeDbChangeFindAction(options: options, out: this)
-				break;
-			case "open":
-				actionRunner = new BeeDbChangeOpenAction(options: options, out: this)
-				break;
-			case "group_up":
-				actionRunner = new BeeDbChangeGroupUpAction(options: options, out: this)
-				break;
-		}
-
-		return actionRunner;
-	}
-
-	def run(options) {
-		def actionRunner = parseOptions(options)
-		if(actionRunner)
-			if(!actionRunner.run())
-				System.exit(1)
-	}
-
-	void log(String msg) {
-		println msg
-	}
 }

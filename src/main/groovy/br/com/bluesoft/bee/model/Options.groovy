@@ -122,7 +122,7 @@ public class Options {
 		}
 
 		if(!dataDir.isDirectory()) {
-			println "Cound not read data dir: %{dataDir}"
+			println "Cound not read data dir: ${dataDir}"
 		}
 
 		return configFile.isFile() && dataDir.isDirectory()

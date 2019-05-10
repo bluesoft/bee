@@ -38,10 +38,11 @@ import br.com.bluesoft.bee.database.reader.OracleDatabaseReader
 import br.com.bluesoft.bee.exporter.JsonExporter
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.model.Schema
+import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 
 
-class BeeSchemaGeneratorAction {
+class BeeSchemaGeneratorAction implements ActionRunner {
 
 	Options options
 	BeeWriter out
@@ -52,7 +53,7 @@ class BeeSchemaGeneratorAction {
 		return options.arguments.size() >= 1
 	}
 
-	public void run(){
+	public boolean run(){
 
 		def clientName = options.arguments[0]
 		def objectName = options.arguments[1]
@@ -72,6 +73,7 @@ class BeeSchemaGeneratorAction {
 				schema = schema.filter(objectName)
 			def exporter = new JsonExporter(schema, options.dataDir.canonicalPath)
 			exporter.export();
+			return true
 		} catch(e) {
 			e.printStackTrace()
 			throw new Exception("Error importing database metadata.",e)

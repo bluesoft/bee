@@ -35,6 +35,7 @@ package br.com.bluesoft.bee
 import br.com.bluesoft.bee.data.BeeDataModule
 import br.com.bluesoft.bee.dbchange.BeeDbChangeModule
 import br.com.bluesoft.bee.dbseed.BeeDbSeedModule
+import br.com.bluesoft.bee.runner.BeeModule
 import br.com.bluesoft.bee.schema.BeeSchemaModule
 import br.com.bluesoft.bee.upgrade.BeeUpgradeModule
 
@@ -89,15 +90,14 @@ class Bee {
 
 	static main(args) {
 		def version = getVersion()
-		println "Bee - v. ${version} - Bluesoft (2013-2019) - GPL - All rights reserved"
+		println "Bee - v. ${version} - Bluesoft (2013-${Calendar.getInstance().get(Calendar.YEAR)}) - GPL - All rights reserved"
 		Options options = Options.instance
 		if(!options.parse(args)) {
 			options.usage()
 			System.exit(1)
 		}
-		def runner = getRunner(options)
+		BeeModule runner = getRunner(options)
 		if(runner == null) {
-			usage()
 			System.exit 0
 		}
 		runner.run(options)

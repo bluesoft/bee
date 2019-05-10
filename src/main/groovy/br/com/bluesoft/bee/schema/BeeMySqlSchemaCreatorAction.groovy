@@ -1,11 +1,12 @@
 package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.importer.JsonImporter;
-import br.com.bluesoft.bee.model.Options;
+import br.com.bluesoft.bee.model.Options
+import br.com.bluesoft.bee.runner.ActionRunner;
 import br.com.bluesoft.bee.service.BeeWriter;
 
 
-class BeeMySqlSchemaCreatorAction {
+class BeeMySqlSchemaCreatorAction  implements ActionRunner {
 
 	Options options
 	BeeWriter out
@@ -19,7 +20,7 @@ class BeeMySqlSchemaCreatorAction {
 		return true
 	}
 
-	public void run() {
+	public boolean run() {
 
 		def objectName = options.arguments[0]
 
@@ -66,6 +67,7 @@ class BeeMySqlSchemaCreatorAction {
 			def cmd = [env['EDITOR'], file.path]
 			new ProcessBuilder(env['EDITOR'], file.path).start()
 		}
+		return true
 	}
 
 	private def getImporter() {

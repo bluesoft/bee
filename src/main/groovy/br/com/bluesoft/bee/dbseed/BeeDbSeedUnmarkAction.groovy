@@ -2,15 +2,19 @@ package br.com.bluesoft.bee.dbseed
 
 import br.com.bluesoft.bee.dbseed.DbSeedManager
 import br.com.bluesoft.bee.model.Options
+import br.com.bluesoft.bee.runner.ActionRunnerParameterValidate
 import br.com.bluesoft.bee.service.BeeWriter
 
+class BeeDbSeedUnmarkAction extends ActionRunnerParameterValidate {
 
-class BeeDbSeedUnmarkAction {
-	Options options
-	BeeWriter out
+    boolean run() {
+        def migrationId = options.arguments[1]
+        new DbSeedManager(configFile: options.configFile, path: options.dataDir.absolutePath, clientName: options.arguments[0], logger: out).unmark(migrationId)
+        true
+    }
 
-	def run() {
-		def migrationId = options.arguments[1]
-		new DbSeedManager(configFile: options.configFile, path: options.dataDir.absolutePath, clientName: options.arguments[0], logger: out).unmark(migrationId)
-	}
+    @Override
+    int minParameters() {
+        return 2
+    }
 }

@@ -2,9 +2,10 @@ package br.com.bluesoft.bee.schema;
 
 import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options
+import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 
-public class BeeSchemaCheckerAction {
+public class BeeSchemaCheckerAction  implements ActionRunner {
 	Options options
 	BeeWriter out
 
@@ -14,7 +15,7 @@ public class BeeSchemaCheckerAction {
 		return true
 	}
 
-	def run() {
+	def boolean run() {
 		out.log('importing schema metadata from the reference files')
 		def schema = getImporter().importMetaData()
 		def errors = []

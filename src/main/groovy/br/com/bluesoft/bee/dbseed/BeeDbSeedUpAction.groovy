@@ -3,14 +3,12 @@ package br.com.bluesoft.bee.dbseed
 import br.com.bluesoft.bee.dbseed.DbSeedManager
 import br.com.bluesoft.bee.dbchange.UpDown
 import br.com.bluesoft.bee.model.Options
+import br.com.bluesoft.bee.runner.ActionRunnerParameterValidate
 import br.com.bluesoft.bee.service.BeeWriter
 
 
-class BeeDbSeedUpAction {
-	Options options
-	BeeWriter out
-
-	def run() {
+class BeeDbSeedUpAction extends ActionRunnerParameterValidate {
+	boolean run() {
 		def clientName = options.arguments[0]
 		def migrationId = options.arguments[1]
 
@@ -22,5 +20,6 @@ class BeeDbSeedUpAction {
 			def lista = manager.listar()
 			manager.executarVariasDbSeeds(lista, UpDown.UP)
 		}
+		true
 	}
 }

@@ -35,11 +35,12 @@ package br.com.bluesoft.bee.data;
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.database.reader.*
 import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.CsvUtil
 
 
-public class BeeDataGeneratorAction {
+public class BeeDataGeneratorAction implements ActionRunner {
 	DatabaseReader databaseReader
 
 	BeeWriter out
@@ -47,7 +48,7 @@ public class BeeDataGeneratorAction {
 
 	def sql
 
-	public void run() {
+	public boolean run() {
 		def clientName = options.arguments[0]
 		def objectName = options.arguments[1]
 		def path = options.dataDir.canonicalPath
@@ -76,10 +77,16 @@ public class BeeDataGeneratorAction {
 			file.delete()
 
 			CsvUtil.write file, data
+			return true
 		} catch(e) {
 			out.log e.toString()
 			throw new Exception("Error importing database metadata.",e)
 		}
+	}
+
+	@Override
+	boolean validateParameters() {
+		return options.arguments.size == 2
 	}
 
 	def getDatabaseConnection(clientName) {
