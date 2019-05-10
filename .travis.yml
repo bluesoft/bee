@@ -1,8 +1,8 @@
 language: groovy
 jdk:
-- oraclejdk8
+- openjdk8
 cache:
   directories:
 before_install:
-- jdk_switcher use oraclejdk8
+- jdk_switcher use openjdk8
 - java -version
