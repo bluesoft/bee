@@ -36,21 +36,20 @@ import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.database.reader.*
 import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.runner.ActionRunner
+import br.com.bluesoft.bee.runner.ActionRunnerMultipleParameter
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.CsvUtil
 
 
-public class BeeDataGeneratorAction implements ActionRunner {
+public class BeeDataGeneratorAction extends ActionRunnerMultipleParameter {
 	DatabaseReader databaseReader
-
-	BeeWriter out
-	def options
 
 	def sql
 
-	public boolean run() {
-		def clientName = options.arguments[0]
-		def objectName = options.arguments[1]
+	boolean execute(params) {
+		def clientName = params[0]
+		def objectName = params[1]
+
 		def path = options.dataDir.canonicalPath
 
 		def sql
@@ -62,7 +61,7 @@ public class BeeDataGeneratorAction implements ActionRunner {
 		}
 
 		try {
-			out.log "Extracting the table data ..."
+			out.log "Extracting the table data to ${objectName} ... "
 			def schema = new JsonImporter(path).importMetaData()
 			def table = schema.tables[objectName]
 			def data = new TableDataReader(sql).getData(table)
@@ -86,7 +85,7 @@ public class BeeDataGeneratorAction implements ActionRunner {
 
 	@Override
 	boolean validateParameters() {
-		return options.arguments.size == 2
+		return options.arguments.size >= 2
 	}
 
 	def getDatabaseConnection(clientName) {
