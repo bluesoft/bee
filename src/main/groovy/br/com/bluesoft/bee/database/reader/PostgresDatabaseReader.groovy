@@ -150,7 +150,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 			column.type = getColumnType(it.data_type)
 			column.size = it.data_size
 			column.scale = it.data_scale == null ? 0 : it.data_scale
-			column.nullable = it.nullable == 'N' ? false : true
+			column.nullable = getCollumnNullable(it.nullable)
 			def defaultValue = it.data_default
 			if(defaultValue) {
 				column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()
@@ -158,7 +158,24 @@ class PostgresDatabaseReader implements DatabaseReader {
 			table.columns[column.name] = column
 		})
 	}
-	
+
+	private getCollumnNullable(String nullable) {
+		switch (nullable.toLowerCase()) {
+			case "no":
+				return false
+				break
+			case "n":
+				return false
+				break
+			case "yes":
+				return true
+				break
+			case "y":
+				return true
+				break
+		}
+	}
+
 	private def getColumnType(String oracleColumnType){
 		switch (oracleColumnType.toLowerCase()) {
 			case "varchar2":
