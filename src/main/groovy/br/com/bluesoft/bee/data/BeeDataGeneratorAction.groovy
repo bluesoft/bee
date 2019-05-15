@@ -35,63 +35,71 @@ package br.com.bluesoft.bee.data;
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.database.reader.*
 import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.runner.ActionRunnerMultipleParameter
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.CsvUtil
 
-
 public class BeeDataGeneratorAction extends ActionRunnerMultipleParameter {
-	DatabaseReader databaseReader
 
-	def sql
+    def sql
+    private Schema schema
 
-	boolean execute(params) {
-		def clientName = params[0]
-		def objectName = params[1]
+    boolean execute(params) {
+        def clientName = params[0]
+        def objectName = params[1]
 
-		def path = options.dataDir.canonicalPath
+        def path = options.dataDir.canonicalPath
 
-		def sql
-		try {
-			out.log "Connecting to the database..."
-			sql = getDatabaseConnection(clientName)
-		} catch (e){
-			throw new Exception("It was not possible to connect to the database.",e)
-		}
+        def sql
+        try {
+            out.log "Connecting to the database..."
+            sql = getDatabaseConnection(clientName)
+        } catch (e) {
+            throw new Exception("It was not possible to connect to the database.", e)
+        }
 
-		try {
-			out.log "Extracting the table data to ${objectName} ... "
-			def schema = new JsonImporter(path).importMetaData()
-			def table = schema.tables[objectName]
-			def data = new TableDataReader(sql).getData(table)
+        try {
+            out.log "Extracting the table data to ${objectName} ... "
+            def schema = getSchema(path)
+            def table = schema.tables[objectName]
+            def data = new TableDataReader(sql).getData(table)
 
-			def dir = new File(path, "data")
-			if(!dir.exists() || !dir.isDirectory())
-				dir.mkdirs()
+            def dir = new File(path, "data")
+            if (!dir.exists() || !dir.isDirectory()) {
+                dir.mkdirs()
+            }
 
-			def filename = objectName.toLowerCase() + ".csv"
+            def filename = objectName.toLowerCase() + ".csv"
 
-			def file = new File(dir, filename)
-			file.delete()
+            def file = new File(dir, filename)
+            file.delete()
 
-			CsvUtil.write file, data
-			return true
-		} catch(e) {
-			out.log e.toString()
-			throw new Exception("Error importing database metadata.",e)
-		}
-	}
+            CsvUtil.write file, data
+            return true
+        } catch (e) {
+            out.log e.toString()
+            throw new Exception("Error importing database metadata.", e)
+        }
+    }
 
-	@Override
-	boolean validateParameters() {
-		return options.arguments.size >= 2
-	}
+    private Schema getSchema(path) {
+        if (schema == null) {
+            schema = new JsonImporter(path).importMetaData()
+        }
+        schema
+    }
 
-	def getDatabaseConnection(clientName) {
-		if(sql != null) {
-			return sql
-		}
-		return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
-	}
+    @Override
+    boolean validateParameters() {
+        return options.arguments.size >= 2
+    }
+
+    def getDatabaseConnection(clientName) {
+        if (sql != null) {
+            return sql
+        }
+        return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
+    }
 }
