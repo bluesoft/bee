@@ -81,7 +81,7 @@ class JsonImporterIntegrationTest {
 	
 	@Test
 	public void "it should create a table object for each table metadata file"(){
-		assertEquals 2, importer.importMetaData().getTables().size()
+		assertEquals 4, importer.importMetaData().getTables().size()
 	}
 	
 	@Test

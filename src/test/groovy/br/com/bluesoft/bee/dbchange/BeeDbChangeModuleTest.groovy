@@ -1,5 +1,7 @@
 package br.com.bluesoft.bee.dbchange
 
+import br.com.bluesoft.bee.exceptions.IncorrectUsageException
+import br.com.bluesoft.bee.model.Options
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -29,6 +31,19 @@ Actions:
          dbchange:open name - open file with EDITOR
          dbchange:group_up connection group - runs all pending dbchange files of the group
 """
+    }
+
+    def "Deve exibir o erro quando não informar o uso correto"() {
+        given:
+        Options options = new Options()
+        options.parse(
+                ["dbchange:creat", "menu"])
+        when:
+            new BeeDbChangeModule().run(options)
+        then:
+        IncorrectUsageException ex = thrown(IncorrectUsageException)
+        ex.class == IncorrectUsageException
+
     }
 
     @Unroll('Deve retornar o runner #runner para a ação #action')

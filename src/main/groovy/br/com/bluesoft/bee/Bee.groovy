@@ -35,6 +35,7 @@ package br.com.bluesoft.bee
 import br.com.bluesoft.bee.data.BeeDataModule
 import br.com.bluesoft.bee.dbchange.BeeDbChangeModule
 import br.com.bluesoft.bee.dbseed.BeeDbSeedModule
+import br.com.bluesoft.bee.exceptions.IncorrectUsageException
 import br.com.bluesoft.bee.runner.BeeModule
 import br.com.bluesoft.bee.schema.BeeSchemaModule
 import br.com.bluesoft.bee.upgrade.BeeUpgradeModule
@@ -45,61 +46,69 @@ import br.com.bluesoft.bee.model.Options
 
 class Bee {
 
-	static def cliBuilder
+    static def cliBuilder
 
-	static getRunner(options) {
-		def runner = null
+    static getRunner(options) {
+        def runner = null
 
-		switch(options.moduleName) {
-			case "dbchange":
-				runner = new BeeDbChangeModule()
-				break;
-			case "dbseed":
-				runner = new BeeDbSeedModule()
-				break;
-			case "schema":
-				runner = new BeeSchemaModule()
-				break;
-			case "data":
-				runner = new BeeDataModule()
-				break;
-			case "upgrade":
-				runner = new BeeUpgradeModule()
-				break;
-			default:
-				options.usage()
-				System.exit(0)
-		}
+        switch (options.moduleName) {
+            case "dbchange":
+                runner = new BeeDbChangeModule()
+                break;
+            case "dbseed":
+                runner = new BeeDbSeedModule()
+                break;
+            case "schema":
+                runner = new BeeSchemaModule()
+                break;
+            case "data":
+                runner = new BeeDataModule()
+                break;
+            case "upgrade":
+                runner = new BeeUpgradeModule()
+                break;
+            default:
+                options.usage()
+                System.exit(0)
+        }
 
-		return runner
-	}
+        return runner
+    }
 
-	static getVersion() {
-		def resources = Thread.currentThread().getContextClassLoader().getResources(JarFile.MANIFEST_NAME)
-		def version = "test"
+    static getVersion() {
+        def resources = Thread.currentThread().getContextClassLoader().
+                getResources(JarFile.MANIFEST_NAME)
+        def version = "test"
 
-		resources.each {
-			Manifest manifest = new Manifest(it.openStream())
-			if(manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_TITLE] == 'bee') {
-				version = manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_VERSION]
-			}
-		}
+        resources.each {
+            Manifest manifest = new Manifest(it.openStream())
+            if (manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_TITLE] == 'bee') {
+                version = manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_VERSION]
+            }
+        }
 
-		return version
-	}
+        return version
+    }
 
-	static main(args) {
-		def version = getVersion()
-		println "Bee - v. ${version} - Bluesoft (2013-${Calendar.getInstance().get(Calendar.YEAR)}) - GPL - All rights reserved"
-		Options options = Options.instance
-		if(!options.parse(args)) {
-			options.usage()
-			System.exit(1)
-		}
-		BeeModule runner = getRunner(options)
-		if(runner == null) {
-			System.exit 0
-		}
-		runner.run(options)
-	}
+    static main(args) {
+        def version = getVersion()
+        println "Bee - v. ${version} - Bluesoft (2013-${Calendar.getInstance().get(Calendar.YEAR)}) - GPL - All rights reserved"
+        Options options = Options.instance
+        if (!options.parse(args)) {
+            options.usage()
+            System.exit(1)
+        }
+        BeeModule runner = getRunner(options)
+
+        if (runner == null) {
+            System.exit 0
+        }
+
+        try {
+            runner.run(options)
+        } catch (IncorrectUsageException e) {
+            print 'Incorrect usage'
+            System.exit 1
+        }
+    }
 }

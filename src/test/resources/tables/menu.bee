@@ -1,0 +1,23 @@
+{
+  name : "menu",
+  columns : {
+    menu_key : {
+      name : "menu_key",
+      type : "number",
+      size : 6
+    },
+    descricao : {
+      name : "descricao",
+      type : "varchar",
+      size : 100,
+      nullable : true
+    }
+  },
+  constraints : {
+    pk_cof : {
+      name : "pk_menu",
+      type : "P",
+      columns : [ "menu_key" ]
+    }
+  }
+}

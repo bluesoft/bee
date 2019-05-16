@@ -30,8 +30,7 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.database.reader;
-
+package br.com.bluesoft.bee.database.reader
 
 public class TableDataReader {
 
