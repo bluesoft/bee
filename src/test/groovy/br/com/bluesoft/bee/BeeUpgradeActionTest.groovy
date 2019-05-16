@@ -1,11 +1,11 @@
 package br.com.bluesoft.bee
 
-import br.com.bluesoft.bee.upgrade.BeeUpgradeModule
+import br.com.bluesoft.bee.upgrade.BeeUpgradeAction
 import br.com.bluesoft.bee.upgrade.BeeVersionModule;
 import spock.lang.Specification
 import org.junit.Test
 
-public class BeeUpgradeModuleTest extends Specification {
+public class BeeUpgradeActionTest extends Specification {
 
 	@Test
 	def "deve verificar que o bee está atualizado e retornar true"() {
@@ -15,7 +15,7 @@ public class BeeUpgradeModuleTest extends Specification {
 		BeeVersionModule.getLatestVersion()  >> "1.1"
 
 		when:""
-		BeeUpgradeModule upgrade = new BeeUpgradeModule()
+		BeeUpgradeAction upgrade = new BeeUpgradeAction()
 		def isLatest = upgrade.isLatestVersion()
 
 		then:""
@@ -30,7 +30,7 @@ public class BeeUpgradeModuleTest extends Specification {
 		BeeVersionModule.getLatestVersion()  >> "1.1"
 
 		when:""
-		BeeUpgradeModule upgrade = new BeeUpgradeModule()
+		BeeUpgradeAction upgrade = new BeeUpgradeAction()
 		def isLatest = upgrade.isLatestVersion()
 
 		then:""
@@ -43,7 +43,7 @@ public class BeeUpgradeModuleTest extends Specification {
 		def beeVersionLatest = BeeVersionModule.getLatestVersion()
 
 		when:""
-		BeeUpgradeModule upgrade = new BeeUpgradeModule()
+		BeeUpgradeAction upgrade = new BeeUpgradeAction()
 		def beeUpgradeLatest = upgrade.getLatestVersion()
 
 		then:""
@@ -60,7 +60,7 @@ public class BeeUpgradeModuleTest extends Specification {
 		System.exit() >> 1
 
 		when:""
-		BeeUpgradeModule upgrade = new BeeUpgradeModule()
+		BeeUpgradeAction upgrade = new BeeUpgradeAction()
 		def version = upgrade.getLatestVersion()
 
 		then:""
