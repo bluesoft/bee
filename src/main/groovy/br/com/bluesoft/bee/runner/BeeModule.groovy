@@ -1,5 +1,6 @@
 package br.com.bluesoft.bee.runner
 
+import br.com.bluesoft.bee.exceptions.IncorrectUsageException
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.service.BeeWriter
 
@@ -13,9 +14,8 @@ abstract class BeeModule implements BeeWriter {
         def action = options.actionName
         def actionRunner = getRunner(action, options, this);
 
-        if (!actionRunner.validateParameters()) {
-            usage()
-            System.exit 0
+        if (actionRunner == null || !actionRunner.validateParameters()) {
+            throw new IncorrectUsageException(usage())
         }
 
         return actionRunner

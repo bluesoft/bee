@@ -1,0 +1,23 @@
+{
+  name : "permissao",
+  columns : {
+    permissao_key : {
+      name : "permissao_key",
+      type : "number",
+      size : 6
+    },
+    descricao : {
+      name : "descricao",
+      type : "varchar",
+      size : 100,
+      nullable : true
+    }
+  },
+  constraints : {
+    pk_cof : {
+      name : "pk_permissao",
+      type : "P",
+      columns : [ "permissao_key" ]
+    }
+  }
+}
