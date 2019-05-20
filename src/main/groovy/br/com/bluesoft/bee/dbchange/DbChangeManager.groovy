@@ -358,10 +358,16 @@ ${group ? "-- group: ${group}" : ""}
 	}
 
 	def getDirectoryFile() {
-		if(this.directoryFile != null) {
-			return this.directoryFile
+		def dir = this.directoryFile
+		if (this.directoryFile == null) {
+			dir = new File(path, "dbchanges")
+
+			if (!dir.exists() || !dir.isDirectory()) {
+				dir.mkdirs()
+			}
 		}
-		return new File(path, "dbchanges")
+
+		return dir
 	}
 
 	def getDatabaseConnection() {
