@@ -5,6 +5,8 @@ import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.QueryDialectHelper;
 import br.com.bluesoft.bee.util.RDBMSUtilTest
 import groovy.sql.Sql
+import org.junit.After
+import org.junit.Before
 import spock.lang.Specification
 
 import java.sql.Connection
@@ -12,6 +14,11 @@ import java.sql.DatabaseMetaData
 import java.sql.SQLException
 
 class DbChangeManagerTest extends Specification {
+
+	@Before
+	void 'create temporary files'( ){
+		new File('/tmp/bee').mkdirs()
+	}
 
 	final static def RESULT = [
 		[ARQUIVO_NOME: "65564564-test.dbchange"]
@@ -615,7 +622,32 @@ class DbChangeManagerTest extends Specification {
 		mensagens[0] == "All files are already marked as implemented"
 	}
 
-	private Sql mockSql(){
+
+    def "se não houver o diretorio 'dbchanges', deve criar" () {
+        given:
+
+        def mensagens = []
+        def logger = [ "log": { msg -> mensagens << msg } ] as BeeWriter
+
+        def manager = new DbChangeManager(logger: logger, path: '/tmp/bee')
+
+        when: "criar um novo dbchange"
+        manager.createDbChangeFile('new-file', null)
+
+        then: "Deve gerar o novo arquivo"
+		def dir = new File('/tmp/bee/dbchanges')
+		true == dir.exists()
+		true == dir.isDirectory()
+		dir.list().size() == 1
+    }
+
+	@After
+	void 'remove temporary files'( ){
+		new File('/tmp/bee').deleteDir()
+	}
+
+
+    private Sql mockSql(){
 		def connection = Mock(Connection)
 		connection.autoCommit() >> false
 		def databaseMetaData = Mock(DatabaseMetaData)
