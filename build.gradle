@@ -31,43 +31,45 @@ mainClassName = "br.com.bluesoft.bee.Bee"
 
 group = 'br.com.bluesoft.bee'
 def artifact = 'bee'
-version = '1.71'
+version = '1.72'
 
 def startScriptsDir = new File("$buildDir/scripts")
 
 repositories {
-	mavenCentral()
-	mavenLocal()
+    mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
-	compile 'org.codehaus.groovy:groovy-all:2.5.7'
-	compile group: 'org.codehaus.jackson', name: 'jackson-mapper-lgpl', version: '1.9.13'
-	compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
-	testCompile group: "org.spockframework", name: "spock-core", version: "1.3-groovy-2.5"
-	testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.12'
-	testCompile group: 'org.mockito', name: 'mockito-core', version: '2.27.0'
-	testRuntime group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'
+    compile group: 'org.codehaus.groovy', name: 'groovy', version: '2.5.8'
+    compile group: 'org.codehaus.groovy', name: 'groovy-sql', version: '2.5.8'
+    compile group: 'org.codehaus.groovy', name: 'groovy-cli-commons', version: '2.5.8'
+    compile group: 'org.codehaus.jackson', name: 'jackson-mapper-lgpl', version: '1.9.13'
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
+    testCompile group: "org.spockframework", name: "spock-core", version: "1.3-groovy-2.5"
+    testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.12'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '2.27.0'
+    testRuntime group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'
 }
 
 startScripts.doLast {
-	def scriptsDir = new File("${startScriptsDir}")
-	scriptsDir.eachFile {
-		def script = it
-		def scriptText = script.text
-		scriptText = scriptText.replaceAll('CLASSPATH=.*', 'for i in \\$APP_HOME/lib/*;do CLASSPATH=\\$CLASSPATH:\\$i; done')
-		script.write scriptText
-	}
+    def scriptsDir = new File("${startScriptsDir}")
+    scriptsDir.eachFile {
+        def script = it
+        def scriptText = script.text
+        scriptText = scriptText.replaceAll('CLASSPATH=.*', 'for i in \\$APP_HOME/lib/*;do CLASSPATH=\\$CLASSPATH:\\$i; done')
+        script.write scriptText
+    }
 }
 
 jar {
-	manifest {
-		attributes 'Implementation-Title': "${artifact}", 'Implementation-Version': "${version}"
-	}
+    manifest {
+        attributes 'Implementation-Title': "${artifact}", 'Implementation-Version': "${version}"
+    }
 }
 
 applicationDistribution.from('bee.properties') {
-	into 'bin'
+    into 'bin'
 }
 
 test.finalizedBy(project.tasks.cobertura)

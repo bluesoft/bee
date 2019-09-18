@@ -43,6 +43,7 @@ class Constraint {
 	String type
 	String onDelete
 	String status
+	String searchCondition
 	def columns = []
 	def refColumns = []
 
@@ -63,7 +64,7 @@ class Constraint {
 			def messageText = "The columns of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.columns} but it is ${this.columns}"
 			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_COLUMNS, message:messageText)
 		}
-		
+
 		if (metadataConstraint.refColumns != this.refColumns) {
 			def messageText = "The columns of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.refColumns} but it is ${this.refColumns}"
 			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_REF_COLUMNS, message:messageText)
@@ -73,10 +74,15 @@ class Constraint {
 			def messageText = "The delete action of the constraint ${this.name} should be ${metadataConstraint.onDelete} but it is ${this.onDelete}"
 			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_DELETE_RULE, message:messageText)
 		}
-		
+
 		if (metadataConstraint.status != null && metadataConstraint.status != this.status) {
 			def messageText = "The status of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.status.toUpperCase()} but it is ${this.status.toUpperCase()}"
 			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_STATUS, message:messageText)
+		}
+
+		if (metadataConstraint.searchCondition != null && metadataConstraint.searchCondition != this.searchCondition) {
+			def messageText = "The search condition of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.searchCondition} but it is ${this.searchCondition}"
+			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_SEARCH_CONDITION, message:messageText)
 		}
 
 		return messages

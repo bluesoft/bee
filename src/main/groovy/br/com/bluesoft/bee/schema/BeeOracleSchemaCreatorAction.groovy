@@ -41,7 +41,7 @@ public class BeeOracleSchemaCreatorAction  implements ActionRunner {
 
 		out.println("generating tables...")
 		beeSchemaCreator.createTables(file, schema)
-		
+
 		out.println("generating core data...")
 		beeSchemaCreator.createCoreData(file, schema, options.dataDir.absolutePath)
 
@@ -49,6 +49,7 @@ public class BeeOracleSchemaCreatorAction  implements ActionRunner {
 		beeSchemaCreator.createPrimaryKeys(file, schema)
 		beeSchemaCreator.createUniqueKeys(file, schema)
 		beeSchemaCreator.createForeignKeys(file, schema)
+		beeSchemaCreator.createCheckConstraint(file, schema)
 
 		out.println("generating indexes...")
 		beeSchemaCreator.createIndexes(file, schema)
@@ -57,7 +58,7 @@ public class BeeOracleSchemaCreatorAction  implements ActionRunner {
 
 		out.println("generating views...")
 		beeSchemaCreator.createViews(file, schema)
-		
+
 		out.println("generating user types...")
 		beeSchemaCreator.createUserTypes(file, schema)
 
@@ -69,9 +70,7 @@ public class BeeOracleSchemaCreatorAction  implements ActionRunner {
 
 		out.println("generating triggers...")
 		beeSchemaCreator.createTriggers(file, schema)
-		
 
-		
 		def env = System.getenv()
 		if(env['EDITOR']) {
 			println "Opening editor ${env['EDITOR']}"

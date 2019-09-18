@@ -1,7 +1,11 @@
 package br.com.bluesoft.bee.database.reader
 
 import br.com.bluesoft.bee.model.*
-import br.com.bluesoft.bee.util.StringUtil;
+import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.util.StringUtil
+import groovy.sql.Sql
+
+import java.sql.Timestamp;
 
 class OracleDatabaseReader implements DatabaseReader {
 
@@ -34,16 +38,16 @@ class OracleDatabaseReader implements DatabaseReader {
 		return tables
 	}
 
-	static final def TABLES_QUERY = ''' 
-	    select ut.table_name, ut.temporary, utc.comments 
+	static final def TABLES_QUERY = '''
+	    select ut.table_name, ut.temporary, utc.comments
 		from user_tables ut
-		left join user_tab_comments utc on ut.table_name = utc.table_name   
+		left join user_tab_comments utc on ut.table_name = utc.table_name
 		order by table_name
 	'''
 	static final def TABLES_QUERY_BY_NAME = '''
-		select ut.table_name, ut.temporary, utc.comments 
+		select ut.table_name, ut.temporary, utc.comments
 		from user_tables ut
-		left join user_tab_comments utc on ut.table_name = utc.table_name   
+		left join user_tab_comments utc on ut.table_name = utc.table_name
 		where ut.table_name = upper(?)
 		order by table_name
 	'''
@@ -67,18 +71,18 @@ class OracleDatabaseReader implements DatabaseReader {
 
 
 	static final def TABLES_COLUMNS_QUERY = '''
-			select ut.table_name, column_name, data_type, nullable, 
-				   coalesce(data_precision, to_number(decode(char_length, 0, data_length, char_length))) data_size, 
-           data_precision, data_length, char_used as size_type, 
+			select ut.table_name, column_name, data_type, nullable,
+				   coalesce(data_precision, to_number(decode(char_length, 0, data_length, char_length))) data_size,
+                   data_precision, data_length, char_used as size_type,
 				   coalesce(data_scale, 0) data_scale, data_default, column_id, virtual_column
 			from   user_tab_cols utc join user_tables ut on utc.table_name = ut.table_name
 			where  hidden_column = 'NO'
 			order  by table_name, column_id
 		'''
 	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
-			select ut.table_name, column_name, data_type, nullable, 
-				   coalesce(data_precision, to_number(decode(char_length, 0, data_length, char_length))) data_size, 
-           data_precision, data_length, char_used as size_type, 
+			select ut.table_name, column_name, data_type, nullable,
+				   coalesce(data_precision, to_number(decode(char_length, 0, data_length, char_length))) data_size,
+                   data_precision, data_length, char_used as size_type,
 				   coalesce(data_scale, 0) data_scale, data_default, column_id, virtual_column
 			from   user_tab_cols utc join user_tables ut on utc.table_name = ut.table_name
 			where  hidden_column = 'NO'
@@ -223,20 +227,20 @@ class OracleDatabaseReader implements DatabaseReader {
 
 	final static def CONSTRAINTS_QUERY = '''
 		select uc.table_name, uc.constraint_name, uc.constraint_type, uc2.table_name ref_table,
-		   uc.index_name, uc.delete_rule, uc.status
+		   uc.index_name, uc.delete_rule, uc.status, uc.search_condition
 		from   user_constraints uc
 			   left join user_constraints uc2 on uc.r_constraint_name = uc2.constraint_name
 			   join user_tables ut on uc.table_name = ut.table_name
-		where  uc.constraint_type <> 'C'
+		where  (uc.constraint_type <> 'C' or (uc.constraint_type = 'C' and uc.generated = 'USER NAME'))
 		order  by uc.table_name, uc.constraint_type, uc.constraint_name
 	'''
 	final static def CONSTRAINTS_QUERY_BY_NAME = '''
 		select uc.table_name, uc.constraint_name, uc.constraint_type, uc2.table_name ref_table,
-		   uc.index_name, uc.delete_rule, uc.status
+		   uc.index_name, uc.delete_rule, uc.status, uc.search_condition
 		from   user_constraints uc
 			   left join user_constraints uc2 on uc.r_constraint_name = uc2.constraint_name
 			   join user_tables ut on uc.table_name = ut.table_name
-		where  uc.constraint_type <> 'C'
+		where  (uc.constraint_type <> 'C' or (uc.constraint_type = 'C' and uc.generated = 'USER NAME'))
 		  and  uc.table_name = upper(?)
 		order  by uc.table_name, uc.constraint_type, uc.constraint_name
 	'''
@@ -256,6 +260,7 @@ class OracleDatabaseReader implements DatabaseReader {
 			constraint.name = it.constraint_name.toLowerCase()
 			constraint.refTable = it.ref_table?.toLowerCase()
 			constraint.type = it.constraint_type
+			constraint.searchCondition = it.search_condition
 			def onDelete = it.delete_rule?.toLowerCase()
 			constraint.onDelete = onDelete == 'no action' ? null : onDelete
 			def status = it.status?.toLowerCase()
@@ -265,7 +270,7 @@ class OracleDatabaseReader implements DatabaseReader {
 	}
 
 	final static def CONSTRAINTS_COLUMNS_QUERY = '''
-        select ucc.table_name, ucc.constraint_name, ucc.column_name, 
+        select ucc.table_name, ucc.constraint_name, ucc.column_name,
                case uc2.constraint_type when 'P' then '' else ucc2.column_name end ref_column_name
 		from   user_cons_columns ucc
 			   join user_constraints uc on ucc.constraint_name = uc.constraint_name
@@ -276,7 +281,7 @@ class OracleDatabaseReader implements DatabaseReader {
 		order  by ucc.table_name, ucc.constraint_name, ucc.position
 	'''
 	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
-        select ucc.table_name, ucc.constraint_name, ucc.column_name, 
+        select ucc.table_name, ucc.constraint_name, ucc.column_name,
                case uc2.constraint_type when 'P' then '' else ucc2.column_name end ref_column_name
 		from   user_cons_columns ucc
 			   join user_constraints uc on ucc.constraint_name = uc.constraint_name
@@ -396,14 +401,14 @@ class OracleDatabaseReader implements DatabaseReader {
 		select name, text
 		from user_source
 		where type in ('PROCEDURE', 'FUNCTION')
-		order by name, line	
+		order by name, line
 	'''
 	final static def PROCEDURES_BODY_QUERY_BY_NAME = '''
 		select name, text
 		from user_source
 		where type in ('PROCEDURE', 'FUNCTION')
 		  and name = upper(?)
-		order by name, line	
+		order by name, line
 	'''
 	def getProceduresBody(procedures, objectName) {
 		def body = ''
@@ -504,17 +509,17 @@ class OracleDatabaseReader implements DatabaseReader {
 
 		return triggers
 	}
-	
+
 	final static def USER_TYPES_NAMES_QUERY = '''
 		select OBJECT_NAME as name from USER_OBJECTS where OBJECT_TYPE = 'TYPE'
 	'''
-	
+
 	final static def USER_TYPES_NAMES_QUERY_BY_NAME = '''
 		select OBJECT_NAME as name from USER_OBJECTS where OBJECT_TYPE = 'TYPE' and OBJECT_NAME = upper(?)
 	'''
 
 	final static def USER_TYPES_BODY = '''SELECT DBMS_METADATA.GET_DDL('TYPE', upper(?)) as text FROM dual'''
-	
+
 	def getUserTypes(objectName) {
 		def userTypes = fillUserTypes(objectName)
 		fillUserTypeBody(userTypes, objectName)
@@ -536,7 +541,7 @@ class OracleDatabaseReader implements DatabaseReader {
 		return userTypes
 
 	}
-	
+
 	private def fillUserTypeBody(userTypes, objectName) {
 		userTypes.each {
 			def userTypeName = it.value.name
@@ -547,7 +552,7 @@ class OracleDatabaseReader implements DatabaseReader {
 				def userType = userTypes[userTypeName]
 				userType['text'] = StringUtil.deleteSchemaNameFromUserTypeText(text)
 			})
-			
+
 		}
 		return userTypes
 	}

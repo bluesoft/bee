@@ -13,3 +13,6 @@ lib
 *.iml
 *.swp
 /out
+gradle/
+gradlew
+gradlew.bat

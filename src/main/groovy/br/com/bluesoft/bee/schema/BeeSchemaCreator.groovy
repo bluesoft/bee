@@ -5,12 +5,8 @@ import java.text.SimpleDateFormat;
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.CsvUtil
 
-
-
-
-
 abstract class BeeSchemaCreator {
-	
+
 	void createSequences(def file, def schema) {
 		schema.sequences*.value.each { file << "create sequence ${it.name};\n" }
 		file << "\n"
@@ -25,7 +21,7 @@ abstract class BeeSchemaCreator {
 				result += "(${column.size} ${column.sizeType})"
 			else
 				result += "(${column.size})"
-				
+
 		if(column.type == 'number')
 			if(column.scale > 0)
 				result += "(${column.size}, ${column.scale})"
@@ -43,7 +39,7 @@ abstract class BeeSchemaCreator {
 	def createTable(def table) {
 		def columns = []
 		table.columns.each({
-			columns << createColumn(it.value) 
+			columns << createColumn(it.value)
 		})
 		def temp = table.temporary ? " global temporary" : ""
 		def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n\n"
@@ -80,7 +76,7 @@ abstract class BeeSchemaCreator {
 		def result = ""
 
 		constraints.each {
-			result += "alter table ${table.name} add constraint ${it.name} unique(" + it.columns.join(',') + ");\n" 
+			result += "alter table ${table.name} add constraint ${it.name} unique(" + it.columns.join(',') + ");\n"
 		}
 
 		return result
@@ -113,6 +109,27 @@ abstract class BeeSchemaCreator {
 		def tables = schema.tables.sort()
 		tables.each {
 			file << createForeignKey(it.value)
+		}
+
+		file << "\n"
+	}
+
+	def createCheckConstraint(table) {
+		def constraints = table.constraints.findAll { it.value.type == 'C' }*.value
+
+		def result = ""
+
+		constraints.each {
+			result += "alter table ${table.name} add constraint ${it.name} check (" + it.searchCondition + ");\n"
+		}
+
+		return result
+	}
+
+	void createCheckConstraint(def file, def schema) {
+		def tables = schema.tables.sort()
+		tables.each {
+			file << createCheckConstraint(it.value)
 		}
 
 		file << "\n"
@@ -183,7 +200,7 @@ abstract class BeeSchemaCreator {
 			def text = []
 			it.text.eachLine { text << it }
 			def text2 = text[1..text.size()-1].join("\n")
-			def procedure = "create or replace ${text2}\n/\n\n" 
+			def procedure = "create or replace ${text2}\n/\n\n"
 			file.append(procedure.toString(), 'utf-8')
 		}
 	}
@@ -283,7 +300,7 @@ abstract class BeeSchemaCreator {
 			file.append("\n", "utf-8")
 		}
 	}
-	
+
 	void createCoreData(def file, def schema, def dataFolderPath) {
 		def dataFolder = new File(dataFolderPath, 'data')
 		def dataFolderFiles = dataFolder.listFiles()
@@ -306,8 +323,8 @@ abstract class BeeSchemaCreator {
 			}
 		}
 	}
-	
+
 	def createUserTypes(file, schema){
-		
+
 	}
 }

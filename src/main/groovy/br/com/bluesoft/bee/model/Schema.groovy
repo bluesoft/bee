@@ -46,6 +46,7 @@ class Schema {
 	Map packages = [:]
 	Map triggers = [:]
 	Map userTypes = [:]
+	boolean filtered
 
 	def validateWithMetadata(Schema metadataSchema) {
 
@@ -127,6 +128,7 @@ class Schema {
 		schema.packages.putAll packages.findAll { it.key == objectName }
 		schema.triggers.putAll triggers.findAll { it.key == objectName }
 		schema.userTypes.putAll userTypes.findAll {it.key == objectName }
+		schema.filtered = true
 		return schema
 	}
 }

@@ -150,7 +150,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 			column.type = getColumnType(it.data_type)
 			column.size = it.data_size
 			column.scale = it.data_scale == null ? 0 : it.data_scale
-			column.nullable = it.nullable == 'N' ? false : true
+			column.nullable = it.nullable == 'NO' ? false : true
 			def defaultValue = it.data_default
 			if(defaultValue) {
 				column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()

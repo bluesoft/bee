@@ -40,7 +40,7 @@ import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
-
+import groovy.sql.Sql
 
 class BeeSchemaGeneratorAction implements ActionRunner {
 
@@ -80,7 +80,7 @@ class BeeSchemaGeneratorAction implements ActionRunner {
 		}
 	}
 
-	def getDatabaseConnection(clientName) {
+	Sql getDatabaseConnection(clientName) {
 		if(sql != null) {
 			return sql
 		}
