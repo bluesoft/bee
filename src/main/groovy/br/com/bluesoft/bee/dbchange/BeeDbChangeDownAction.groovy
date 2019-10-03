@@ -9,8 +9,7 @@ class BeeDbChangeDownAction extends ActionRunnerParameterValidate {
         def migrationId = options.arguments[1]
 
         def manager = new DbChangeManager(configFile: options.configFile, path: options.dataDir.absolutePath, logger: out, clientName: clientName)
-        manager.executarDbChange(migrationId, UpDown.DOWN)
-        true
+        return manager.executarDbChange(migrationId, UpDown.DOWN)
     }
 
     @Override

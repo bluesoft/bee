@@ -11,11 +11,10 @@ class BeeDbChangeUpAction extends ActionRunnerParameterValidate {
 		def manager = new DbChangeManager(configFile: options.configFile, path: options.dataDir.absolutePath, logger: out, clientName: clientName)
 
 		if(migrationId)
-			manager.executarDbChange(migrationId, UpDown.UP)
+			return manager.executarDbChange(migrationId, UpDown.UP)
 		else {
 			def lista = manager.listar()
-			manager.executarVariasDbChanges(lista, UpDown.UP)
+			return manager.executarVariasDbChanges(lista, UpDown.UP)
 		}
-		true
 	}
 }
