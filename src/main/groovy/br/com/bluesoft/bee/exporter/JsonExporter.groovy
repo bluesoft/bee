@@ -30,13 +30,10 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.exporter;
-
-import java.io.File
+package br.com.bluesoft.bee.exporter
 
 import org.codehaus.jackson.map.ObjectMapper
 
-import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.util.JsonUtil
 
