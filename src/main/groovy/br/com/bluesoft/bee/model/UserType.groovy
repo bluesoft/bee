@@ -9,7 +9,7 @@ import br.com.bluesoft.bee.util.StringUtil
 class UserType implements Validator {
 
 	def name
-	def text
+	def text = ''
 
 	List validateWithMetadata(metadataView) {
 		if (! (metadataView instanceof UserType) ) {

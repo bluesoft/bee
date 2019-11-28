@@ -324,7 +324,10 @@ abstract class BeeSchemaCreator {
 		}
 	}
 
-	def createUserTypes(file, schema){
-
+	def createUserTypes(def file, def schema) {
+		schema.userTypes*.value.sort().each {
+			def userType = createUserType(it)
+			file.append(userType.toString(), 'utf-8')
+		}
 	}
 }
