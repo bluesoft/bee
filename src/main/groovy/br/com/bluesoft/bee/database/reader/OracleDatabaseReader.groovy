@@ -510,50 +510,28 @@ class OracleDatabaseReader implements DatabaseReader {
 		return triggers
 	}
 
-	final static def USER_TYPES_NAMES_QUERY = '''
-		select OBJECT_NAME as name from USER_OBJECTS where OBJECT_TYPE = 'TYPE'
-	'''
+	final static def USER_TYPES = "SELECT name, text from user_source where type = 'TYPE' order by name, line"
 
-	final static def USER_TYPES_NAMES_QUERY_BY_NAME = '''
-		select OBJECT_NAME as name from USER_OBJECTS where OBJECT_TYPE = 'TYPE' and OBJECT_NAME = upper(?)
-	'''
-
-	final static def USER_TYPES_BODY = '''SELECT DBMS_METADATA.GET_DDL('TYPE', upper(?)) as text FROM dual'''
+	final static def USER_TYPES_BY_NAME = "SELECT name, text from user_source where type = 'TYPE' and name = upper(?) order by name, line"
 
 	def getUserTypes(objectName) {
-		def userTypes = fillUserTypes(objectName)
-		fillUserTypeBody(userTypes, objectName)
-		return userTypes
-	}
-
-	private def fillUserTypes(objectName) {
 		def userTypes = [:]
 		def rows
+
 		if (objectName) {
-			rows = sql.rows(USER_TYPES_NAMES_QUERY_BY_NAME, [objectName])
+			rows = sql.rows(USER_TYPES_BY_NAME, [objectName])
 		} else {
-			rows = sql.rows(USER_TYPES_NAMES_QUERY)
+			rows = sql.rows(USER_TYPES)
 		}
+
 		rows.each({
 			def name = it.name.toLowerCase()
-			userTypes[name] = new UserType(name:name)
+			def userType = userTypes[name] ?: new UserType()
+			userType.name = name
+			userType.text += it.text
+			userTypes[name] = userType
 		})
-		return userTypes
 
-	}
-
-	private def fillUserTypeBody(userTypes, objectName) {
-		userTypes.each {
-			def userTypeName = it.value.name
-			def rows = sql.rows(USER_TYPES_BODY, [userTypeName])
-			rows.each({
-				java.sql.Clob clob = (java.sql.Clob) it.text
-				String text = clob.getCharacterStream().getText()
-				def userType = userTypes[userTypeName]
-				userType['text'] = StringUtil.deleteSchemaNameFromUserTypeText(text)
-			})
-
-		}
 		return userTypes
 	}
 }
