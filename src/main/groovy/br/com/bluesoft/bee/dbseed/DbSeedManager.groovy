@@ -1,6 +1,11 @@
 package br.com.bluesoft.bee.dbseed
 
+import br.com.bluesoft.bee.database.reader.TableDataReader
+import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.util.CsvUtil
+
 import java.sql.SQLException
 
 import br.com.bluesoft.bee.database.ConnectionInfo
@@ -29,7 +34,8 @@ class DbSeedManager {
 	String path
 	String clientName
 	boolean force
-	BeeWriter logger
+	private BeeWriter logger
+	private Schema schema
 
 	boolean executarVariasDbSeeds(List<String> lista, UpDown upDown) {
 		def result = true;
@@ -274,6 +280,29 @@ class DbSeedManager {
 		salvarExecucao(sql, arquivo, UpDown.DOWN)
 	}
 
+	def generate(def tableName) {
+		def sql = getDatabaseConnection()
+
+		try {
+			logger.log "Extracting the table data from ${tableName} ... "
+			def schema = getSchema(path)
+			def table = schema.tables[tableName]
+			def data = new TableDataReader(sql).getData(table)
+
+			def dir = getDirectoryFile()
+			def filename = tableName.toLowerCase() + ".csv"
+
+			def file = new File(dir, filename)
+			file.delete()
+
+			CsvUtil.write file, data
+			return true
+		} catch (e) {
+			logger.log e.toString()
+			throw new Exception("Error importing database metadata.", e)
+		}
+	}
+
 	def obterTimestamp(def arquivo) {
 		if(!(arquivo ==~ /^([0-9]+)\-(.+)\.dbseed$/)) {
 			return "0"
@@ -286,6 +315,13 @@ class DbSeedManager {
 
 	def getFile(def directoryFile, def arquivo) {
 		return new File(directoryFile, arquivo)
+	}
+
+	private Schema getSchema(path) {
+		if (schema == null) {
+			schema = new JsonImporter(path).importMetaData()
+		}
+		schema
 	}
 
 	def getParser() {
@@ -306,6 +342,13 @@ class DbSeedManager {
 		if(sql != null) {
 			return sql
 		}
-		return ConnectionInfo.createDatabaseConnection(configFile.absoluteFile, clientName)
+
+		try {
+			logger.log "Connecting to the database..."
+			sql = ConnectionInfo.createDatabaseConnection(configFile.absoluteFile, clientName)
+			return sql
+		} catch (e) {
+			throw new Exception("It was not possible to connect to the database.", e)
+		}
 	}
 }
