@@ -50,6 +50,7 @@ class TableColumn {
 	String autoIncrement
 	String onUpdateCurrentTimestamp
 	Boolean virtual = false
+	Boolean ignore = false
 
 	def messageTemplate = 'The {0} of the column {1} of the table {2} should be {3} but it is {4}'
 

@@ -40,6 +40,7 @@ dependencies {
     testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.12'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.27.0'
     testRuntime group: 'org.slf4j', name: 'slf4j-api', version: '1.7.10'
+    implementation 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
 }
 
 startScripts.doLast {
