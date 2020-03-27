@@ -84,8 +84,7 @@ public class BeeFileUtils {
 			return []
 
 		def result = []
-		source.eachFile {substring(0, it.name.lastIndexOf('-'))
-		}
+		source.eachFile { result << it.name.substring(0, it.name.lastIndexOf('-')) }
 
 		return result
 	}

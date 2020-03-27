@@ -55,7 +55,7 @@ public class BeeFileUtilsTest extends Specification {
 		def source = [
 				files: files,
 		        isDirectory: { true },
-				eachFile: { def c -> arquivos.each(c) }
+				eachFile: { def c -> files.each(c) }
 		]
 
 		when: "listing"
