@@ -94,7 +94,6 @@ public class BeeUpgradeAction implements ActionRunner {
 
     def static applyChanges() {
         String app_path = getAppPath()
-        String inst_dir = app_path.replaceAll("lib/bee-[0-9]+\\.[0-9]+\\.jar", "")
 
         def version = VERSION
         def release = TMPDIR + '/bee-' + version + '.zip'
@@ -106,16 +105,19 @@ public class BeeUpgradeAction implements ActionRunner {
         println "Applying changes ..."
         def source = TMPDIR + '/bee-' + version
 
-        File dest = new File(inst_dir)
+        File dest = new File(app_path)
         File src = new File(source)
 
+        def libDirSource = new File(src, "lib")
+        def files = BeeFileUtils.listBaseJars(libDirSource)
+        def libDirDest = new File(dest, "lib")
+        BeeFileUtils.removeOldJars(libDirDest, files)
+
         BeeFileUtils.copyFolder(src, dest)
-        BeeFileUtils.removeOldBees(dest)
     }
 
     def static getAppPath() {
-        String app_path = BeeUpgradeModule.getProtectionDomain().getCodeSource().getLocation().
-                getPath()
+        String app_path = BeeUpgradeModule.getProtectionDomain().getCodeSource().getLocation().getPath()
         String inst_dir = app_path.replaceAll("lib/bee-[0-9]+\\.[0-9]+\\.jar", "")
 
         return inst_dir
