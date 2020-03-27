@@ -36,6 +36,7 @@ import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.database.reader.DatabaseReaderChanger;
 import br.com.bluesoft.bee.database.reader.OracleDatabaseReader
 import br.com.bluesoft.bee.exporter.JsonExporter
+import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.runner.ActionRunner
@@ -48,6 +49,7 @@ class BeeSchemaGeneratorAction implements ActionRunner {
 	BeeWriter out
 
 	def sql
+	def importer
 
 	public boolean validateParameters() {
 		return options.arguments.size() >= 1
@@ -68,10 +70,17 @@ class BeeSchemaGeneratorAction implements ActionRunner {
 		try {
 			out.log "Extracting the metadata..."
 			def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
-			def Schema schema = databaseReader.getSchema(objectName)
+			Schema schemaNew = databaseReader.getSchema(objectName)
 			if(objectName)
-				schema = schema.filter(objectName)
-			def exporter = new JsonExporter(schema, options.dataDir.canonicalPath)
+				schemaNew = schemaNew.filter(objectName)
+
+			Schema schemaOld = getImporter().importMetaData()
+			if(objectName)
+				schemaOld = schemaOld.filter(objectName)
+
+			applyIgnore(schemaOld, schemaNew)
+
+			def exporter = new JsonExporter(schemaNew, options.dataDir.canonicalPath)
 			exporter.export();
 			return true
 		} catch(e) {
@@ -80,10 +89,29 @@ class BeeSchemaGeneratorAction implements ActionRunner {
 		}
 	}
 
+	void applyIgnore(Schema schemaOld, Schema schemaNew) {
+		def tableNames = schemaOld.tables.findAll { it.key in schemaOld.tables }
+
+		tableNames.each { etable ->
+			def ignoredColumns = schemaOld.tables[etable.key].columns.findAll { it.value.ignore }
+			ignoredColumns.each {
+				if(schemaNew.tables[etable.key].columns[it.key]) {
+					schemaNew.tables[etable.key].columns[it.key].ignore = true
+				}
+			}
+		}
+	}
+
 	Sql getDatabaseConnection(clientName) {
 		if(sql != null) {
 			return sql
 		}
 		return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
+	}
+
+	private def getImporter() {
+		if(importer == null)
+			return new JsonImporter(options.dataDir.canonicalPath)
+		return importer
 	}
 }
