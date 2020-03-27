@@ -25,6 +25,7 @@ Actions:
          dbseed:mark connection file - mark a file as executed
          dbseed:markall connection - mark All files as executed
          dbseed:unmark connection file - unmark a file as executed
+         dbseed:generate connection object - generates single object
 """
     }
 

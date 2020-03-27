@@ -17,6 +17,7 @@ public class BeeDbSeedModule extends BeeModule {
         println "         dbseed:mark connection file - mark a file as executed"
         println "         dbseed:markall connection - mark All files as executed"
         println "         dbseed:unmark connection file - unmark a file as executed"
+        println "         dbseed:generate connection object - generates single object"
     }
 
     @Override
@@ -42,6 +43,9 @@ public class BeeDbSeedModule extends BeeModule {
                 break
             case "unmark":
                 return new BeeDbSeedUnmarkAction(options: options, out: this)
+                break
+            case "generate":
+                return new BeeDbSeedGenerateAction(options: options, out: this)
                 break
         }
     }

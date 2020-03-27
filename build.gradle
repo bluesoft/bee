@@ -3,10 +3,6 @@ buildscript {
         mavenLocal()
         mavenCentral()
     }
-    dependencies {
-        classpath 'net.saliman:gradle-cobertura-plugin:2.6.1'
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.4.0'
-    }
 }
 
 plugins {
@@ -16,22 +12,16 @@ plugins {
 }
 
 apply plugin:'application'
-apply plugin: 'cobertura'
-apply plugin: 'com.github.kt3k.coveralls'
-
-cobertura {
-    coverageSourceDirs = sourceSets.main.groovy.srcDirs
-    coverageFormats = ['html', 'xml']
-    coverageIgnoreTrivial = true
-    coverageIgnores = ['org.slf4j.Logger.*']
-    coverageReportDir = new File("$buildDir/reports/cobertura")
-}
 
 mainClassName = "br.com.bluesoft.bee.Bee"
 
 group = 'br.com.bluesoft.bee'
 def artifact = 'bee'
-version = '1.75'
+version = '1.76'
+
+def javaVersion = JavaVersion.VERSION_1_8
+sourceCompatibility = javaVersion;
+targetCompatibility = javaVersion;
 
 def startScriptsDir = new File("$buildDir/scripts")
 
@@ -41,9 +31,9 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.codehaus.groovy', name: 'groovy', version: '2.5.8'
-    compile group: 'org.codehaus.groovy', name: 'groovy-sql', version: '2.5.8'
-    compile group: 'org.codehaus.groovy', name: 'groovy-cli-commons', version: '2.5.8'
+    compile group: 'org.codehaus.groovy', name: 'groovy', version: '2.5.10'
+    compile group: 'org.codehaus.groovy', name: 'groovy-sql', version: '2.5.10'
+    compile group: 'org.codehaus.groovy', name: 'groovy-cli-commons', version: '2.5.10'
     compile group: 'org.codehaus.jackson', name: 'jackson-mapper-lgpl', version: '1.9.13'
     compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
     testCompile group: "org.spockframework", name: "spock-core", version: "1.3-groovy-2.5"
@@ -71,6 +61,3 @@ jar {
 applicationDistribution.from('bee.properties') {
     into 'bin'
 }
-
-test.finalizedBy(project.tasks.cobertura)
-project.tasks.generateCoberturaReport.finalizedBy(project.tasks.coveralls)

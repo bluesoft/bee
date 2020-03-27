@@ -67,8 +67,8 @@ class DbSeedManagerTest extends Specification {
 
 		then: "deve retornar null e conter a mensagem"
 		lista == null
-		mensagens.size() == 1
-		mensagens[0] == DbSeedManager.MESSAGE_COULD_NOT_GET_CONNECTION
+		mensagens.size() == 2
+		mensagens[1] == DbSeedManager.MESSAGE_COULD_NOT_GET_CONNECTION
 	}
 
 	def "deve listar as instrucoes ja executadas no banco"() {
@@ -502,8 +502,8 @@ class DbSeedManagerTest extends Specification {
 
 		then: "retorna false e a mensagem que nao conseguiu obter conexao"
 		resultado == false
-		mensagens.size() == 1
-		mensagens[0] == DbSeedManager.MESSAGE_COULD_NOT_GET_CONNECTION
+		mensagens.size() == 2
+		mensagens[1] == DbSeedManager.MESSAGE_COULD_NOT_GET_CONNECTION
 	}
 
 	def "deve retornar o timestamp do nome de arquivo"() {
