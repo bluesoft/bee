@@ -78,27 +78,35 @@ public class BeeFileUtils {
 
 		dir.delete()
 	}
-	
-	def static removeOldBees(File dir) {
-		def libfolder =  new File(dir.getPath(), "/lib")
 
-		if(libfolder.isDirectory()) {
-			String[] files = libfolder.list()
+	def static listBaseJars(def source) {
+		if(!source.isDirectory())
+			return []
 
-			for(String file: files) {
-				File f  = new File(libfolder, file)
+		def result = []
+		source.eachFile { result << it.name.substring(0, it.name.lastIndexOf('-')) }
 
-				if (f.getName().matches("bee-[0-9]+\\.[0-9]+\\.jar")) {
-					if (f.getName() != "bee-" + BeeVersionModule.getLatestVersion() + ".jar") f.delete()
-				}
+		return result
+	}
+
+	def static removeOldJars(File source, def baseNames) {
+		if(!source.isDirectory())
+			return false
+
+		Set itens = baseNames.toSet()
+		def names = source.list()
+
+		names.each {
+			if(it.substring(0, it.lastIndexOf('-')) in itens) {
+				new File(source, it).delete()
 			}
 		}
+
+
+		return true
 	}
 
 	def static copyFolder(File source, File destination) {
-		InputStream  is
-		OutputStream out
-
 		if(source.isDirectory()) {
 			String[] files = source.list()
 
@@ -113,25 +121,10 @@ public class BeeFileUtils {
 
 			try {
 				destination.getParentFile().mkdirs()
-
-				is  = new FileInputStream(source)
-				out = new FileOutputStream(destination)
-
-				byte[] buffer = new byte[1024]
-
-				int len
-				while((len = is.read(buffer)) > 0)
-					out.write(buffer, 0, len)
+				destination << source.text
 			} catch (Exception e) {
 				println "fatal: could not copy folder"
 				e.printStackTrace()
-			} finally {
-				try {
-					is.close()
-					out.close()
-				} catch (IOException ioe) {
-					ioe.printStackTrace()
-				}
 			}
 		}
 	}

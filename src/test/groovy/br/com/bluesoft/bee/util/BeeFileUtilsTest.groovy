@@ -41,29 +41,50 @@ public class BeeFileUtilsTest extends Specification {
 	}
 
 	@Test
-	def "deve remover todos os arquivos cuja versão seja diferente de getLatestVersion"() {
-		setup:""
-		GroovyMock(BeeVersionModule, global: true)
-		BeeVersionModule.getLatestVersion()  >> "1.3"
+	def testListBaseJars() {
+		given: "Lista de arquivos para testar"
+		def files = [
+				[ name: 'bee-1.75.jar' ],
+				[ name: 'commons-cli-1.4.jar' ],
+				[ name: 'groovy-2.5.8.jar' ],
+				[ name: 'groovy-cli-commons-2.5.8.jar' ],
+				[ name: 'groovy-sql-2.5.8.jar' ],
+				[ name: 'jackson-core-lgpl-1.9.13.jar' ],
+				[ name: 'jackson-mapper-lgpl-1.9.13.jar' ]
+		]
+		def source = [
+				files: files,
+		        isDirectory: { true },
+				eachFile: { def c -> files.each(c) }
+		]
 
-		def tempFolder    = temporaryFolder.newFolder()
-		def tempLibFolder = new File(tempFolder.getPath(), "lib")
-		tempLibFolder.mkdirs()
+		when: "listing"
+		def result = BeeFileUtils.listBaseJars(source)
 
-		def bee1 = new File(tempLibFolder.getPath(), "bee-1.1.jar")
-		def bee2 = new File(tempLibFolder.getPath(), "bee-1.2.jar")
-		def bee3 = new File(tempLibFolder.getPath(), "bee-1.3.jar")
+		then: ""
+		result == ['bee', 'commons-cli', 'groovy', 'groovy-cli-commons', 'groovy-sql', 'jackson-core-lgpl', 'jackson-mapper-lgpl']
+	}
 
-		bee1.createNewFile()
-		bee2.createNewFile()
-		bee3.createNewFile()
+	@Test
+	def testRemoveOldJars() {
+		given: ""
+		Set files = [
+				'bee-1.75.jar',
+				'commons-cli-1.4.jar',
+				'groovy-2.5.8.jar',
+				'groovy-cli-commons-2.5.8.jar',
+				'groovy-sql-2.5.8.jar',
+				'jackson-core-lgpl-1.9.13.jar',
+				'jackson-mapper-lgpl-1.9.13.jar',
+				'postgresql-9.2-1003.jdbc4.jar'
+		]
+		def list = ['bee', 'commons-cli', 'groovy', 'groovy-cli-commons', 'groovy-sql', 'jackson-core-lgpl', 'jackson-mapper-lgpl']
+		files.each { temporaryFolder.newFile(it) }
 
-		when:""
-		BeeFileUtils.removeOldBees(tempFolder)
+		when: ""
+		def result = BeeFileUtils.removeOldJars(temporaryFolder.getRoot(), list)
 
-		then:""
-		bee1.exists() == false
-		bee2.exists() == false
-		bee3.exists() == true
+		then: ""
+		temporaryFolder.getRoot().list() == [ 'postgresql-9.2-1003.jdbc4.jar' ]
 	}
 }
