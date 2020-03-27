@@ -67,8 +67,7 @@ public class TableDataReader {
 	def getData(def table) {
 		def query = buildQuery(table)
 
-		def columnNames = []
-		table.columns.each { columnNames << it.value.name }
+		def columnNames = table.columns.findAll { !it.value.ignore }*.value.name
 
 		def result = []
 
