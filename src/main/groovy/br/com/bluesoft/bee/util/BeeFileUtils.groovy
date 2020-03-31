@@ -97,7 +97,7 @@ public class BeeFileUtils {
 		def names = source.list()
 
 		names.each {
-			if(it.substring(0, it.lastIndexOf('-')) in itens) {
+			if(it.lastIndexOf('-') > 0 && it.substring(0, it.lastIndexOf('-')) in itens) {
 				new File(source, it).delete()
 			}
 		}
