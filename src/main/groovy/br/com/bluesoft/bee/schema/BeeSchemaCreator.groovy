@@ -223,7 +223,7 @@ abstract class BeeSchemaCreator {
 		def numberOfVirtualColumns = 0
 
 		if (table != null) {
-			table.columns.each{
+			table.columns.findAll { !it.value.ignore }.each{
 				columns[it.value.name] = it.value.type
 				columnNames << it.value.name
 				isVirtualColumn[it.value.name] = it.value.virtual
