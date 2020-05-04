@@ -34,256 +34,259 @@ package br.com.bluesoft.bee.dbchange
 
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.service.BeeWriter
-import br.com.bluesoft.bee.util.QueryDialectHelper;
+import br.com.bluesoft.bee.util.QueryDialectHelper
 
 import java.sql.SQLException
 
 class DbChangeManager {
-	private final static def FILENAME_REGEX = /^([0-9]+)\-(.+)\.dbchange((\.)(.+))?$/
-	final static def SELECT_TABLE = "select * from dbchanges"
-	final static def MESSAGE_THERE_IS_NO_INSTRUCTIONS = "!!!Error: There is no ::up/::down statement in dbchange file"
-	final static def MESSAGE_NO_COMMANDS_IN_FILE = "There is no commands in the dbchange file"
-	final static def MESSAGE_DBCHANGE_ALREADY_EXECUTED = "It was not possible to execute the instructions ::up, because this dbchange was already executed"
-	final static def MESSAGE_DBCHANGE_NOT_EXECUTED = "It was not possible to execute the instructions ::down, because this dbchange was not executed"
-	final static def MESSAGE_INVALID_FILE_NAME = "Invalid dbchange file name"
-	final static def MESSAGE_COULD_NOT_GET_CONNECTION = "It was not possible to get the database connection"
 
-	def sql
-	def directoryFile
-	def parser
+    private final static def FILENAME_REGEX = /^([0-9]+)\-(.+)\.dbchange((\.)(.+))?$/
+    final static def SELECT_TABLE = "select * from dbchanges"
+    final static def MESSAGE_THERE_IS_NO_INSTRUCTIONS = "!!!Error: There is no ::up/::down statement in dbchange file"
+    final static def MESSAGE_NO_COMMANDS_IN_FILE = "There is no commands in the dbchange file"
+    final static def MESSAGE_DBCHANGE_ALREADY_EXECUTED = "It was not possible to execute the instructions ::up, because this dbchange was already executed"
+    final static def MESSAGE_DBCHANGE_NOT_EXECUTED = "It was not possible to execute the instructions ::down, because this dbchange was not executed"
+    final static def MESSAGE_INVALID_FILE_NAME = "Invalid dbchange file name"
+    final static def MESSAGE_COULD_NOT_GET_CONNECTION = "It was not possible to get the database connection"
 
-	File configFile
-	String path
-	String clientName
-	String fileName
-	boolean force
-	BeeWriter logger
+    def sql
+    def directoryFile
+    def parser
 
-	boolean executarVariasDbChanges(List<String> lista, UpDown upDown) {
-		def result = true;
+    File configFile
+    String path
+    String clientName
+    String fileName
+    boolean force
+    BeeWriter logger
 
-		for(def execucao: lista) {
-			if(!executarDbChange(execucao, upDown)) {
-				result = false;
-				break
-			}
-		}
-		return result
-	}
+    boolean executarVariasDbChanges(List<String> lista, UpDown upDown) {
+        def result = true;
 
-	boolean executarDbChange(String arquivo, UpDown upDown) {
+        for (def execucao : lista) {
+            if (!executarDbChange(execucao, upDown)) {
+                result = false;
+                break
+            }
+        }
+        return result
+    }
 
-		if (obterTimestamp(arquivo) == "0") {
-			logger.log(MESSAGE_INVALID_FILE_NAME)
-			return false
-		}
+    boolean executarDbChange(String arquivo, UpDown upDown) {
 
-		sql = getDatabaseConnection()
-		if (sql == null) {
-			logger.log(MESSAGE_COULD_NOT_GET_CONNECTION)
-			return false
-		}
+        if (obterTimestamp(arquivo) == "0") {
+            logger.log(MESSAGE_INVALID_FILE_NAME)
+            return false
+        }
 
-		def directoryFile = getDirectoryFile()
-		def file = getFile(directoryFile, arquivo)
-		def parser = getParser()
-		def dbchange = parser.parseFile(file)
+        sql = getDatabaseConnection()
+        if (sql == null) {
+            logger.log(MESSAGE_COULD_NOT_GET_CONNECTION)
+            return false
+        }
 
-		def msg = "Executing dbchange: ${arquivo}"
-		if(dbchange.header != null) {
-			msg += " -- ${dbchange.header}"
-		}
-		logger.log(msg)
+        def directoryFile = getDirectoryFile()
+        def file = getFile(directoryFile, arquivo)
+        def parser = getParser()
+        def dbchange = parser.parseFile(file)
 
-		def listaDeInstrucoes = null
-		if(upDown == UpDown.UP) {
-			listaDeInstrucoes = dbchange.up
-		} else {
-			listaDeInstrucoes = dbchange.down
-		}
+        def msg = "Executing dbchange: ${arquivo}"
+        if (dbchange.header != null) {
+            msg += " -- ${dbchange.header}"
+        }
+        logger.log(msg)
 
-		if(listaDeInstrucoes == null) {
-			logger.log MESSAGE_THERE_IS_NO_INSTRUCTIONS
-			return false
-		}
+        def listaDeInstrucoes = null
+        if (upDown == UpDown.UP) {
+            listaDeInstrucoes = dbchange.up
+        } else {
+            listaDeInstrucoes = dbchange.down
+        }
 
-		if(listaDeInstrucoes.size == 0) {
-			logger.log MESSAGE_NO_COMMANDS_IN_FILE
-			return true
-		}
+        if (listaDeInstrucoes == null) {
+            logger.log MESSAGE_THERE_IS_NO_INSTRUCTIONS
+            return false
+        }
 
-		criarTabelaDbchangesSeNaoExistir(sql)
+        if (listaDeInstrucoes.size == 0) {
+            logger.log MESSAGE_NO_COMMANDS_IN_FILE
+            return true
+        }
 
-		def resultado
-		if (podeExecutar(arquivo, sql, upDown)) {
+        criarTabelaDbchangesSeNaoExistir(sql)
 
-			def executor = new SQLExecutor(sql: sql, logger: logger)
-			resultado = executor.execute(listaDeInstrucoes)
+        def resultado
+        if (podeExecutar(arquivo, sql, upDown)) {
 
-			def start = System.currentTimeMillis()
-			if(resultado) {
-				salvarExecucao(sql, arquivo, upDown)
-			}
+            def executor = new SQLExecutor(sql: sql, logger: logger)
+            resultado = executor.execute(listaDeInstrucoes)
 
-			def end = System.currentTimeMillis()
-			logger.log("Execution time: ${(end - start) / 1000} seconds")
-		} else {
-			if(upDown == UpDown.UP) {
-				logger.log(MESSAGE_DBCHANGE_ALREADY_EXECUTED)
-			} else {
-				logger.log(MESSAGE_DBCHANGE_NOT_EXECUTED)
-			}
-			resultado = false
-		}
+            def start = System.currentTimeMillis()
+            if (resultado) {
+                salvarExecucao(sql, arquivo, upDown)
+            }
 
-		return resultado
-	}
+            def end = System.currentTimeMillis()
+            logger.log("Execution time: ${(end - start) / 1000} seconds")
+        } else {
+            if (upDown == UpDown.UP) {
+                logger.log(MESSAGE_DBCHANGE_ALREADY_EXECUTED)
+            } else {
+                logger.log(MESSAGE_DBCHANGE_NOT_EXECUTED)
+            }
+            resultado = false
+        }
 
-	def salvarExecucao(def sql, def arquivo, def upDown) {
-		boolean autocommit = sql.connection.getAutoCommit()
+        return resultado
+    }
 
-		if (!autocommit)
+    def salvarExecucao(def sql, def arquivo, def upDown) {
+        boolean autocommit = sql.connection.getAutoCommit()
+
+		if (!autocommit) {
 			sql.commit()
-
-		if (!criarTabelaDbchangesSeNaoExistir(sql)) {
-			return false
 		}
 
-		def timestamp = obterTimestamp(arquivo)
+        if (!criarTabelaDbchangesSeNaoExistir(sql)) {
+            return false
+        }
 
-		if(upDown == UpDown.UP) {
-			def insertQuery = QueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
-			sql.execute(insertQuery, [arquivo, timestamp])
-		} else {
-			def deleteQuery = QueryDialectHelper.getDeleteFromDbchangesQuery(configFile, clientName)
-			sql.execute(deleteQuery, [timestamp])
-		}
+        def timestamp = obterTimestamp(arquivo)
 
-		if (!autocommit)
+        if (upDown == UpDown.UP) {
+            def insertQuery = QueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
+            sql.execute(insertQuery, [arquivo, timestamp])
+        } else {
+            def deleteQuery = QueryDialectHelper.getDeleteFromDbchangesQuery(configFile, clientName)
+            sql.execute(deleteQuery, [timestamp])
+        }
+
+		if (!autocommit) {
 			sql.commit()
-	}
-
-	def podeExecutar(def arquivo, def sql, def upDown) {
-		def timestamp = obterTimestamp(arquivo)
-		def selectQuery = QueryDialectHelper.getSelectFromDbchangesQuery(configFile, clientName)
-		def rows = sql.rows(selectQuery, [timestamp])
-
-		if (upDown == UpDown.UP) {
-			if(force) {
-				return true
-			}
-			return rows.size == 0
-		} else {
-			return rows.size > 0
 		}
-	}
+    }
 
-	List<String> listar(String group) {
-		def listaBanco = listarInstrucoesJaExecutadas()
-		def listaArquivo = listarArquivos(group)
+    def podeExecutar(def arquivo, def sql, def upDown) {
+        def timestamp = obterTimestamp(arquivo)
+        def selectQuery = QueryDialectHelper.getSelectFromDbchangesQuery(configFile, clientName)
+        def rows = sql.rows(selectQuery, [timestamp])
 
-		if (listaArquivo == null || listaBanco == null) {
-			return null
-		}
+        if (upDown == UpDown.UP) {
+            if (force) {
+                return true
+            }
+            return rows.size == 0
+        } else {
+            return rows.size > 0
+        }
+    }
 
-		def listaParaExecutar = listaArquivo
-		listaParaExecutar.removeAll(listaBanco)
-		listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
+    List<String> listar(String group) {
+        def listaBanco = listarInstrucoesJaExecutadas()
+        def listaArquivo = listarArquivos(group)
 
-		logger.log "Found ${listaParaExecutar.size} file(s)"
-		listaParaExecutar.each { logger.log "${it.ARQUIVO_NOME}" }
-		return listaParaExecutar*.ARQUIVO_NOME
-	}
+        if (listaArquivo == null || listaBanco == null) {
+            return null
+        }
 
-	List<String> search() {
-		def listFiles = listarArquivos()
+        def listaParaExecutar = listaArquivo
+        listaParaExecutar.removeAll(listaBanco)
+        listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
 
-		if (listFiles == null) {
-			return null
-		}
+        logger.log "Found ${listaParaExecutar.size} file(s)"
+        listaParaExecutar.each { logger.log "${it.ARQUIVO_NOME}" }
+        return listaParaExecutar*.ARQUIVO_NOME
+    }
 
-		listFiles = listFiles.findAll({ it.ARQUIVO_NOME.contains(fileName) ? it.ARQUIVO_NOME : null })
+    List<String> search() {
+        def listFiles = listarArquivos()
 
-		logger.log "Found ${listFiles.size} file(s)"
-		listFiles.each { logger.log "${it.ARQUIVO_NOME}" }
-		return listFiles*.ARQUIVO_NOME
-	}
+        if (listFiles == null) {
+            return null
+        }
 
-	def open() {
-		def listFiles = listarArquivos()
-		def env = System.getenv()
-		def files = ""
+        listFiles = listFiles.findAll({ it.ARQUIVO_NOME.contains(fileName) ? it.ARQUIVO_NOME : null })
 
-		if (listFiles == null) {
-			return null
-		}
+        logger.log "Found ${listFiles.size} file(s)"
+        listFiles.each { logger.log "${it.ARQUIVO_NOME}" }
+        return listFiles*.ARQUIVO_NOME
+    }
 
-		listFiles = listFiles.findAll({ it.ARQUIVO_NOME.contains(fileName) ? it.ARQUIVO_NOME : null })
-			def file = new File(getDirectoryFile(), listFiles[0].ARQUIVO_NOME)
-		println file
-		if(env['EDITOR']) {
-			println "Opening with editor ${env['EDITOR']}"
-			def cmd = [env['EDITOR'], file.path]
-			new ProcessBuilder(env['EDITOR'], file.path).start()
-		}
+    def open() {
+        def listFiles = listarArquivos()
+        def env = System.getenv()
+        def files = ""
 
-	}
+        if (listFiles == null) {
+            return null
+        }
 
-	def listarArquivos(def group) {
-		def directoryFile = getDirectoryFile()
-		def filenames = directoryFile.list().findAll {
-			return it ==~ FILENAME_REGEX && (!group || it.endsWith(".${group}"))
-		}
+        listFiles = listFiles.findAll({ it.ARQUIVO_NOME.contains(fileName) ? it.ARQUIVO_NOME : null })
+        def file = new File(getDirectoryFile(), listFiles[0].ARQUIVO_NOME)
+        println file
+        if (env['EDITOR']) {
+            println "Opening with editor ${env['EDITOR']}"
+            def cmd = [env['EDITOR'], file.path]
+            new ProcessBuilder(env['EDITOR'], file.path).start()
+        }
 
-		def result = []
-		filenames.each {
-			result << [ ARQUIVO_NOME: it ]
-		}
-		return result
-	}
+    }
 
-	def listarInstrucoesJaExecutadas() {
-		def sql = getDatabaseConnection()
+    def listarArquivos(def group) {
+        def directoryFile = getDirectoryFile()
+        def filenames = directoryFile.list().findAll {
+            return it ==~ FILENAME_REGEX && (!group || it.endsWith(".${group}"))
+        }
 
-		def result = null
-		if (criarTabelaDbchangesSeNaoExistir(sql)) {
-			result = sql.rows('select arquivo_nome as "ARQUIVO_NOME" from dbchanges order by arquivo_timestamp desc')
-			sql.close()
-		}
-		return result
-	}
+        def result = []
+        filenames.each {
+            result << [ARQUIVO_NOME: it]
+        }
+        return result
+    }
 
-	def criarTabelaDbchangesSeNaoExistir(def sql) {
-		def tabelaDbchangesFoiCriada = false
-		if (sql == null) {
-			logger.log(MESSAGE_COULD_NOT_GET_CONNECTION)
-			return false
-		}
+    def listarInstrucoesJaExecutadas() {
+        def sql = getDatabaseConnection()
 
-		try {
-			sql.execute(SELECT_TABLE)
-			tabelaDbchangesFoiCriada = true
-		} catch (SQLException ex) {
-			def createTableQuery = QueryDialectHelper.getCreateTableDbchangesQuery(configFile, clientName)
-			try {
-				sql.execute(createTableQuery)
-				tabelaDbchangesFoiCriada = true
-			} catch (SQLException e) {
-				logger.log("!!!Erro: Nao foi possivel criar a tabela dbchanges")
-				return false
-			}
-		}
-		return tabelaDbchangesFoiCriada
-	}
+        def result = null
+        if (criarTabelaDbchangesSeNaoExistir(sql)) {
+            result = sql.rows('select arquivo_nome as "ARQUIVO_NOME" from dbchanges order by arquivo_timestamp desc')
+            sql.close()
+        }
+        return result
+    }
 
-	def createDbChangeFile(description, group) {
-		def filename = "${String.valueOf(System.currentTimeMillis())}-${description}.dbchange"
-		if (group) {
-			filename += ".${group}"
-		}
-		def file = new File(getDirectoryFile(), filename)
+    def criarTabelaDbchangesSeNaoExistir(def sql) {
+        def tabelaDbchangesFoiCriada = false
+        if (sql == null) {
+            logger.log(MESSAGE_COULD_NOT_GET_CONNECTION)
+            return false
+        }
 
-		def str = """-- ${description}
+        try {
+            sql.execute(SELECT_TABLE)
+            tabelaDbchangesFoiCriada = true
+        } catch (SQLException ex) {
+            def createTableQuery = QueryDialectHelper.getCreateTableDbchangesQuery(configFile, clientName)
+            try {
+                sql.execute(createTableQuery)
+                tabelaDbchangesFoiCriada = true
+            } catch (SQLException e) {
+                logger.log("!!!Erro: Nao foi possivel criar a tabela dbchanges")
+                return false
+            }
+        }
+        return tabelaDbchangesFoiCriada
+    }
+
+    def createDbChangeFile(description, group) {
+        def filename = "${String.valueOf(System.currentTimeMillis())}-${description}.dbchange"
+        if (group) {
+            filename += ".${group}"
+        }
+        def file = new File(getDirectoryFile(), filename)
+
+        def str = """-- ${description}
 ${group ? "-- group: ${group}" : ""}
 
 ::up
@@ -292,88 +295,89 @@ ${group ? "-- group: ${group}" : ""}
 
 """
 
-		file << str
-		logger.log("Criado " + file.path)
+        file << str
+        logger.log("Criado " + file.path)
 
-		def env = System.getenv()
-		if(env['EDITOR']) {
-			println "Opening editor ${env['EDITOR']}"
-			def cmd = [env['EDITOR'], file.path]
-			new ProcessBuilder(env['EDITOR'], file.path).start()
-		}
-	}
+        def env = System.getenv()
+        if (env['EDITOR']) {
+            println "Opening editor ${env['EDITOR']}"
+            def cmd = [env['EDITOR'], file.path]
+            new ProcessBuilder(env['EDITOR'], file.path).start()
+        }
+    }
 
-	def mark(def arquivo) {
-		def sql = getDatabaseConnection()
-		if(podeExecutar(arquivo, sql, UpDown.UP))
+    def mark(def arquivo) {
+        def sql = getDatabaseConnection()
+		if (podeExecutar(arquivo, sql, UpDown.UP)) {
 			salvarExecucao(sql, arquivo, UpDown.UP)
-	}
-
-	def markAll(def group) {
-		def sql = getDatabaseConnection()
-		def listaBanco = listarInstrucoesJaExecutadas()
-		def listaArquivo = listarArquivos(group)
-
-		def listaParaExecutar = (listaArquivo - listaBanco)
-		listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
-
-		if (listaParaExecutar.size > 0) {
-			logger.log "marking ${listaParaExecutar.size} file(s)"
-			listaParaExecutar.each {
-			def timestamp = obterTimestamp("${it.ARQUIVO_NOME}")
-			String arquivo_nome = "${it.ARQUIVO_NOME}"
-			def insertQuery = QueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
-			sql.execute(insertQuery, [arquivo_nome, timestamp])
-			logger.log "${it.ARQUIVO_NOME} marked as implemented"
-			}
-		} else {
-			logger.log "All files are already marked as implemented"
 		}
-	}
+    }
 
-	def unmark(def arquivo) {
-		def sql = getDatabaseConnection()
-		salvarExecucao(sql, arquivo, UpDown.DOWN)
-	}
+    def markAll(def group) {
+        def sql = getDatabaseConnection()
+        def listaBanco = listarInstrucoesJaExecutadas()
+        def listaArquivo = listarArquivos(group)
 
-	def obterTimestamp(def arquivo) {
-		if(!(arquivo ==~ FILENAME_REGEX)) {
-			return "0"
-		}
+        def listaParaExecutar = (listaArquivo - listaBanco)
+        listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
 
-		def matcher = (arquivo =~ FILENAME_REGEX)
-		def timestamp = matcher[0][1]
-		return timestamp
-	}
+        if (listaParaExecutar.size > 0) {
+            logger.log "marking ${listaParaExecutar.size} file(s)"
+            listaParaExecutar.each {
+                def timestamp = obterTimestamp("${it.ARQUIVO_NOME}")
+                String arquivo_nome = "${it.ARQUIVO_NOME}"
+                def insertQuery = QueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
+                sql.execute(insertQuery, [arquivo_nome, timestamp])
+                logger.log "${it.ARQUIVO_NOME} marked as implemented"
+            }
+        } else {
+            logger.log "All files are already marked as implemented"
+        }
+    }
 
-	def getFile(def directoryFile, def arquivo) {
-		return new File(directoryFile, arquivo)
-	}
+    def unmark(def arquivo) {
+        def sql = getDatabaseConnection()
+        salvarExecucao(sql, arquivo, UpDown.DOWN)
+    }
 
-	def getParser() {
-		if(parser) {
-			return parser
-		}
-		return new SQLFileParser()
-	}
+    def obterTimestamp(def arquivo) {
+        if (!(arquivo ==~ FILENAME_REGEX)) {
+            return "0"
+        }
 
-	def getDirectoryFile() {
-		def dir = this.directoryFile
-		if (this.directoryFile == null) {
-			dir = new File(path, "dbchanges")
+        def matcher = (arquivo =~ FILENAME_REGEX)
+        def timestamp = matcher[0][1]
+        return timestamp
+    }
 
-			if (!dir.exists() || !dir.isDirectory()) {
-				dir.mkdirs()
-			}
-		}
+    def getFile(def directoryFile, def arquivo) {
+        return new File(directoryFile, arquivo)
+    }
 
-		return dir
-	}
+    def getParser() {
+        if (parser) {
+            return parser
+        }
+        return new SQLFileParser()
+    }
 
-	def getDatabaseConnection() {
-		if(sql != null) {
-			return sql
-		}
-		return ConnectionInfo.createDatabaseConnection(configFile.absoluteFile, clientName)
-	}
+    def getDirectoryFile() {
+        def dir = this.directoryFile
+        if (this.directoryFile == null) {
+            dir = new File(path, "dbchanges")
+
+            if (!dir.exists() || !dir.isDirectory()) {
+                dir.mkdirs()
+            }
+        }
+
+        return dir
+    }
+
+    def getDatabaseConnection() {
+        if (sql != null) {
+            return sql
+        }
+        return ConnectionInfo.createDatabaseConnection(configFile.absoluteFile, clientName)
+    }
 }

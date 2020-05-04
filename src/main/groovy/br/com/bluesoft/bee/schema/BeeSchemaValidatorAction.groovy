@@ -101,7 +101,6 @@ class BeeSchemaValidatorAction implements ActionRunner {
         return importer
     }
 
-
     def getDatabaseConnection(clientName) {
         if (sql != null) {
             return sql

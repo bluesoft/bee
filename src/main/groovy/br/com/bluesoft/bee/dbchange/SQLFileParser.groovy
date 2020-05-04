@@ -32,79 +32,78 @@
  */
 package br.com.bluesoft.bee.dbchange
 
-
 class SQLFileParser {
 
-	static final String DELIMITER = ";"
+    static final String DELIMITER = ";"
 
-	def parseFile(def file) {
-		def statementsUp = null
-		def statementsDown = null
-		def statements = null
-		def header = null
-		def statement = ""
-		def blockCode = false
+    def parseFile(def file) {
+        def statementsUp = null
+        def statementsDown = null
+        def statements = null
+        def header = null
+        def statement = ""
+        def blockCode = false
 
-		def lines = []
-		file.eachLine { lines << it }
+        def lines = []
+        file.eachLine { lines << it }
 
-		lines.each {
+        lines.each {
 
-			if(it.trim().toLowerCase() == "--!code") {
-				blockCode = true
-				return
-			}
+            if (it.trim().toLowerCase() == "--!code") {
+                blockCode = true
+                return
+            }
 
-			if(it.trim() == "") {
-				return
-			}
+            if (it.trim() == "") {
+                return
+            }
 
-			if(it.trim().startsWith("--")) {
-				if(statements == null && header == null) {
-					header = (it - "--").trim()
-				}
-				return
-			}
+            if (it.trim().startsWith("--")) {
+                if (statements == null && header == null) {
+                    header = (it - "--").trim()
+                }
+                return
+            }
 
-			if(it.trim() == "::up") {
-				statementsUp = []
-				statements = statementsUp
-				return
-			}
+            if (it.trim() == "::up") {
+                statementsUp = []
+                statements = statementsUp
+                return
+            }
 
-			if(it.trim() == "::down") {
-				statementsDown = []
-				statements = statementsDown
-				return
-			}
+            if (it.trim() == "::down") {
+                statementsDown = []
+                statements = statementsDown
+                return
+            }
 
-			if(!blockCode && it.trim().endsWith(DELIMITER)) {
-				def pos = it.lastIndexOf(DELIMITER)
-				statement += it[0..pos-1] + "\n"
+            if (!blockCode && it.trim().endsWith(DELIMITER)) {
+                def pos = it.lastIndexOf(DELIMITER)
+                statement += it[0..pos - 1] + "\n"
 
-				if(statements == null) {
-					throw new IllegalStateException("!!!Erro: Wrong sql file format")
-				}
+                if (statements == null) {
+                    throw new IllegalStateException("!!!Erro: Wrong sql file format")
+                }
 
-				statements << statement
-				statement = ""
-				return
-			}
+                statements << statement
+                statement = ""
+                return
+            }
 
-			if(blockCode && it.trim() == "/") {
-				if(statements == null) {
-					throw new IllegalStateException("!!!Erro: Wrong sql file format")
-				}
+            if (blockCode && it.trim() == "/") {
+                if (statements == null) {
+                    throw new IllegalStateException("!!!Erro: Wrong sql file format")
+                }
 
-				statements << statement
-				statement = ""
-				blockCode = false
-				return
-			}
+                statements << statement
+                statement = ""
+                blockCode = false
+                return
+            }
 
-			statement += it + "\n"
-		}
+            statement += it + "\n"
+        }
 
-		return [ header: header, up: statementsUp, down: statementsDown ]
-	}
+        return [header: header, up: statementsUp, down: statementsDown]
+    }
 }

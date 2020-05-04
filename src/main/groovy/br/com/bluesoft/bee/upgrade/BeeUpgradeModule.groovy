@@ -39,16 +39,16 @@ import br.com.bluesoft.bee.service.BeeWriter
 
 public class BeeUpgradeModule extends BeeModule {
 
-	@Override
-	def usage() {
-		println "usage: bee upgrade"
-		println "Actions:"
-		println "         upgrade - Upgrade current version of Bee to the latest version available"
-	}
+    @Override
+    def usage() {
+        println "usage: bee upgrade"
+        println "Actions:"
+        println "         upgrade - Upgrade current version of Bee to the latest version available"
+    }
 
 
-	@Override
-	protected ActionRunner getRunner(String action, Options options, BeeWriter out) {
-		return new BeeUpgradeAction(options: options, out: this)
-	}
+    @Override
+    protected ActionRunner getRunner(String action, Options options, BeeWriter out) {
+        return new BeeUpgradeAction(options: options, out: this)
+    }
 }

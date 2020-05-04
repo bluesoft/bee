@@ -32,54 +32,53 @@
  */
 package br.com.bluesoft.bee.upgrade
 
-import br.com.bluesoft.bee.Bee;
-import br.com.bluesoft.bee.service.*
+import br.com.bluesoft.bee.Bee
 
 public class BeeVersionModule {
 
-	def static getLatestVersion() {
-		def latest_url = getLatestVersionURL()
-		def url_split  = latest_url.split("/") 
+    def static getLatestVersion() {
+        def latest_url = getLatestVersionURL()
+        def url_split = latest_url.split("/")
 
-		def version = url_split[url_split.size() - 1]
+        def version = url_split[url_split.size() - 1]
 
-		return version
-	}
+        return version
+    }
 
-	def static getLatestVersionURL() {
-		String url_latest = "https://github.com/bluesoft/bee/releases/latest"
-		InputStream is
-		URLConnection con
+    def static getLatestVersionURL() {
+        String url_latest = "https://github.com/bluesoft/bee/releases/latest"
+        InputStream is
+        URLConnection con
 
-		try {
-			con = new URL(url_latest).openConnection()
-			con.connect()
+        try {
+            con = new URL(url_latest).openConnection()
+            con.connect()
 
-			is = con.getInputStream()
-			String latest_url = con.getURL() 
+            is = con.getInputStream()
+            String latest_url = con.getURL()
 
-			return latest_url
+            return latest_url
 
-		} catch (Exception e) {
-			println "fatal: error while downloading"
-			e.printStackTrace()
+        } catch (Exception e) {
+            println "fatal: error while downloading"
+            e.printStackTrace()
 
-		} finally {
-			try {
-				is.close()
-			} catch (IOException ioe) {
-				ioe.printStackTrace()
-			}
-		}
-	}
+        } finally {
+            try {
+                is.close()
+            } catch (IOException ioe) {
+                ioe.printStackTrace()
+            }
+        }
+    }
 
-	def static getLatestDownloadURL() {
-		String version = getLatestVersion()
-		
-		return 'https://github.com/bluesoft/bee/releases/download/' + version + '/bee-' + version + '.zip'
-	}
+    def static getLatestDownloadURL() {
+        String version = getLatestVersion()
 
-	def static getCurrentVersion() {
-		return Bee.getVersion();
-	}
+        return 'https://github.com/bluesoft/bee/releases/download/' + version + '/bee-' + version + '.zip'
+    }
+
+    def static getCurrentVersion() {
+        return Bee.getVersion();
+    }
 }

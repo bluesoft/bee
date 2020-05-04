@@ -40,41 +40,41 @@ import br.com.bluesoft.bee.service.BeeWriter;
 
 public class BeeSchemaModule extends BeeModule {
 
-	def usage() {
-		println "usage: bee <options> schema:action <parameters>"
-		println "Actions:"
-		println "         schema:generate connection [object] - generates an entire schema or single object, if specified"
-		println "         schema:validate connection [object] - validates an entire schema or single object, if specified"
-		println "         schema:recreate_mysql [object] - build a MySql DDL script"
-		println "         schema:recreate_oracle [object] - build a Oracle DDL script"
-		println "         schema:recreate_postgres [object] - build a Postgres DDL script"
-		println "         schema:check - validate structure correctness"
-	}
+    def usage() {
+        println "usage: bee <options> schema:action <parameters>"
+        println "Actions:"
+        println "         schema:generate connection [object] - generates an entire schema or single object, if specified"
+        println "         schema:validate connection [object] - validates an entire schema or single object, if specified"
+        println "         schema:recreate_mysql [object] - build a MySql DDL script"
+        println "         schema:recreate_oracle [object] - build a Oracle DDL script"
+        println "         schema:recreate_postgres [object] - build a Postgres DDL script"
+        println "         schema:check - validate structure correctness"
+    }
 
-	protected ActionRunner getRunner(String action, Options options, BeeWriter out) {
-		switch (action) {
-			case "generate":
-				return new BeeSchemaGeneratorAction(options: options, out: this)
-				break
-			case "validate":
-				return new BeeSchemaValidatorAction(options: options, out: this)
-				break
-			case "recreate_mysql":
-				return new BeeMySqlSchemaCreatorAction(options: options, out: this)
-				break
-			case "recreate_oracle":
-				return new BeeOracleSchemaCreatorAction(options: options, out: this)
-				break
-			case "recreate_postgres":
-				return new BeePostgresSchemaCreatorAction(options: options, out: this)
-				break
-			case "check":
-				return new BeeSchemaCheckerAction(options: options, out: this)
-				break
+    protected ActionRunner getRunner(String action, Options options, BeeWriter out) {
+        switch (action) {
+            case "generate":
+                return new BeeSchemaGeneratorAction(options: options, out: this)
+                break
+            case "validate":
+                return new BeeSchemaValidatorAction(options: options, out: this)
+                break
+            case "recreate_mysql":
+                return new BeeMySqlSchemaCreatorAction(options: options, out: this)
+                break
+            case "recreate_oracle":
+                return new BeeOracleSchemaCreatorAction(options: options, out: this)
+                break
+            case "recreate_postgres":
+                return new BeePostgresSchemaCreatorAction(options: options, out: this)
+                break
+            case "check":
+                return new BeeSchemaCheckerAction(options: options, out: this)
+                break
 
-			default:
-				usage()
-				System.exit 0
-		}
-	}
+            default:
+                usage()
+                System.exit 0
+        }
+    }
 }

@@ -36,36 +36,36 @@ import java.sql.SQLException
 
 class SQLExecutor {
 
-	def sql
-	def logger
+    def sql
+    def logger
 
-	def execute(def x) {
-		if(x.class in String) {
-			return executeMany([x])
-		} else {
-			return executeMany(x)
-		}
-	}
+    def execute(def x) {
+        if (x.class in String) {
+            return executeMany([x])
+        } else {
+            return executeMany(x)
+        }
+    }
 
-	private def executeMany(def list) {
+    private def executeMany(def list) {
 
-		for(def instrucao : list) {
-			def result = ""
-			try {
-				logger.log(instrucao)
+        for (def instrucao : list) {
+            def result = ""
+            try {
+                logger.log(instrucao)
 
-				def start = System.currentTimeMillis()
-				def retorno = sql.executeUpdate(instrucao)
-				def end = System.currentTimeMillis()
+                def start = System.currentTimeMillis()
+                def retorno = sql.executeUpdate(instrucao)
+                def end = System.currentTimeMillis()
 
-				result = "Time elapsed: ${(end - start) / 1000} seconds -  ${retorno} rows updated"
-			} catch(SQLException e) {
-				result = "!!!Error: ${e.message}"
-				return false
-			} finally {
-				logger.log(result)
-			}
-		}
-		return true
-	}
+                result = "Time elapsed: ${(end - start) / 1000} seconds -  ${retorno} rows updated"
+            } catch (SQLException e) {
+                result = "!!!Error: ${e.message}"
+                return false
+            } finally {
+                logger.log(result)
+            }
+        }
+        return true
+    }
 }

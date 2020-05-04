@@ -16,7 +16,7 @@ class BeeDbSeedModuleTest extends Specification {
         when: "chamar o usage"
         module.usage()
         then: "o uso deve ser do Data"
-        buffer.toString()  == """usage: bee <options> dbseed:action <parameters>
+        buffer.toString() == """usage: bee <options> dbseed:action <parameters>
 Actions:
          dbseed:create description - creates a dbseed file
          dbseed:status connection - lists dbseeds to run
@@ -35,14 +35,14 @@ Actions:
         new BeeDbSeedModule().getRunner(action, null, null).class == runner
 
         where:
-        action      | runner
-        "create"    | BeeDbSeedCreateAction
-        "status"    | BeeDbSeedStatusAction
-        "up"        | BeeDbSeedUpAction
-        "down"      | BeeDbSeedDownAction
-        "mark"      | BeeDbSeedMarkAction
-        "markall"   | BeeDbSeedMarkAllAction
-        "unmark"    | BeeDbSeedUnmarkAction
+        action    | runner
+        "create"  | BeeDbSeedCreateAction
+        "status"  | BeeDbSeedStatusAction
+        "up"      | BeeDbSeedUpAction
+        "down"    | BeeDbSeedDownAction
+        "mark"    | BeeDbSeedMarkAction
+        "markall" | BeeDbSeedMarkAllAction
+        "unmark"  | BeeDbSeedUnmarkAction
 
     }
 }

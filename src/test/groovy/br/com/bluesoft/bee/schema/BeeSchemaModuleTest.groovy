@@ -16,7 +16,7 @@ class BeeSchemaModuleTest extends Specification {
         when: "chamar o usage"
         module.usage()
         then: "o uso deve ser do Data"
-        buffer.toString()  == """usage: bee <options> schema:action <parameters>
+        buffer.toString() == """usage: bee <options> schema:action <parameters>
 Actions:
          schema:generate connection [object] - generates an entire schema or single object, if specified
          schema:validate connection [object] - validates an entire schema or single object, if specified

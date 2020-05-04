@@ -21,10 +21,10 @@ public class BeePostgresSchemaCreatorAction implements ActionRunner {
     }
 
     public boolean run() {
-
         def objectName = options.arguments[0]
 
         out.log('importing schema metadata from the reference files')
+
         def schema = getImporter().importMetaData(PostgresTable.class)
 
         if (objectName) {

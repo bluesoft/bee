@@ -49,7 +49,6 @@ class Schema {
     boolean filtered
 
     def validateWithMetadata(Schema metadataSchema) {
-
         def databaseObjects = this.getAllObjects()
         def metadataObjects = metadataSchema.getAllObjects()
 

@@ -38,6 +38,7 @@ abstract class BeeSchemaCreator {
         if (!column.nullable) {
             result += ' not null'
         }
+
         return result
     }
 

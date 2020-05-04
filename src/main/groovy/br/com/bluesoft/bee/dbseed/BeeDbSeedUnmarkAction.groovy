@@ -1,9 +1,7 @@
 package br.com.bluesoft.bee.dbseed
 
 import br.com.bluesoft.bee.dbseed.DbSeedManager
-import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.runner.ActionRunnerParameterValidate
-import br.com.bluesoft.bee.service.BeeWriter
 
 class BeeDbSeedUnmarkAction extends ActionRunnerParameterValidate {
 

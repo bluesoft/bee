@@ -16,7 +16,7 @@ class BeeDataModuleTest extends Specification {
         when: "chamar o usage"
         module.usage()
         then: "o uso deve ser do Data"
-        buffer.toString()  == """usage: bee <options> data:action <options>
+        buffer.toString() == """usage: bee <options> data:action <options>
 Actions:
          data:generate connection object - generates an entire schema data or single object, if specified
          data:validate connection [object] - validates an entire schema data or single object, if specified
@@ -29,9 +29,9 @@ Actions:
         new BeeDataModule().getRunner(action, null, null).class == runner
 
         where:
-        action                  | runner
-        "generate"              | BeeDataGeneratorAction
-        "validate"              | BeeDataValidatorAction
+        action     | runner
+        "generate" | BeeDataGeneratorAction
+        "validate" | BeeDataValidatorAction
 
     }
 }

@@ -72,7 +72,6 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
         file << "\n"
     }
 
-
     void createProcedures(def file, def schema) {
         schema.procedures*.value.sort().each {
             def procedure = "${it.text};\n\n"

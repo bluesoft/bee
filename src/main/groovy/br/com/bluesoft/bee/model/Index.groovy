@@ -36,32 +36,31 @@ import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
 
-
 class Index {
 
-	String name
-	String type = "N" //N,B,F
-	Boolean unique = false
-	List<IndexColumn> columns = []
+    String name
+    String type = "N" //N,B,F
+    Boolean unique = false
+    List<IndexColumn> columns = []
 
-	def validateWithMetadata(Table table, Index metadataIndex) {
-		def messages = []
+    def validateWithMetadata(Table table, Index metadataIndex) {
+        def messages = []
 
-		if (metadataIndex.type != this.type) {
-			def messageText = "The type of the index ${this.name} of the table ${table.name} should be ${metadataIndex.type} but it is ${this.type}"
-			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.INDEX, messageType:MessageType.INDEX_TYPE, message:messageText)
-		}
+        if (metadataIndex.type != this.type) {
+            def messageText = "The type of the index ${this.name} of the table ${table.name} should be ${metadataIndex.type} but it is ${this.type}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.INDEX, messageType: MessageType.INDEX_TYPE, message: messageText)
+        }
 
-		if (metadataIndex.unique != this.unique) {
-			def messageText = "The uniqueness of the index ${this.name} of the table ${table.name} should be ${metadataIndex.unique} but it is ${this.unique}"
-			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.INDEX, messageType:MessageType.INDEX_UNIQUENESS, message:messageText)
-		}
+        if (metadataIndex.unique != this.unique) {
+            def messageText = "The uniqueness of the index ${this.name} of the table ${table.name} should be ${metadataIndex.unique} but it is ${this.unique}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.INDEX, messageType: MessageType.INDEX_UNIQUENESS, message: messageText)
+        }
 
-		if (metadataIndex.columns != this.columns) {
-			def messageText = "The columns of the index ${this.name} of the table ${table.name} should be ${metadataIndex.columns} but it is ${this.columns}"
-			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.INDEX, messageType:MessageType.INDEX_COLUMNS, message:messageText)
-		}
+        if (metadataIndex.columns != this.columns) {
+            def messageText = "The columns of the index ${this.name} of the table ${table.name} should be ${metadataIndex.columns} but it is ${this.columns}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.INDEX, messageType: MessageType.INDEX_COLUMNS, message: messageText)
+        }
 
-		return messages
-	}
+        return messages
+    }
 }

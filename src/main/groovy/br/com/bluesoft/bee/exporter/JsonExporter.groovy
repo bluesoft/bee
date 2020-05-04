@@ -32,114 +32,113 @@
  */
 package br.com.bluesoft.bee.exporter
 
-import org.codehaus.jackson.map.ObjectMapper
-
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.util.JsonUtil
+import org.codehaus.jackson.map.ObjectMapper
 
 public class JsonExporter implements Exporter {
 
-	String path
-	Schema schema
-	ObjectMapper mapper
+    String path
+    Schema schema
+    ObjectMapper mapper
 
-	File mainFolder
-	File tablesFolder
-	File sequencesFolder
-	File viewsFolder
-	File proceduresFolder
-	File packagesFolder
-	File triggersFolder
-	File userTypesFolder
+    File mainFolder
+    File tablesFolder
+    File sequencesFolder
+    File viewsFolder
+    File proceduresFolder
+    File packagesFolder
+    File triggersFolder
+    File userTypesFolder
 
-	JsonExporter(Schema schema) {
-		this(schema, null)
-	}
+    JsonExporter(Schema schema) {
+        this(schema, null)
+    }
 
-	JsonExporter(Schema schema, String path) {
-		this.schema = schema
-		this.path = path ?: '/tmp/bee'
-		this.mapper = JsonUtil.createMapper()
-	}
+    JsonExporter(Schema schema, String path) {
+        this.schema = schema
+        this.path = path ?: '/tmp/bee'
+        this.mapper = JsonUtil.createMapper()
+    }
 
-	void createPath() {
-		mainFolder = new File(this.path)
-		mainFolder.mkdirs()
+    void createPath() {
+        mainFolder = new File(this.path)
+        mainFolder.mkdirs()
 
-		tablesFolder = new File(mainFolder, 'tables')
-		tablesFolder.mkdir()
-		
-		sequencesFolder = new File(mainFolder, 'sequences')
-		sequencesFolder.mkdir()
+        tablesFolder = new File(mainFolder, 'tables')
+        tablesFolder.mkdir()
 
-		viewsFolder = new File(mainFolder, 'views')
-		viewsFolder.mkdir()
+        sequencesFolder = new File(mainFolder, 'sequences')
+        sequencesFolder.mkdir()
 
-		proceduresFolder = new File(mainFolder, 'procedures')
-		proceduresFolder.mkdir()
+        viewsFolder = new File(mainFolder, 'views')
+        viewsFolder.mkdir()
 
-		packagesFolder = new File(mainFolder, 'packages')
-		packagesFolder.mkdir()
+        proceduresFolder = new File(mainFolder, 'procedures')
+        proceduresFolder.mkdir()
 
-		triggersFolder = new File(mainFolder, 'triggers')
-		triggersFolder.mkdir()
-		
-		userTypesFolder = new File(mainFolder, 'usertypes')
-		userTypesFolder.mkdir()
+        packagesFolder = new File(mainFolder, 'packages')
+        packagesFolder.mkdir()
 
-	}
+        triggersFolder = new File(mainFolder, 'triggers')
+        triggersFolder.mkdir()
 
-	void export() {
-		createPath()
-		createTableFiles(schema.getTables())
-		createSequenceFiles(schema.getSequences())
-		createViewFiles(schema.getViews())
-		createProceduresFiles(schema.getProcedures())
-		createPackagesFiles(schema.getPackages())
-		createTriggersFiles(schema.getTriggers())
-		createUserTypesFiles(schema.getUserTypes())
-	}
+        userTypesFolder = new File(mainFolder, 'usertypes')
+        userTypesFolder.mkdir()
 
-	void createTableFiles(def tables) {
-		tables.each {
-			mapper.writeValue(new File(tablesFolder, "${it.value.name}.bee"), it.value)
-		}
-	}
+    }
 
-	void createViewFiles(def views) {
-		views.each {
-			mapper.writeValue(new File(viewsFolder, "${it.value.name}.bee"), it.value)
-		}
-	}
+    void export() {
+        createPath()
+        createTableFiles(schema.getTables())
+        createSequenceFiles(schema.getSequences())
+        createViewFiles(schema.getViews())
+        createProceduresFiles(schema.getProcedures())
+        createPackagesFiles(schema.getPackages())
+        createTriggersFiles(schema.getTriggers())
+        createUserTypesFiles(schema.getUserTypes())
+    }
 
-	void createSequenceFiles(def sequences) {
-		sequences.each {
-			mapper.writeValue(new File(sequencesFolder, "${it.value.name}.bee"), it.value)
-		}
-	}
+    void createTableFiles(def tables) {
+        tables.each {
+            mapper.writeValue(new File(tablesFolder, "${it.value.name}.bee"), it.value)
+        }
+    }
 
-	void createProceduresFiles(def procedures) {
-		procedures.each { name, procedure ->
-			mapper.writeValue(new File(proceduresFolder, "${name}.bee"), procedure)
-		}
-	}
+    void createViewFiles(def views) {
+        views.each {
+            mapper.writeValue(new File(viewsFolder, "${it.value.name}.bee"), it.value)
+        }
+    }
 
-	void createPackagesFiles(def packages) {
-		packages.each { name, pack ->
-			mapper.writeValue(new File(packagesFolder, "${name}.bee"), pack)
-		}
-	}
+    void createSequenceFiles(def sequences) {
+        sequences.each {
+            mapper.writeValue(new File(sequencesFolder, "${it.value.name}.bee"), it.value)
+        }
+    }
 
-	void createTriggersFiles(def triggers) {
-		triggers.each { name, trigger ->
-			mapper.writeValue(new File(triggersFolder, "${name}.bee"), trigger)
-		}
-	}
-	
-	void createUserTypesFiles(def userTypes) {
-		userTypes.each { name, userType ->
-			mapper.writeValue(new File(userTypesFolder, "${name}.bee"), userType)
-		}
-	}
+    void createProceduresFiles(def procedures) {
+        procedures.each { name, procedure ->
+            mapper.writeValue(new File(proceduresFolder, "${name}.bee"), procedure)
+        }
+    }
+
+    void createPackagesFiles(def packages) {
+        packages.each { name, pack ->
+            mapper.writeValue(new File(packagesFolder, "${name}.bee"), pack)
+        }
+    }
+
+    void createTriggersFiles(def triggers) {
+        triggers.each { name, trigger ->
+            mapper.writeValue(new File(triggersFolder, "${name}.bee"), trigger)
+        }
+    }
+
+    void createUserTypesFiles(def userTypes) {
+        userTypes.each { name, userType ->
+            mapper.writeValue(new File(userTypesFolder, "${name}.bee"), userType)
+        }
+    }
 
 }
