@@ -32,31 +32,30 @@
  */
 package br.com.bluesoft.bee.util
 
-
 class PropertiesUtil {
 
-	static private readFile(File file) {
-		def properties = new Properties()
-		file.withInputStream { stream ->
-			properties.load(stream)
-		}
-		return properties
-	}
+    static private readFile(File file) {
+        def properties = new Properties()
+        file.withInputStream { stream ->
+            properties.load(stream)
+        }
+        return properties
+    }
 
-	static def readDatabaseConfig(File configFile, def key) {
-		def properties = readFile(configFile)
+    static def readDatabaseConfig(File configFile, def key) {
+        def properties = readFile(configFile)
 
-		def config = null
-		def atributos = [
-			"${key}.url" as String,
-			"${key}.driver" as String,
-			"${key}.user" as String,
-			"${key}.password"  as String
-		]
-		if (properties.keySet().containsAll(atributos)) {
-			config = [ url: properties["${key}.url"], driver: properties["${key}.driver"], user: properties["${key}.user"], password: properties["${key}.password"]]
-		}
+        def config = null
+        def atributos = [
+                "${key}.url" as String,
+                "${key}.driver" as String,
+                "${key}.user" as String,
+                "${key}.password" as String
+        ]
+        if (properties.keySet().containsAll(atributos)) {
+            config = [url: properties["${key}.url"], driver: properties["${key}.driver"], user: properties["${key}.user"], password: properties["${key}.password"]]
+        }
 
-		return config
-	}
+        return config
+    }
 }

@@ -30,12 +30,16 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.data;
+package br.com.bluesoft.bee.data
 
 import br.com.bluesoft.bee.database.ConnectionInfo
-import br.com.bluesoft.bee.database.reader.*
-import br.com.bluesoft.bee.importer.*
-import br.com.bluesoft.bee.model.message.*
+import br.com.bluesoft.bee.database.reader.DatabaseReader
+import br.com.bluesoft.bee.database.reader.TableDataReader
+import br.com.bluesoft.bee.importer.Importer
+import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.model.message.Message
+import br.com.bluesoft.bee.model.message.MessageLevel
+import br.com.bluesoft.bee.model.message.MessageType
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.service.MessagePrinter

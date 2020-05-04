@@ -4,6 +4,7 @@ import br.com.bluesoft.bee.util.PropertiesUtil
 import groovy.sql.Sql
 
 class ConnectionInfo {
+
     static Sql createDatabaseConnection(File configFile, def key) {
         def config = PropertiesUtil.readDatabaseConfig(configFile, key)
         if (config != null) {

@@ -36,16 +36,15 @@ import org.codehaus.jackson.map.ObjectMapper
 import org.codehaus.jackson.map.SerializationConfig
 import org.codehaus.jackson.map.annotate.JsonSerialize
 
-
 class JsonUtil {
 
-	static ObjectMapper createMapper(){
-		def mapper = new ObjectMapper()
-		mapper.configure(org.codehaus.jackson.map.SerializationConfig.Feature.INDENT_OUTPUT, true);
-		mapper.configure org.codehaus.jackson.JsonGenerator.Feature.QUOTE_FIELD_NAMES, false
-		mapper.configure org.codehaus.jackson.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true
-		mapper.configure(SerializationConfig.Feature.SORT_PROPERTIES_ALPHABETICALLY, true)
-		mapper.getSerializationConfig().setSerializationInclusion JsonSerialize.Inclusion.NON_DEFAULT
-		return mapper
-	}
+    static ObjectMapper createMapper() {
+        def mapper = new ObjectMapper()
+        mapper.configure(org.codehaus.jackson.map.SerializationConfig.Feature.INDENT_OUTPUT, true);
+        mapper.configure org.codehaus.jackson.JsonGenerator.Feature.QUOTE_FIELD_NAMES, false
+        mapper.configure org.codehaus.jackson.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true
+        mapper.configure(SerializationConfig.Feature.SORT_PROPERTIES_ALPHABETICALLY, true)
+        mapper.getSerializationConfig().setSerializationInclusion JsonSerialize.Inclusion.NON_DEFAULT
+        return mapper
+    }
 }

@@ -32,99 +32,103 @@
  */
 package br.com.bluesoft.bee.model;
 
-
 public class Options {
-	File configFile
-	File dataDir
-	List<String> arguments = []
-	String moduleName
-	String actionName
-	CliBuilder cliBuilder
 
-	private static final INSTANCE = new Options()
+    File configFile
+    File dataDir
+    List<String> arguments = []
+    String moduleName
+    String actionName
+    CliBuilder cliBuilder
 
-	static getInstance() {
-		return INSTANCE
-	}
+    private static final INSTANCE = new Options()
 
-	private Options() {
-		cliBuilder = getCliBuilder()
-	}
+    static getInstance() {
+        return INSTANCE
+    }
 
-	private def getCliBuilder() {
-		def cliBuilder = new CliBuilder(usage: 'bee <options> module:action <parameters>', header: 'Options:')
-		cliBuilder.c(args: 1, argName: 'file', 'config file')
-		cliBuilder.d(args: 1, argName: 'dir', 'bee files directory')
-		cliBuilder.stopAtNonOption  = false
-		return cliBuilder
-	}
+    private Options() {
+        cliBuilder = getCliBuilder()
+    }
 
-	void usage() {
-		cliBuilder.usage()
-		println "Modules: "
-		println "         schema"
-		println "         data"
-		println "         dbchange"
-		println "         dbseed"
-		println "         upgrade"
-	}
+    private def getCliBuilder() {
+        def cliBuilder = new CliBuilder(usage: 'bee <options> module:action <parameters>', header: 'Options:')
+        cliBuilder.c(args: 1, argName: 'file', 'config file')
+        cliBuilder.d(args: 1, argName: 'dir', 'bee files directory')
+        cliBuilder.stopAtNonOption = false
+        return cliBuilder
+    }
 
-	boolean parse(def args) {
-		def cli = cliBuilder.parse(args)
+    void usage() {
+        cliBuilder.usage()
+        println "Modules: "
+        println "         schema"
+        println "         data"
+        println "         dbchange"
+        println "         dbseed"
+        println "         upgrade"
+    }
 
-		if(cli == null || cli == false || cli.arguments().size < 1) {
-			return false;
-		}
+    boolean parse(def args) {
+        def cli = cliBuilder.parse(args)
 
-		def module = cli.arguments()[0]
-		if(!parseModule(module)) {
-			return false;
-		}
+        if (cli == null || cli == false || cli.arguments().size < 1) {
+            return false;
+        }
 
-		if(cli.c)
-			configFile = new File(cli.c)
-		else
-			configFile = new File("bee.properties")
+        def module = cli.arguments()[0]
+        if (!parseModule(module)) {
+            return false;
+        }
 
-		if(cli.d)
-			dataDir = new File(cli.d)
-		else
-			dataDir = new File("bee")
+        if (cli.c) {
+            configFile = new File(cli.c)
+        } else {
+            configFile = new File("bee.properties")
+        }
 
-		arguments = cli.arguments()
-		arguments.remove(0)
+        if (cli.d) {
+            dataDir = new File(cli.d)
+        } else {
+            dataDir = new File("bee")
+        }
 
-		return validate()
-	}
+        arguments = cli.arguments()
+        arguments.remove(0)
 
-	private boolean parseModule(def module) {
-		if(module.contains("upgrade")) {
-			def args = module.split(":")
-			moduleName = args[0]
+        return validate()
+    }
 
-			if(args.size() > 1)
-				actionName = (args[1] == "y") ? args[1] : null
+    private boolean parseModule(def module) {
+        if (module.contains("upgrade")) {
+            def args = module.split(":")
+            moduleName = args[0]
 
-			return true
-		}
+            if (args.size() > 1) {
+                actionName = (args[1] == "y") ? args[1] : null
+            }
 
-		if(!module.contains(":"))
-			return false
+            return true
+        }
 
-		moduleName = module.split(":")[0]
-		actionName = module.split(":")[1]
-	}
+        if (!module.contains(":")) {
+            return false
+        }
 
-	private boolean validate() {
+        moduleName = module.split(":")[0]
+        actionName = module.split(":")[1]
+    }
 
-		if(!configFile.isFile()) {
-			println "Could not read config file: ${configFile}"
-		}
+    private boolean validate() {
 
-		if(!dataDir.isDirectory()) {
-			println "Cound not read data dir: ${dataDir}"
-		}
+        if (!configFile.isFile()) {
+            println "Could not read config file: ${configFile}"
+        }
 
-		return configFile.isFile() && dataDir.isDirectory()
-	}
+        if (!dataDir.isDirectory()) {
+            println "Cound not read data dir: ${dataDir}"
+        }
+
+        return configFile.isFile() && dataDir.isDirectory()
+    }
 }

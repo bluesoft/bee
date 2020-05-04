@@ -32,8 +32,7 @@
  */
 package br.com.bluesoft.bee.service
 
-
 interface BeeWriter {
 
-	void log(String msg)
+    void log(String msg)
 }

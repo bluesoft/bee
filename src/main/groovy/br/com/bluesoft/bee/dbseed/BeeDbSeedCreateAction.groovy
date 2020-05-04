@@ -5,15 +5,15 @@ import br.com.bluesoft.bee.runner.ActionRunnerParameterValidate
 
 class BeeDbSeedCreateAction extends ActionRunnerParameterValidate {
 
-	boolean run() {
-		def description = options.arguments[0]
+    boolean run() {
+        def description = options.arguments[0]
 
-		new DbSeedManager(configFile: options.configFile, path: options.dataDir.absolutePath, logger: out).createDbSeedFile(description)
-		true
-	}
+        new DbSeedManager(configFile: options.configFile, path: options.dataDir.absolutePath, logger: out).createDbSeedFile(description)
+        true
+    }
 
-	@Override
-	int maxParameters() {
-		return 1
-	}
+    @Override
+    int maxParameters() {
+        return 1
+    }
 }

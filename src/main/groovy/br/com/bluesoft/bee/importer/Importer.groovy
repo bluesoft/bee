@@ -34,8 +34,7 @@ package br.com.bluesoft.bee.importer
 
 import br.com.bluesoft.bee.model.Schema
 
-
 interface Importer {
 
-	Schema importMetaData()
+    Schema importMetaData()
 }

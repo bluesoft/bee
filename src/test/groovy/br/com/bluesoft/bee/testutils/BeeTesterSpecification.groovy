@@ -28,7 +28,6 @@ class BeeTesterSpecification extends Specification {
         File destUserTypesFolder = new File("${BEE_TEMP_DIRECTORY}/usertypes")
         destUserTypesFolder.mkdirs()
 
-
         File srcTablesFolder = new File(this.getClass().getResource("/tables").getFile())
         srcTablesFolder.eachFile {
             new File(destTablesFolder, it.getName()) << it.getText()

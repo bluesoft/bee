@@ -33,8 +33,7 @@
 package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.database.ConnectionInfo
-import br.com.bluesoft.bee.database.reader.DatabaseReaderChanger;
-import br.com.bluesoft.bee.database.reader.OracleDatabaseReader
+import br.com.bluesoft.bee.database.reader.DatabaseReaderChanger
 import br.com.bluesoft.bee.exporter.JsonExporter
 import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options
@@ -45,73 +44,76 @@ import groovy.sql.Sql
 
 class BeeSchemaGeneratorAction implements ActionRunner {
 
-	Options options
-	BeeWriter out
+    Options options
+    BeeWriter out
 
-	def sql
-	def importer
+    def sql
+    def importer
 
-	public boolean validateParameters() {
-		return options.arguments.size() >= 1
-	}
+    public boolean validateParameters() {
+        return options.arguments.size() >= 1
+    }
 
-	public boolean run(){
+    public boolean run() {
 
-		def clientName = options.arguments[0]
-		def objectName = options.arguments[1]
+        def clientName = options.arguments[0]
+        def objectName = options.arguments[1]
 
-		try {
-			out.log "Connecting to the database..."
-			sql = getDatabaseConnection(clientName)
-		} catch (e){
-			throw new Exception("It was not possible to connect to the database.",e)
-		}
+        try {
+            out.log "Connecting to the database..."
+            sql = getDatabaseConnection(clientName)
+        } catch (e) {
+            throw new Exception("It was not possible to connect to the database.", e)
+        }
 
-		try {
-			out.log "Extracting the metadata..."
-			def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
-			Schema schemaNew = databaseReader.getSchema(objectName)
-			if(objectName)
+        try {
+            out.log "Extracting the metadata..."
+            def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
+            Schema schemaNew = databaseReader.getSchema(objectName)
+			if (objectName) {
 				schemaNew = schemaNew.filter(objectName)
-
-			Schema schemaOld = getImporter().importMetaData()
-			if(objectName)
-				schemaOld = schemaOld.filter(objectName)
-
-			applyIgnore(schemaOld, schemaNew)
-
-			def exporter = new JsonExporter(schemaNew, options.dataDir.canonicalPath)
-			exporter.export();
-			return true
-		} catch(e) {
-			e.printStackTrace()
-			throw new Exception("Error importing database metadata.",e)
-		}
-	}
-
-	void applyIgnore(Schema schemaOld, Schema schemaNew) {
-		def tableNames = schemaOld.tables.findAll { it.key in schemaOld.tables }
-
-		tableNames.each { etable ->
-			def ignoredColumns = schemaOld.tables[etable.key].columns.findAll { it.value.ignore }
-			ignoredColumns.each {
-				if(schemaNew.tables[etable.key].columns[it.key]) {
-					schemaNew.tables[etable.key].columns[it.key].ignore = true
-				}
 			}
-		}
-	}
 
-	Sql getDatabaseConnection(clientName) {
-		if(sql != null) {
-			return sql
-		}
-		return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
-	}
+            Schema schemaOld = getImporter().importMetaData()
+			if (objectName) {
+				schemaOld = schemaOld.filter(objectName)
+			}
 
-	private def getImporter() {
-		if(importer == null)
+            applyIgnore(schemaOld, schemaNew)
+
+            def exporter = new JsonExporter(schemaNew, options.dataDir.canonicalPath)
+            exporter.export();
+            return true
+        } catch (e) {
+            e.printStackTrace()
+            throw new Exception("Error importing database metadata.", e)
+        }
+    }
+
+    void applyIgnore(Schema schemaOld, Schema schemaNew) {
+        def tableNames = schemaOld.tables.findAll { it.key in schemaOld.tables }
+
+        tableNames.each { etable ->
+            def ignoredColumns = schemaOld.tables[etable.key].columns.findAll { it.value.ignore }
+            ignoredColumns.each {
+                if (schemaNew.tables[etable.key].columns[it.key]) {
+                    schemaNew.tables[etable.key].columns[it.key].ignore = true
+                }
+            }
+        }
+    }
+
+    Sql getDatabaseConnection(clientName) {
+        if (sql != null) {
+            return sql
+        }
+        return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
+    }
+
+    private def getImporter() {
+		if (importer == null) {
 			return new JsonImporter(options.dataDir.canonicalPath)
-		return importer
-	}
+		}
+        return importer
+    }
 }

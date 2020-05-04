@@ -30,15 +30,13 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.data;
+package br.com.bluesoft.bee.data
 
 import br.com.bluesoft.bee.database.ConnectionInfo
-import br.com.bluesoft.bee.database.reader.*
+import br.com.bluesoft.bee.database.reader.TableDataReader
 import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Schema
-import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.runner.ActionRunnerMultipleParameter
-import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.CsvUtil
 
 public class BeeDataGeneratorAction extends ActionRunnerMultipleParameter {

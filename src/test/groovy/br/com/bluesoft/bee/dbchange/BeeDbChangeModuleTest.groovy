@@ -18,7 +18,7 @@ class BeeDbChangeModuleTest extends Specification {
         when: "chamar o usage"
         module.usage()
         then: "o uso deve ser do Data"
-        buffer.toString()  == """usage: bee <options> dbchange:action <parameters>
+        buffer.toString() == """usage: bee <options> dbchange:action <parameters>
 Actions:
          dbchange:create description <group> - creates a dbchange file
          dbchange:status connection <group> - lists dbchanges to run
@@ -39,7 +39,7 @@ Actions:
         options.parse(
                 ["dbchange:creat", "menu"])
         when:
-            new BeeDbChangeModule().run(options)
+        new BeeDbChangeModule().run(options)
         then:
         IncorrectUsageException ex = thrown(IncorrectUsageException)
         ex.class == IncorrectUsageException
@@ -52,17 +52,17 @@ Actions:
         new BeeDbChangeModule().getRunner(action, null, null).class == runner
 
         where:
-        action      | runner
-        "create"    | BeeDbChangeCreateAction
-        "status"    | BeeDbChangeStatusAction
-        "up"        | BeeDbChangeUpAction
-        "down"      | BeeDbChangeDownAction
-        "mark"      | BeeDbChangeMarkAction
-        "markall"   | BeeDbChangeMarkAllAction
-        "unmark"    | BeeDbChangeUnmarkAction
-        "find"      | BeeDbChangeFindAction
-        "open"      | BeeDbChangeOpenAction
-        "group_up"  | BeeDbChangeGroupUpAction
+        action     | runner
+        "create"   | BeeDbChangeCreateAction
+        "status"   | BeeDbChangeStatusAction
+        "up"       | BeeDbChangeUpAction
+        "down"     | BeeDbChangeDownAction
+        "mark"     | BeeDbChangeMarkAction
+        "markall"  | BeeDbChangeMarkAllAction
+        "unmark"   | BeeDbChangeUnmarkAction
+        "find"     | BeeDbChangeFindAction
+        "open"     | BeeDbChangeOpenAction
+        "group_up" | BeeDbChangeGroupUpAction
 
     }
 

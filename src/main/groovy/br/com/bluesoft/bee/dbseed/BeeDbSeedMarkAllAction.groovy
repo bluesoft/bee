@@ -5,17 +5,18 @@ import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.runner.ActionRunnerParameterValidate
 
 class BeeDbSeedMarkAllAction extends ActionRunnerParameterValidate {
-	boolean run() {
-		def clientName = Options.instance.arguments[0]
 
-		def manager = new DbSeedManager(configFile: Options.instance.configFile, path: Options.instance.dataDir.absolutePath, clientName: clientName, logger: out)
+    boolean run() {
+        def clientName = Options.instance.arguments[0]
 
-		manager.markAll()
-		true
-	}
+        def manager = new DbSeedManager(configFile: Options.instance.configFile, path: Options.instance.dataDir.absolutePath, clientName: clientName, logger: out)
 
-	@Override
-	int maxParameters() {
-		return 1
-	}
+        manager.markAll()
+        true
+    }
+
+    @Override
+    int maxParameters() {
+        return 1
+    }
 }

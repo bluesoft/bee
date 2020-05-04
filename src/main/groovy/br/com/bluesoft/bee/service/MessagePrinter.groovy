@@ -32,14 +32,13 @@
  */
 package br.com.bluesoft.bee.service
 
-
 import br.com.bluesoft.bee.model.message.Message
 
 class MessagePrinter {
 
-	void print(BeeWriter writer, messages) {
-		messages.each { Message it ->
-			writer.log "[${it.level}] ${it.message}"
-		}
-	}
+    void print(BeeWriter writer, messages) {
+        messages.each { Message it ->
+            writer.log "[${it.level}] ${it.message}"
+        }
+    }
 }

@@ -36,9 +36,9 @@ import br.com.bluesoft.bee.model.ObjectType
 
 class Message {
 
-	MessageLevel level
-	ObjectType objectType
-	MessageType messageType
-	String objectName
-	String message
+    MessageLevel level
+    ObjectType objectType
+    MessageType messageType
+    String objectName
+    String message
 }

@@ -34,54 +34,55 @@ package br.com.bluesoft.bee.database.reader
 
 public class TableDataReader {
 
-	def sql
+    def sql
 
-	def TableDataReader(def sql) {
-		this.sql = sql
-	}
+    def TableDataReader(def sql) {
+        this.sql = sql
+    }
 
-	def buildQuery(def table) {
-		def query = "select "
-		table.columns.each {
-			query +=  it.value.name + ","
-		}
-		query = (query.toString())[0..-2]
-		query +=" from "
-		query += table.name
+    def buildQuery(def table) {
+        def query = "select "
+        table.columns.each {
+            query += it.value.name + ","
+        }
+        query = (query.toString())[0..-2]
+        query += " from "
+        query += table.name
 
-		def primaryKey = null
-		table.constraints.each {
-			if(it.value.type == 'P')
+        def primaryKey = null
+        table.constraints.each {
+			if (it.value.type == 'P') {
 				primaryKey = it.value
-		}
-
-		if(primaryKey) {
-			query += " order by "
-			primaryKey.columns.each { query += it + "," }
-			query = query[0..-2]
-		}
-
-		return query
-	}
-
-	def getData(def table) {
-		def query = buildQuery(table)
-
-		def columnNames = table.columns.findAll { !it.value.ignore }*.value.name
-
-		def result = []
-
-		sql.eachRow(query, {
-			def rowArray = []
-			def row = it
-			columnNames.each {
-				def row1 = row[it] as String
-				rowArray << (row1?.trim())
 			}
+        }
 
-			result << rowArray
-		})
-		
-		return result
-	}
+        if (primaryKey) {
+            query += " order by "
+            primaryKey.columns.each { query += it + "," }
+            query = query[0..-2]
+        }
+
+        return query
+    }
+
+    def getData(def table) {
+        def query = buildQuery(table)
+
+        def columnNames = table.columns.findAll { !it.value.ignore }*.value.name
+
+        def result = []
+
+        sql.eachRow(query, {
+            def rowArray = []
+            def row = it
+            columnNames.each {
+                def row1 = row[it] as String
+                rowArray << (row1?.trim())
+            }
+
+            result << rowArray
+        })
+
+        return result
+    }
 }

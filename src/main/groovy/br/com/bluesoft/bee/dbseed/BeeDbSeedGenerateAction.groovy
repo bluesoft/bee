@@ -3,6 +3,7 @@ package br.com.bluesoft.bee.dbseed
 import br.com.bluesoft.bee.runner.ActionRunnerParameterValidate
 
 class BeeDbSeedGenerateAction extends ActionRunnerParameterValidate {
+
     @Override
     boolean run() {
         def clientName = options.arguments[0]

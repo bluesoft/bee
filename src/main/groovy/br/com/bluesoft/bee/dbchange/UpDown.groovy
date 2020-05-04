@@ -32,7 +32,7 @@
  */
 package br.com.bluesoft.bee.dbchange;
 
-
 public enum UpDown {
-	UP, DOWN;
+
+    UP, DOWN;
 }

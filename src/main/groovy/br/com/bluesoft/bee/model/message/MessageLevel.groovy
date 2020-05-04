@@ -34,5 +34,5 @@ package br.com.bluesoft.bee.model.message
 
 enum MessageLevel {
 
-	WARNING, ERROR
+    WARNING, ERROR
 }

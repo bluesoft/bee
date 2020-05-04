@@ -34,6 +34,6 @@ package br.com.bluesoft.bee.model
 
 class Sequence {
 
-	String name
-	Integer minValue = 1
+    String name
+    Integer minValue = 1
 }

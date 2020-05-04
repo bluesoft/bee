@@ -32,56 +32,56 @@
  */
 package br.com.bluesoft.bee.util
 
-
 class CsvUtil {
 
-	static private def parseLine(def line) {
-		def result = []
-		def matcher = line.split("(?<!\\\\),")
-		matcher.each {
-			def campo = it.trim().replace("\\,", ",").replace("\\n", "\n")
-			if(campo.equals(""))
+    static private def parseLine(def line) {
+        def result = []
+        def matcher = line.split("(?<!\\\\),")
+        matcher.each {
+            def campo = it.trim().replace("\\,", ",").replace("\\n", "\n")
+			if (campo.equals("")) {
 				result << null
-			else
+			} else {
 				result << campo
-		}
-
-		// add null values at the end of array, because split function remove last delimiters
-		def m = line =~ /,*$/
-		if(m.size() > 1) {
-			for(n in 1..m[0].size()) {
-				result << null
 			}
-		}
+        }
 
-		return result
-	}
+        // add null values at the end of array, because split function remove last delimiters
+        def m = line =~ /,*$/
+        if (m.size() > 1) {
+            for (n in 1..m[0].size()) {
+                result << null
+            }
+        }
 
-	static def read(def file) {
-		def result = []
-		file.eachLine( "utf-8", { result << parseLine(it) })
-		return result
-	}
+        return result
+    }
 
-	static void write(def file, Collection dados) {
-		def writer = file.newPrintWriter("utf-8")
-		dados.each {
-			def linha = writeLine(it)
-			writer.println(linha)
-		}
-		writer.close()
-	}
+    static def read(def file) {
+        def result = []
+        file.eachLine("utf-8", { result << parseLine(it) })
+        return result
+    }
 
-	static String writeLine(row) {
-		def linha = new StringBuffer()
-		row.each {
-			if(it != null)
-				linha << ("${it}".replace(",", "\\,").replace("\n", "\\n")) + ",";
-			else {
+    static void write(def file, Collection dados) {
+        def writer = file.newPrintWriter("utf-8")
+        dados.each {
+            def linha = writeLine(it)
+            writer.println(linha)
+        }
+        writer.close()
+    }
+
+    static String writeLine(row) {
+        def linha = new StringBuffer()
+        row.each {
+			if (it != null) {
+				linha << ("${it}".replace(",", "\\,").replace("\n", "\\n")) + ","
+			} else {
 				linha << ","
 			}
-		}
-		linha = linha[0..-2]
-		return linha
-	}
+        }
+        linha = linha[0..-2]
+        return linha
+    }
 }
