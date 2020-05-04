@@ -32,10 +32,9 @@
  */
 package br.com.bluesoft.bee.database.reader
 
-
 import br.com.bluesoft.bee.model.Schema
 
 interface DatabaseReader {
 
-	def Schema getSchema(objectName)
+    def Schema getSchema(objectName)
 }

@@ -38,122 +38,123 @@ import br.com.bluesoft.bee.model.message.MessageType
 
 class Table implements Validator {
 
-	String name
-	Boolean temporary = false
-	String comment
+    String name
+    Boolean temporary = false
+    String comment
 
-	Map<String, TableColumn> columns = [:] as LinkedHashMap
-	Map<String, Index> indexes = [:]
-	Map<String, Constraint> constraints = [:]
+    Map<String, TableColumn> columns = [:] as LinkedHashMap
+    Map<String, Index> indexes = [:]
+    Map<String, Constraint> constraints = [:]
 
-	Boolean shouldImportTheData() {
-		this.comment ? this.comment?.toUpperCase()?.contains('#CORE') : false
-	}
+    Boolean shouldImportTheData() {
+        this.comment ? this.comment?.toUpperCase()?.contains('#CORE') : false
+    }
 
-	List validateWithMetadata(metadataTable) {
-		if (!metadataTable instanceof Table)
+    List validateWithMetadata(metadataTable) {
+		if (!metadataTable instanceof Table) {
 			return []
-
-		def messages = []
-		if (metadataTable) {
-			messages.addAll validatePresenceOfColumns(metadataTable)
-			messages.addAll validatePresenceOfIndexes(metadataTable)
-			messages.addAll validatePresenceOfConstraints(metadataTable)
-			messages.addAll validateTemporary(metadataTable)
-			messages.addAll validateColumns(metadataTable)
-			messages.addAll validateIndexes(metadataTable)
-			messages.addAll validateConstraints(metadataTable)
 		}
-		return messages
-	}
 
-	private def validatePresenceOfColumns(Table metadataTable) {
-		def messages = []
-		def databaseMissingColumns = metadataTable.columns.keySet() - this.columns.keySet()
-		def aditionalDatabaseColumns = this.columns.keySet() - metadataTable.columns.keySet()
-		databaseMissingColumns.each {
-			def messageText = "The table ${name} is missing the column ${it}.";
-			def message = new Message(objectName:"${name}.${it}", level:MessageLevel.ERROR, objectType:ObjectType.TABLE_COLUMN, messageType:MessageType.PRESENCE, message:messageText)
-			messages << message
-		}
-		aditionalDatabaseColumns.each {
-			def messageText = "The table ${name} has the additional column ${it}.";
-			def message = new Message(objectName:"${name}.${it}", level:MessageLevel.ERROR, objectType:ObjectType.TABLE_COLUMN, messageType:MessageType.PRESENCE, message:messageText)
-			messages << message
-		}
-		return messages
-	}
+        def messages = []
+        if (metadataTable) {
+            messages.addAll validatePresenceOfColumns(metadataTable)
+            messages.addAll validatePresenceOfIndexes(metadataTable)
+            messages.addAll validatePresenceOfConstraints(metadataTable)
+            messages.addAll validateTemporary(metadataTable)
+            messages.addAll validateColumns(metadataTable)
+            messages.addAll validateIndexes(metadataTable)
+            messages.addAll validateConstraints(metadataTable)
+        }
+        return messages
+    }
 
-	private def validatePresenceOfIndexes(Table metadataTable) {
-		def messages = []
-		def databaseMissingIndexes = metadataTable.indexes.keySet() - this.indexes.keySet()
-		def aditionalDatabaseIndexes = this.indexes.keySet() - metadataTable.indexes.keySet()
-		databaseMissingIndexes.each {
-			def messageText = "The table ${name} is missing the index ${it}.";
-			def message = new Message(objectName:"${it}", level:MessageLevel.ERROR, objectType:ObjectType.INDEX, messageType:MessageType.PRESENCE, message:messageText)
-			messages << message
-		}
-		aditionalDatabaseIndexes.each {
-			def messageText = "The table ${name} has the additional index ${it}.";
-			def message = new Message(objectName:"${it}", level:MessageLevel.ERROR, objectType:ObjectType.INDEX, messageType:MessageType.PRESENCE, message:messageText)
-			messages << message
-		}
-		return messages
-	}
+    private def validatePresenceOfColumns(Table metadataTable) {
+        def messages = []
+        def databaseMissingColumns = metadataTable.columns.keySet() - this.columns.keySet()
+        def aditionalDatabaseColumns = this.columns.keySet() - metadataTable.columns.keySet()
+        databaseMissingColumns.each {
+            def messageText = "The table ${name} is missing the column ${it}.";
+            def message = new Message(objectName: "${name}.${it}", level: MessageLevel.ERROR, objectType: ObjectType.TABLE_COLUMN, messageType: MessageType.PRESENCE, message: messageText)
+            messages << message
+        }
+        aditionalDatabaseColumns.each {
+            def messageText = "The table ${name} has the additional column ${it}.";
+            def message = new Message(objectName: "${name}.${it}", level: MessageLevel.ERROR, objectType: ObjectType.TABLE_COLUMN, messageType: MessageType.PRESENCE, message: messageText)
+            messages << message
+        }
+        return messages
+    }
 
-	private def validatePresenceOfConstraints(Table metadataTable) {
-		def messages = []
-		def databaseMissingConstraints = metadataTable.constraints.keySet() - this.constraints.keySet()
-		def aditionalDatabaseConstraints = this.constraints.keySet() - metadataTable.constraints.keySet()
-		databaseMissingConstraints.each {
-			def messageText = "The table ${name} is missing the constraint ${it}.";
-			def message = new Message(objectName:"${it}", level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.PRESENCE, message:messageText)
-			messages << message
-		}
-		aditionalDatabaseConstraints.each {
-			def messageText = "The table ${name} has the additional constraint ${it}.";
-			def message = new Message(objectName:"${it}", level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.PRESENCE, message:messageText)
-			messages << message
-		}
-		return messages
-	}
+    private def validatePresenceOfIndexes(Table metadataTable) {
+        def messages = []
+        def databaseMissingIndexes = metadataTable.indexes.keySet() - this.indexes.keySet()
+        def aditionalDatabaseIndexes = this.indexes.keySet() - metadataTable.indexes.keySet()
+        databaseMissingIndexes.each {
+            def messageText = "The table ${name} is missing the index ${it}.";
+            def message = new Message(objectName: "${it}", level: MessageLevel.ERROR, objectType: ObjectType.INDEX, messageType: MessageType.PRESENCE, message: messageText)
+            messages << message
+        }
+        aditionalDatabaseIndexes.each {
+            def messageText = "The table ${name} has the additional index ${it}.";
+            def message = new Message(objectName: "${it}", level: MessageLevel.ERROR, objectType: ObjectType.INDEX, messageType: MessageType.PRESENCE, message: messageText)
+            messages << message
+        }
+        return messages
+    }
 
-	private def validateTemporary(Table metadataTable) {
-		def messages = []
-		if (metadataTable.temporary != this.temporary) {
-			def message = new Message(objectName:name, level:MessageLevel.ERROR, objectType:ObjectType.TABLE, messageType:MessageType.TEMPORARY)
-			if (metadataTable.temporary) {
-				message.message = "The table ${this.name} should be temporary.";
-			} else {
-				message.message = "The table ${this.name} should not be temporary.";
-			}
-			messages << message
-		}
-		return messages
-	}
+    private def validatePresenceOfConstraints(Table metadataTable) {
+        def messages = []
+        def databaseMissingConstraints = metadataTable.constraints.keySet() - this.constraints.keySet()
+        def aditionalDatabaseConstraints = this.constraints.keySet() - metadataTable.constraints.keySet()
+        databaseMissingConstraints.each {
+            def messageText = "The table ${name} is missing the constraint ${it}.";
+            def message = new Message(objectName: "${it}", level: MessageLevel.ERROR, objectType: ObjectType.CONSTRAINT, messageType: MessageType.PRESENCE, message: messageText)
+            messages << message
+        }
+        aditionalDatabaseConstraints.each {
+            def messageText = "The table ${name} has the additional constraint ${it}.";
+            def message = new Message(objectName: "${it}", level: MessageLevel.ERROR, objectType: ObjectType.CONSTRAINT, messageType: MessageType.PRESENCE, message: messageText)
+            messages << message
+        }
+        return messages
+    }
 
-	private def validateColumns(Table metadataTable) {
-		return validateElements('columns', metadataTable)
-	}
+    private def validateTemporary(Table metadataTable) {
+        def messages = []
+        if (metadataTable.temporary != this.temporary) {
+            def message = new Message(objectName: name, level: MessageLevel.ERROR, objectType: ObjectType.TABLE, messageType: MessageType.TEMPORARY)
+            if (metadataTable.temporary) {
+                message.message = "The table ${this.name} should be temporary.";
+            } else {
+                message.message = "The table ${this.name} should not be temporary.";
+            }
+            messages << message
+        }
+        return messages
+    }
 
-	private def validateIndexes(Table metadataTable) {
-		return validateElements('indexes', metadataTable)
-	}
+    private def validateColumns(Table metadataTable) {
+        return validateElements('columns', metadataTable)
+    }
 
-	private def validateConstraints(Table metadataTable) {
-		return validateElements('constraints', metadataTable)
-	}
+    private def validateIndexes(Table metadataTable) {
+        return validateElements('indexes', metadataTable)
+    }
 
-	private def validateElements(elements, metadataTable) {
-		def messages = []
-		def metadataElementsMap = metadataTable[elements]
-		def databaseElementsMap = this[elements]
+    private def validateConstraints(Table metadataTable) {
+        return validateElements('constraints', metadataTable)
+    }
 
-		metadataElementsMap.each { elementName, element ->
-			if (databaseElementsMap[elementName]) {
-				messages.addAll(databaseElementsMap[elementName].validateWithMetadata(metadataTable, element))
-			}
-		}
-		return messages
-	}
+    private def validateElements(elements, metadataTable) {
+        def messages = []
+        def metadataElementsMap = metadataTable[elements]
+        def databaseElementsMap = this[elements]
+
+        metadataElementsMap.each { elementName, element ->
+            if (databaseElementsMap[elementName]) {
+                messages.addAll(databaseElementsMap[elementName].validateWithMetadata(metadataTable, element))
+            }
+        }
+        return messages
+    }
 }

@@ -32,73 +32,75 @@
  */
 package br.com.bluesoft.bee.model
 
-import java.text.MessageFormat
-
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
 
+import java.text.MessageFormat
+
 class TableColumn {
 
-	String name
-	String type
-	Integer size
-	String sizeType
-	Integer scale = 0
-	Boolean nullable = false
-	String defaultValue
-	String autoIncrement
-	String onUpdateCurrentTimestamp
-	Boolean virtual = false
-	Boolean ignore = false
+    String name
+    String type
+    Integer size
+    String sizeType
+    Integer scale = 0
+    Boolean nullable = false
+    String defaultValue
+    String autoIncrement
+    String onUpdateCurrentTimestamp
+    Boolean virtual = false
+    Boolean ignore = false
 
-	def messageTemplate = 'The {0} of the column {1} of the table {2} should be {3} but it is {4}'
+    def messageTemplate = 'The {0} of the column {1} of the table {2} should be {3} but it is {4}'
 
-	def validateWithMetadata(Table table, TableColumn metadataColumn) {
-		def messages = []
+    def validateWithMetadata(Table table, TableColumn metadataColumn) {
+        def messages = []
 
-		if (metadataColumn.type != this.type) {
-			messages << createMessage(table.name, metadataColumn, MessageType.DATA_TYPE, 'type')
-		}
+        if (metadataColumn.type != this.type) {
+            messages << createMessage(table.name, metadataColumn, MessageType.DATA_TYPE, 'type')
+        }
 
-		if (metadataColumn.size != this.size) {
-			messages << createMessage(table.name, metadataColumn, MessageType.DATA_SIZE, 'size')
-		}
+        if (metadataColumn.size != this.size) {
+            messages << createMessage(table.name, metadataColumn, MessageType.DATA_SIZE, 'size')
+        }
 
-		if (metadataColumn.scale != this.scale) {
-			messages << createMessage(table.name, metadataColumn, MessageType.DATA_SCALE, 'scale')
-		}
+        if (metadataColumn.scale != this.scale) {
+            messages << createMessage(table.name, metadataColumn, MessageType.DATA_SCALE, 'scale')
+        }
 
-		if (metadataColumn.nullable != this.nullable) {
-			messages << createMessage(table.name, metadataColumn, MessageType.NULLABILITY, 'nullable')
-		}
+        if (metadataColumn.nullable != this.nullable) {
+            messages << createMessage(table.name, metadataColumn, MessageType.NULLABILITY, 'nullable')
+        }
 
-		if (metadataColumn.defaultValue != this.defaultValue) {
-			messages << createMessage(table.name, metadataColumn, MessageType.DATA_DEFAULT, 'defaultValue')
-		}
+        if (metadataColumn.defaultValue != this.defaultValue) {
+            messages << createMessage(table.name, metadataColumn, MessageType.DATA_DEFAULT, 'defaultValue')
+        }
 
-		if (metadataColumn.autoIncrement != this.autoIncrement) {
-			messages << createMessage(table.name, metadataColumn, MessageType.AUTO_INCREMENT, 'autoIncrement')
-		}
+        if (metadataColumn.autoIncrement != this.autoIncrement) {
+            messages << createMessage(table.name, metadataColumn, MessageType.AUTO_INCREMENT, 'autoIncrement')
+        }
 
-		if (metadataColumn.onUpdateCurrentTimestamp != this.onUpdateCurrentTimestamp) {
-			messages << createMessage(table.name, metadataColumn, MessageType.ON_UPDATE_CURRENT_TIMESTAMP, 'onUpdateCurrentTimestamp')
-		}
+        if (metadataColumn.onUpdateCurrentTimestamp != this.onUpdateCurrentTimestamp) {
+            messages << createMessage(table.name, metadataColumn, MessageType.ON_UPDATE_CURRENT_TIMESTAMP, 'onUpdateCurrentTimestamp')
+        }
 
-		return messages
-	}
+        return messages
+    }
 
-	private def createMessage(tableName, metadataColumn, messageType, info) {
-		def messageText = MessageFormat.format(messageTemplate, info, name, tableName, metadataColumn[info], this[info])
-		new Message(objectName:"${name}", level:MessageLevel.ERROR, objectType:ObjectType.TABLE_COLUMN, messageType:messageType, message:messageText)
-	}
+    private def createMessage(tableName, metadataColumn, messageType, info) {
+        def messageText = MessageFormat.format(messageTemplate, info, name, tableName, metadataColumn[info], this[info])
+        new Message(objectName: "${name}", level: MessageLevel.ERROR, objectType: ObjectType.TABLE_COLUMN, messageType: messageType, message: messageText)
+    }
 
-	def compareType(def col) {
-		if(!col instanceof TableColumn)
-			return false;
-
-		if(col.type != type || col.size != size || col.scale != scale)
+    def compareType(def col) {
+		if (!col instanceof TableColumn) {
 			return false
-		return true
-	}
+		};
+
+		if (col.type != type || col.size != size || col.scale != scale) {
+			return false
+		}
+        return true
+    }
 }

@@ -35,30 +35,30 @@ package br.com.bluesoft.bee.util;
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-
 public class StringUtil {
 
-	static def splitString(str) {
-		def arr = []
-		str.eachLine {
-			def line = it.trim()
-			if(line != "")
-				arr << line
-		}
+    static def splitString(str) {
+        def arr = []
+        str.eachLine {
+            def line = it.trim()
+            if (line != "") {
+                arr << line
+            }
+        }
 
-		return arr
-	}
+        return arr
+    }
 
-	static boolean compare(String str1, String str2) {
-		def arr1 = splitString("$str1")
-		def arr2 = splitString("$str2")
+    static boolean compare(String str1, String str2) {
+        def arr1 = splitString("$str1")
+        def arr2 = splitString("$str2")
 
-		return arr1 == arr2
-	}
-	
-	static deleteSchemaNameFromUserTypeText(userTypeText) {
-		Pattern regex = Pattern.compile("\\\".*\\.\\\"(.*)\\\"");
-		Matcher regexMatcher = regex.matcher(userTypeText);
-		def newUserTypeText = regexMatcher.replaceFirst('$1');
-	}
+        return arr1 == arr2
+    }
+
+    static deleteSchemaNameFromUserTypeText(userTypeText) {
+        Pattern regex = Pattern.compile("\\\".*\\.\\\"(.*)\\\"");
+        Matcher regexMatcher = regex.matcher(userTypeText);
+        def newUserTypeText = regexMatcher.replaceFirst('$1');
+    }
 }

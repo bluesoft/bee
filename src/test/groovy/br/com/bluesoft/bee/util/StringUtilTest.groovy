@@ -36,27 +36,27 @@ import spock.lang.Specification
 
 public class StringUtilTest extends Specification {
 
-	void 'it should split strings'() {
+    void 'it should split strings'() {
 
-		expect:
-		arr == StringUtil.splitString(str)
+        expect:
+        arr == StringUtil.splitString(str)
 
-		where:
-		str                   |  arr
-		"abc\nabc\nabc"       |  ['abc', 'abc', 'abc']
-		"abc \n abc\n abc"    |  ['abc', 'abc', 'abc']
-		"abc \n\n abc\n abc"  |  ['abc', 'abc', 'abc']
-	}
+        where:
+        str                  | arr
+        "abc\nabc\nabc"      | ['abc', 'abc', 'abc']
+        "abc \n abc\n abc"   | ['abc', 'abc', 'abc']
+        "abc \n\n abc\n abc" | ['abc', 'abc', 'abc']
+    }
 
-	void 'it should compare 2 strings' () {
+    void 'it should compare 2 strings'() {
 
-		expect:
-		StringUtil.compare(str1, str2) == true
+        expect:
+        StringUtil.compare(str1, str2) == true
 
-		where:
-		str1                     |  str2
-		"abc\nabc"               |  "abc\n abc "
-		"abc\n\nabc"             |  "abc\n abc "
-		"abc\n \n abc"           |  "abc\n abc "
-	}
+        where:
+        str1           | str2
+        "abc\nabc"     | "abc\n abc "
+        "abc\n\nabc"   | "abc\n abc "
+        "abc\n \n abc" | "abc\n abc "
+    }
 }

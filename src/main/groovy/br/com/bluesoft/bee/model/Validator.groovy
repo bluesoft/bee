@@ -33,5 +33,6 @@
 package br.com.bluesoft.bee.model
 
 interface Validator {
-	List validateWithMetadata(metadata);
+
+    List validateWithMetadata(metadata);
 }

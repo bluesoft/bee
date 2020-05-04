@@ -36,13 +36,14 @@ import br.com.bluesoft.bee.data.BeeDataModule
 import br.com.bluesoft.bee.dbchange.BeeDbChangeModule
 import br.com.bluesoft.bee.dbseed.BeeDbSeedModule
 import br.com.bluesoft.bee.exceptions.IncorrectUsageException
+import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.runner.BeeModule
 import br.com.bluesoft.bee.schema.BeeSchemaModule
 import br.com.bluesoft.bee.upgrade.BeeUpgradeModule
 
-import java.util.jar.*
-
-import br.com.bluesoft.bee.model.Options
+import java.util.jar.Attributes
+import java.util.jar.JarFile
+import java.util.jar.Manifest
 
 class Bee {
 

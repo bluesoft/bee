@@ -32,81 +32,90 @@
  */
 package br.com.bluesoft.bee.database.reader
 
-
-import br.com.bluesoft.bee.model.*
+import br.com.bluesoft.bee.model.Constraint
+import br.com.bluesoft.bee.model.Index
+import br.com.bluesoft.bee.model.IndexColumn
+import br.com.bluesoft.bee.model.Procedure
+import br.com.bluesoft.bee.model.Schema
+import br.com.bluesoft.bee.model.Sequence
+import br.com.bluesoft.bee.model.Table
+import br.com.bluesoft.bee.model.TableColumn
+import br.com.bluesoft.bee.model.Trigger
+import br.com.bluesoft.bee.model.View
 import br.com.bluesoft.bee.util.VersionHelper
 
 class PostgresDatabaseReader implements DatabaseReader {
 
-	def sql
-	
-	PostgresDatabaseReader (def sql) {
-		this.sql = sql
-	}
+    def sql
 
-	Schema getSchema(objectName = null) {
-		def schema = new Schema()
-		schema.databaseVersion = getDatabaseVersion()
-		schema.tables = getTables(objectName, schema.databaseVersion)
-		schema.sequences = getSequences(objectName)
-		schema.views = getViews(objectName)
-		schema.procedures = getProcedures(objectName)
-		schema.packages = getPackages(objectName)
-		schema.triggers = getTriggers(objectName)
-		return schema
-	}
+    PostgresDatabaseReader(def sql) {
+        this.sql = sql
+    }
 
-	def getDatabaseVersion() {
-		def databaseVersion = null
-		try {
-			databaseVersion = sql.rows('show server_version')[0].get('server_version')
-		} catch (Exception e) {
-			databaseVersion = sql.rows("select setting from pg_settings where name = 'server_version'")[0].get('setting')
-		}
-		return databaseVersion		
-	}
+    Schema getSchema(objectName = null) {
+        def schema = new Schema()
+        schema.databaseVersion = getDatabaseVersion()
+        schema.tables = getTables(objectName, schema.databaseVersion)
+        schema.sequences = getSequences(objectName)
+        schema.views = getViews(objectName)
+        schema.procedures = getProcedures(objectName)
+        schema.packages = getPackages(objectName)
+        schema.triggers = getTriggers(objectName)
+        return schema
+    }
 
-	def getTables(objectName, databaseVersion) {
-		def tables = fillTables(objectName)
-		fillColumns(tables, objectName)
-		fillIndexes(tables, objectName, databaseVersion)
-		fillCostraints(tables, objectName)
-		fillCostraintsColumns(tables, objectName)
-		return tables
-	}
-	
-	static final def TABLES_QUERY = ''' 
+    def getDatabaseVersion() {
+        def databaseVersion = null
+        try {
+            databaseVersion = sql.rows('show server_version')[0].get('server_version')
+        } catch (Exception e) {
+            databaseVersion = sql.rows("select setting from pg_settings where name = 'server_version'")[0].get('setting')
+        }
+        return databaseVersion
+    }
+
+    def getTables(objectName, databaseVersion) {
+        def tables = fillTables(objectName)
+        fillColumns(tables, objectName)
+        fillIndexes(tables, objectName, databaseVersion)
+        fillCostraints(tables, objectName)
+        fillCostraintsColumns(tables, objectName)
+        return tables
+    }
+
+    static final def TABLES_QUERY = ''' 
 	    select t.table_name, 'N'as temporary 
 		from information_schema.tables t
 		where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
 		order by table_name
 	'''
-	static final def TABLES_QUERY_BY_NAME = '''
+    static final def TABLES_QUERY_BY_NAME = '''
 	    select t.table_name, 'N'as temporary 
 		from information_schema.tables t
 		where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
 		and t.table_name = ?
 		order by table_name
 	'''
-	private def fillTables(objectName) {
-		def tables = [:]
-		def rows
-		if(objectName) {
-			rows = sql.rows(TABLES_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(TABLES_QUERY)
-		}
-		rows.each({
-			def name = it.table_name.toLowerCase()
-			def temporary = it.temporary == 'Y' ? true : false
-			def comment = '' 
-			tables[name] = new Table(name:name, temporary:temporary, comment:comment)
-		})
-		return tables
-	}
+
+    private def fillTables(objectName) {
+        def tables = [:]
+        def rows
+        if (objectName) {
+            rows = sql.rows(TABLES_QUERY_BY_NAME, [objectName])
+        } else {
+            rows = sql.rows(TABLES_QUERY)
+        }
+        rows.each({
+            def name = it.table_name.toLowerCase()
+            def temporary = it.temporary == 'Y' ? true : false
+            def comment = ''
+            tables[name] = new Table(name: name, temporary: temporary, comment: comment)
+        })
+        return tables
+    }
 
 
-	static final def TABLES_COLUMNS_QUERY = '''
+    static final def TABLES_COLUMNS_QUERY = '''
 		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
 		case 
 			when (ic.numeric_precision_radix is not null) then ic.numeric_precision
@@ -121,7 +130,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		order by ic.table_name, ic.ordinal_position;
 		'''
 
-	static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
+    static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
 		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
 		case 
 			when (ic.numeric_precision_radix is not null) then ic.numeric_precision
@@ -136,40 +145,41 @@ class PostgresDatabaseReader implements DatabaseReader {
 		and ic.table_name = ?
 		order by ic.table_name, ic.ordinal_position;
 	'''
-	private def fillColumns(tables, objectName) {
-		def rows
-		if(objectName) {
-			rows = sql.rows(TABLES_COLUMNS_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(TABLES_COLUMNS_QUERY)
-		}	
-		rows.each({
-			def table = tables[it.table_name.toLowerCase()]
-			def column = new TableColumn()
-			column.name = it.column_name.toLowerCase()
-			column.type = getColumnType(it.data_type)
-			column.size = it.data_size
-			column.scale = it.data_scale == null ? 0 : it.data_scale
-			column.nullable = it.nullable == 'NO' ? false : true
-			def defaultValue = it.data_default
-			if(defaultValue) {
-				column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()
-			}
-			table.columns[column.name] = column
-		})
-	}
-	
-	private def getColumnType(String oracleColumnType){
-		switch (oracleColumnType.toLowerCase()) {
-			case "varchar2":
-				return "varchar"
-				break
-			default:
-				return oracleColumnType.toLowerCase()
-		}
-	}
-	
-	final static def INDEXES_QUERY = '''
+
+    private def fillColumns(tables, objectName) {
+        def rows
+        if (objectName) {
+            rows = sql.rows(TABLES_COLUMNS_QUERY_BY_NAME, [objectName])
+        } else {
+            rows = sql.rows(TABLES_COLUMNS_QUERY)
+        }
+        rows.each({
+            def table = tables[it.table_name.toLowerCase()]
+            def column = new TableColumn()
+            column.name = it.column_name.toLowerCase()
+            column.type = getColumnType(it.data_type)
+            column.size = it.data_size
+            column.scale = it.data_scale == null ? 0 : it.data_scale
+            column.nullable = it.nullable == 'NO' ? false : true
+            def defaultValue = it.data_default
+            if (defaultValue) {
+                column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()
+            }
+            table.columns[column.name] = column
+        })
+    }
+
+    private def getColumnType(String oracleColumnType) {
+        switch (oracleColumnType.toLowerCase()) {
+            case "varchar2":
+                return "varchar"
+                break
+            default:
+                return oracleColumnType.toLowerCase()
+        }
+    }
+
+    final static def INDEXES_QUERY = '''
 		select ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, am.amname as index_type, 
 		      pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name, 
 		      case am.amcanorder 
@@ -191,8 +201,8 @@ class PostgresDatabaseReader implements DatabaseReader {
 		where ct.relname !~ '^(pg_|sql_)'
 		order by table_name, index_name, column_name;
 	'''
-	
-	final static def INDEXES_QUERY_BY_NAME = '''
+
+    final static def INDEXES_QUERY_BY_NAME = '''
 		select ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, am.amname as index_type, 
 		      pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name, 
 		      case am.amcanorder 
@@ -216,7 +226,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		order by table_name, index_name, column_name;
 	'''
 
-	final static def INDEXES_QUERY_9_6 = '''
+    final static def INDEXES_QUERY_9_6 = '''
 		select ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, am.amname as index_type, 
 		      pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name, 
 			  case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
@@ -231,9 +241,9 @@ class PostgresDatabaseReader implements DatabaseReader {
 		join pg_am am on (ci.relam = am.oid)
 		where ct.relname !~ '^(pg_|sql_)'
 		order by table_name, index_name, column_name;
-	'''	
+	'''
 
-	final static def INDEXES_QUERY_BY_NAME_9_6 = '''
+    final static def INDEXES_QUERY_BY_NAME_9_6 = '''
 		select ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, am.amname as index_type, 
 		      pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name, 
 			  case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
@@ -249,130 +259,131 @@ class PostgresDatabaseReader implements DatabaseReader {
 		where ct.relname !~ '^(pg_|sql_)'
 		and  ct.relname = ? 
 		order by table_name, index_name, column_name;
-	'''	
-	
-	private def fillIndexes(tables, objectName, databaseVersion) {
-		def rows = queryIndexesInInformationSchema(objectName, databaseVersion)
-		rows.each({
-			def tableName = it.table_name.toLowerCase()
-			def table = tables[tableName]
-			def indexName = it.index_name.toLowerCase()
-			def indexAlreadyExists = table.indexes[indexName] ? true : false
-			def index = null;
-			if (indexAlreadyExists) {
-				index = table.indexes[indexName]
-			} else {
-				index = new Index()
-				index.name = indexName
-				index.type = getIndexType(it.index_type)
-				index.unique = it.uniqueness
-				table.indexes[index.name] = index
-			}
-			def indexColumn = new IndexColumn()
-			indexColumn.name = it.column_name.toLowerCase()
-			indexColumn.descend = it.descend.toLowerCase() == 'desc' ? true : false
-			index.columns << indexColumn
-		})
-	}
-	
-	private queryIndexesInInformationSchema(objectName, databaseVersion){
-		def rows = null
-		if  (databaseVersion != null) {
-			if (objectName) {
-				if (VersionHelper.isNewerThan9_6(databaseVersion)) {
-					rows = sql.rows(INDEXES_QUERY_BY_NAME_9_6, [objectName])
-				} else {
-					rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
-				}
-				} else {
-				if (VersionHelper.isNewerThan9_6(databaseVersion)) {
-					rows = sql.rows(INDEXES_QUERY_9_6)
-				} else {
-					rows = sql.rows(INDEXES_QUERY)
-				}
-			}
-		} else {
-			if (objectName) {
-				try {
-					rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
-				} catch (Exception e) {
-					rows = sql.rows(INDEXES_QUERY_BY_NAME_9_6, [objectName])
-				}
-			} else {
-				try {
-					rows = sql.rows(INDEXES_QUERY)
-				} catch (Exception e) {
-					rows = sql.rows(INDEXES_QUERY_9_6)
-				}
-			}
-		}
-	}
-	
-	private def getIndexType(String indexType){
-		switch (indexType) {
-			case "btree":
-				return "n"
-				break
-			default:
-				return indexType
-		}
-	}
+	'''
 
-	final static def CONSTRAINTS_QUERY = '''
+    private def fillIndexes(tables, objectName, databaseVersion) {
+        def rows = queryIndexesInInformationSchema(objectName, databaseVersion)
+        rows.each({
+            def tableName = it.table_name.toLowerCase()
+            def table = tables[tableName]
+            def indexName = it.index_name.toLowerCase()
+            def indexAlreadyExists = table.indexes[indexName] ? true : false
+            def index = null;
+            if (indexAlreadyExists) {
+                index = table.indexes[indexName]
+            } else {
+                index = new Index()
+                index.name = indexName
+                index.type = getIndexType(it.index_type)
+                index.unique = it.uniqueness
+                table.indexes[index.name] = index
+            }
+            def indexColumn = new IndexColumn()
+            indexColumn.name = it.column_name.toLowerCase()
+            indexColumn.descend = it.descend.toLowerCase() == 'desc' ? true : false
+            index.columns << indexColumn
+        })
+    }
+
+    private queryIndexesInInformationSchema(objectName, databaseVersion) {
+        def rows = null
+        if (databaseVersion != null) {
+            if (objectName) {
+                if (VersionHelper.isNewerThan9_6(databaseVersion)) {
+                    rows = sql.rows(INDEXES_QUERY_BY_NAME_9_6, [objectName])
+                } else {
+                    rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
+                }
+            } else {
+                if (VersionHelper.isNewerThan9_6(databaseVersion)) {
+                    rows = sql.rows(INDEXES_QUERY_9_6)
+                } else {
+                    rows = sql.rows(INDEXES_QUERY)
+                }
+            }
+        } else {
+            if (objectName) {
+                try {
+                    rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
+                } catch (Exception e) {
+                    rows = sql.rows(INDEXES_QUERY_BY_NAME_9_6, [objectName])
+                }
+            } else {
+                try {
+                    rows = sql.rows(INDEXES_QUERY)
+                } catch (Exception e) {
+                    rows = sql.rows(INDEXES_QUERY_9_6)
+                }
+            }
+        }
+    }
+
+    private def getIndexType(String indexType) {
+        switch (indexType) {
+            case "btree":
+                return "n"
+                break
+            default:
+                return indexType
+        }
+    }
+
+    final static def CONSTRAINTS_QUERY = '''
 		select tc.table_name, tc.constraint_name, ccu.table_name as ref_table, tc.constraint_type, rc.delete_rule as delete_rule, 'enabled' as status
 		from information_schema.table_constraints tc
 			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
 			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
 		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key')
 	'''
-	final static def CONSTRAINTS_QUERY_BY_NAME = '''
+    final static def CONSTRAINTS_QUERY_BY_NAME = '''
 		select tc.table_name, tc.constraint_name, ccu.table_name as ref_table, tc.constraint_type, rc.delete_rule as delete_rule, 'enabled' as status
 		from information_schema.table_constraints tc
 			left join information_schema.referential_constraints rc on tc.constraint_catalog = rc.constraint_catalog and tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name
 			left join information_schema.constraint_column_usage ccu on rc.unique_constraint_catalog = ccu.constraint_catalog and rc.unique_constraint_schema = ccu.constraint_schema and rc.unique_constraint_name = ccu.constraint_name
 		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key') and tc.table_name = ?
 	'''
-	private def fillCostraints(tables, objectName) {
-		def rows
-		if(objectName) {
-			rows = sql.rows(CONSTRAINTS_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(CONSTRAINTS_QUERY)
-		}
 
-		rows.each({
-			def tableName = it.table_name.toLowerCase()
-			def table = tables[tableName]
+    private def fillCostraints(tables, objectName) {
+        def rows
+        if (objectName) {
+            rows = sql.rows(CONSTRAINTS_QUERY_BY_NAME, [objectName])
+        } else {
+            rows = sql.rows(CONSTRAINTS_QUERY)
+        }
 
-			def constraint = new Constraint()
-			constraint.name = it.constraint_name.toLowerCase()
-			constraint.refTable = it.ref_table?.toLowerCase()
-			constraint.type = getConstraintType(it.constraint_type.toLowerCase())
-			def onDelete = it.delete_rule?.toLowerCase()
-			constraint.onDelete = onDelete == 'no action' ? null : onDelete
-			def status = it.status?.toLowerCase()
-			constraint.status = status
-			table.constraints[constraint.name] = constraint
-		})
-	}
-	
-	private getConstraintType(constraint_type) {
-		switch (constraint_type) {
-			case "primary key":
-				return "P"
-				break
-			case "unique":
-				return "U"
-				break
-			case "foreign key":
-				return "R"
-				break
-			default:
-				return constraint_type
-		}
-	} 
+        rows.each({
+            def tableName = it.table_name.toLowerCase()
+            def table = tables[tableName]
 
-	final static def CONSTRAINTS_COLUMNS_QUERY = '''
+            def constraint = new Constraint()
+            constraint.name = it.constraint_name.toLowerCase()
+            constraint.refTable = it.ref_table?.toLowerCase()
+            constraint.type = getConstraintType(it.constraint_type.toLowerCase())
+            def onDelete = it.delete_rule?.toLowerCase()
+            constraint.onDelete = onDelete == 'no action' ? null : onDelete
+            def status = it.status?.toLowerCase()
+            constraint.status = status
+            table.constraints[constraint.name] = constraint
+        })
+    }
+
+    private getConstraintType(constraint_type) {
+        switch (constraint_type) {
+            case "primary key":
+                return "P"
+                break
+            case "unique":
+                return "U"
+                break
+            case "foreign key":
+                return "R"
+                break
+            default:
+                return constraint_type
+        }
+    }
+
+    final static def CONSTRAINTS_COLUMNS_QUERY = '''
 		select tc.table_name, tc.constraint_name, kcu.column_name, ccu.table_name as ref_table, ccu.column_name as ref_field
 		from information_schema.table_constraints tc 
 			left join information_schema.key_column_usage kcu on tc.constraint_catalog = kcu.constraint_catalog and tc.constraint_schema = kcu.constraint_schema and tc.constraint_name = kcu.constraint_name
@@ -381,7 +392,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key')
 		order by kcu.ordinal_position, kcu.position_in_unique_constraint
 	'''
-	final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
+    final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
 		select tc.table_name, tc.constraint_name, kcu.column_name, ccu.table_name as ref_table, ccu.column_name as ref_field
 		from information_schema.table_constraints tc 
 			left join information_schema.key_column_usage kcu on tc.constraint_catalog = kcu.constraint_catalog and tc.constraint_schema = kcu.constraint_schema and tc.constraint_name = kcu.constraint_name
@@ -390,81 +401,84 @@ class PostgresDatabaseReader implements DatabaseReader {
 		where lower(tc.constraint_type) in ('primary key','unique', 'foreign key') and tc.table_name = ?
  		order by kcu.ordinal_position, kcu.position_in_unique_constraint
 	'''
-	private def fillCostraintsColumns(tables, objectName) {
-		def rows
-		if(objectName) {
-			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY)
-		}
-		rows.each({
-			def tableName = it.table_name.toLowerCase()
-			def table = tables[tableName]
-			def constraint = table.constraints[it.constraint_name.toLowerCase()]
-			constraint.columns << it.column_name.toLowerCase()
-		})
-	}
 
-	final static def SEQUENCES_QUERY = '''
+    private def fillCostraintsColumns(tables, objectName) {
+        def rows
+        if (objectName) {
+            rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY_BY_NAME, [objectName])
+        } else {
+            rows = sql.rows(CONSTRAINTS_COLUMNS_QUERY)
+        }
+        rows.each({
+            def tableName = it.table_name.toLowerCase()
+            def table = tables[tableName]
+            def constraint = table.constraints[it.constraint_name.toLowerCase()]
+            constraint.columns << it.column_name.toLowerCase()
+        })
+    }
+
+    final static def SEQUENCES_QUERY = '''
 			select c.relname as sequence_name, '1' as min_value   
 			from pg_class c 
 			where c.relkind = 'S'
 			order by c.relname
 		'''
-	final static def SEQUENCES_QUERY_BY_NAME = '''
+    final static def SEQUENCES_QUERY_BY_NAME = '''
 			select c.relname as sequence_name, '1' as min_value   
 			from pg_class c 
 			where c.relkind = 'S' and c.relname = upper(?)
 			order by c.relname
 		'''
-	def getSequences(objectName){
-		def sequences = [:]
-		def rows
-		if(objectName) {
-			rows = sql.rows(SEQUENCES_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(SEQUENCES_QUERY)
-		}
-		rows.each({
-			def sequence = new Sequence()
-			sequence.name = it.sequence_name.toLowerCase()
-			sequence.minValue = it.min_value
-			sequences[sequence.name] = sequence
-		})
-		return sequences
-	}
 
-	final static def VIEWS_QUERY = '''
+    def getSequences(objectName) {
+        def sequences = [:]
+        def rows
+        if (objectName) {
+            rows = sql.rows(SEQUENCES_QUERY_BY_NAME, [objectName])
+        } else {
+            rows = sql.rows(SEQUENCES_QUERY)
+        }
+        rows.each({
+            def sequence = new Sequence()
+            sequence.name = it.sequence_name.toLowerCase()
+            sequence.minValue = it.min_value
+            sequences[sequence.name] = sequence
+        })
+        return sequences
+    }
+
+    final static def VIEWS_QUERY = '''
 		select table_name as view_name, view_definition as text 
 		from information_schema.views 
 		where table_schema = 'public'
 		order by view_name
 	'''
-	final static def VIEWS_QUERY_BY_NAME = '''
+    final static def VIEWS_QUERY_BY_NAME = '''
 		select table_name as view_name, view_definition as text 
 		from information_schema.views 
 		where table_schema = 'public' and table_name = upper(?)
 		order by view_name
 	'''
-	def getViews(objectName){
-		def views = [:]
-		def rows
-		if(objectName) {
-			rows = sql.rows(VIEWS_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(VIEWS_QUERY)
-		}
 
-		rows.each({
-			def view = new View()
-			view.name = it.view_name.toLowerCase()
-			view.text = it.text
-			views[view.name] = view
-		})
-		return views
-	}
+    def getViews(objectName) {
+        def views = [:]
+        def rows
+        if (objectName) {
+            rows = sql.rows(VIEWS_QUERY_BY_NAME, [objectName])
+        } else {
+            rows = sql.rows(VIEWS_QUERY)
+        }
 
-	final static def PROCEDURES_NAME_QUERY = '''
+        rows.each({
+            def view = new View()
+            view.name = it.view_name.toLowerCase()
+            view.text = it.text
+            views[view.name] = view
+        })
+        return views
+    }
+
+    final static def PROCEDURES_NAME_QUERY = '''
 		select p.proname as name
 		from pg_namespace n
 		inner join pg_proc p on pronamespace = n.oid
@@ -473,7 +487,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		and n.nspname not in ('information_schema','pg_catalog','pg_toast')
 		order by p.proname
 	'''
-	final static def PROCEDURES_NAME_QUERY_BY_NAME = '''
+    final static def PROCEDURES_NAME_QUERY_BY_NAME = '''
 		select p.proname as name
 		from pg_namespace n
 		join pg_proc p on pronamespace = n.oid
@@ -483,12 +497,13 @@ class PostgresDatabaseReader implements DatabaseReader {
 		and p.proname = ?
 		order by p.pronames	
 '''
-	def getProcedures(objectName) {
-		def procedures = getProceduresBody(objectName)
-		return procedures
-	}
 
-	final static def PROCEDURES_BODY_QUERY = '''
+    def getProcedures(objectName) {
+        def procedures = getProceduresBody(objectName)
+        return procedures
+    }
+
+    final static def PROCEDURES_BODY_QUERY = '''
 		select 
 			pp.proname as name,
 			pg_get_functiondef(pp.oid) as text
@@ -501,7 +516,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 			and pn.nspname <> 'information_schema'
 		order by pp.proname
 	'''
-	final static def PROCEDURES_BODY_QUERY_BY_NAME = '''
+    final static def PROCEDURES_BODY_QUERY_BY_NAME = '''
 		select 
 			pp.proname as name,
 			pg_get_functiondef(pp.oid) as text
@@ -515,24 +530,25 @@ class PostgresDatabaseReader implements DatabaseReader {
 			and pp.proname = ?
 		order by pp.proname
 	'''
-	def getProceduresBody(objectName) {
-		def procedures = [:]
-		def rows
 
-		if(objectName) {
-			rows = sql.rows(PROCEDURES_BODY_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(PROCEDURES_BODY_QUERY)
-		}
+    def getProceduresBody(objectName) {
+        def procedures = [:]
+        def rows
 
-		rows.each({
-			def procedure = new Procedure(name: it.name.toLowerCase(), text: it.text)
-			procedures[procedure.name] = procedure
-		})
-		return procedures
-	}
+        if (objectName) {
+            rows = sql.rows(PROCEDURES_BODY_QUERY_BY_NAME, [objectName])
+        } else {
+            rows = sql.rows(PROCEDURES_BODY_QUERY)
+        }
 
-	final static def TRIGGERS_QUERY = '''
+        rows.each({
+            def procedure = new Procedure(name: it.name.toLowerCase(), text: it.text)
+            procedures[procedure.name] = procedure
+        })
+        return procedures
+    }
+
+    final static def TRIGGERS_QUERY = '''
 		select 
 			trigger_name as name, 
 			action_timing, 
@@ -544,7 +560,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		group by trigger_name, action_timing, event_object_table, action_orientation, action_statement
 		order by trigger_name, action_timing, event_object_table, action_orientation, action_statement
 	'''
-	final static def TRIGGERS_QUERY_BY_NAME = '''
+    final static def TRIGGERS_QUERY_BY_NAME = '''
 		select 
 			trigger_name as name, 
 			action_timing, 
@@ -557,34 +573,35 @@ class PostgresDatabaseReader implements DatabaseReader {
 		group by trigger_name, action_timing, event_object_table, action_orientation, action_statement
 		order by trigger_name, action_timing, event_object_table, action_orientation, action_statement
 	'''
-	def getTriggers(objectName) {
-		def triggers = [:]
-		def rows
 
-		if(objectName) {
-			rows = sql.rows(TRIGGERS_QUERY_BY_NAME, [objectName])
-		} else {
-			rows = sql.rows(TRIGGERS_QUERY)
-		}
+    def getTriggers(objectName) {
+        def triggers = [:]
+        def rows
 
-		rows.each({
-			def triggerName = it.name.toLowerCase()
-			def trigger = triggers[triggerName] ?: new Trigger()
-			trigger.name = triggerName
-			def text = ""
-			text += "CREATE TRIGGER ${it.name}\n"
-			text += "${it.action_timing} ${it.event_manipulation} ON ${it.event_object_table}\n"
-			text += "FOR EACH ${it.action_orientation}\n"
-			text += "${it.action_statement}\n"
-			trigger.text = text
-			triggers[triggerName] = trigger
-		})
+        if (objectName) {
+            rows = sql.rows(TRIGGERS_QUERY_BY_NAME, [objectName])
+        } else {
+            rows = sql.rows(TRIGGERS_QUERY)
+        }
 
-		return triggers
-	}
-	
-	def getPackages(objectName) {
-		def packages = [:]
-		return packages
-	}
+        rows.each({
+            def triggerName = it.name.toLowerCase()
+            def trigger = triggers[triggerName] ?: new Trigger()
+            trigger.name = triggerName
+            def text = ""
+            text += "CREATE TRIGGER ${it.name}\n"
+            text += "${it.action_timing} ${it.event_manipulation} ON ${it.event_object_table}\n"
+            text += "FOR EACH ${it.action_orientation}\n"
+            text += "${it.action_statement}\n"
+            trigger.text = text
+            triggers[triggerName] = trigger
+        })
+
+        return triggers
+    }
+
+    def getPackages(objectName) {
+        def packages = [:]
+        return packages
+    }
 }

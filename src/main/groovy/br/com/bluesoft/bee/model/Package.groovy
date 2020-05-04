@@ -32,31 +32,34 @@
  */
 package br.com.bluesoft.bee.model
 
-import br.com.bluesoft.bee.model.message.*
+import br.com.bluesoft.bee.model.message.Message
+import br.com.bluesoft.bee.model.message.MessageLevel
+import br.com.bluesoft.bee.model.message.MessageType
 import br.com.bluesoft.bee.util.StringUtil
 
-
 class Package implements Validator {
-	def name
-	def text = ''
-	def body = ''
 
-	List validateWithMetadata(metadataPackage) {
-		if (!metadataPackage instanceof Package)
+    def name
+    def text = ''
+    def body = ''
+
+    List validateWithMetadata(metadataPackage) {
+		if (!metadataPackage instanceof Package) {
 			return []
-
-		def messages = []
-
-		if (!StringUtil.compare(metadataPackage.text, this.text)) {
-			def message = new Message(objectName:name, level:MessageLevel.ERROR, objectType:ObjectType.PACKAGE, messageType:MessageType.PACKAGE_HEADER, message:"The header of the package ${this.name} differs from metadata.")
-			messages << message
 		}
 
-		if (!StringUtil.compare(metadataPackage.body, this.body)) {
-			def message = new Message(objectName:name, level:MessageLevel.ERROR, objectType:ObjectType.PACKAGE, messageType:MessageType.PACKAGE_BODY, message:"The body of the package ${this.name} differs from metadata.")
-			messages << message
-		}
+        def messages = []
 
-		return messages
-	}
+        if (!StringUtil.compare(metadataPackage.text, this.text)) {
+            def message = new Message(objectName: name, level: MessageLevel.ERROR, objectType: ObjectType.PACKAGE, messageType: MessageType.PACKAGE_HEADER, message: "The header of the package ${this.name} differs from metadata.")
+            messages << message
+        }
+
+        if (!StringUtil.compare(metadataPackage.body, this.body)) {
+            def message = new Message(objectName: name, level: MessageLevel.ERROR, objectType: ObjectType.PACKAGE, messageType: MessageType.PACKAGE_BODY, message: "The body of the package ${this.name} differs from metadata.")
+            messages << message
+        }
+
+        return messages
+    }
 }

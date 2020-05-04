@@ -32,29 +32,28 @@
  */
 package br.com.bluesoft.bee.model
 
-import java.util.List
-
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
 import br.com.bluesoft.bee.util.StringUtil
 
-
 class Trigger implements Validator {
-	def name
-	def text = ''
 
-	List validateWithMetadata(metadataPackage) {
-		if (!metadataPackage instanceof Package)
+    def name
+    def text = ''
+
+    List validateWithMetadata(metadataPackage) {
+		if (!metadataPackage instanceof Package) {
 			return []
-
-		def messages = []
-
-		if (!StringUtil.compare(metadataPackage.text, this.text)) {
-			def message = new Message(objectName:name, level:MessageLevel.ERROR, objectType:ObjectType.TRIGGER, messageType:MessageType.TRIGGER_BODY, message:"The body of the trigger ${this.name} differs from metadata.")
-			messages << message
 		}
 
-		return messages
-	}
+        def messages = []
+
+        if (!StringUtil.compare(metadataPackage.text, this.text)) {
+            def message = new Message(objectName: name, level: MessageLevel.ERROR, objectType: ObjectType.TRIGGER, messageType: MessageType.TRIGGER_BODY, message: "The body of the trigger ${this.name} differs from metadata.")
+            messages << message
+        }
+
+        return messages
+    }
 }

@@ -32,27 +32,28 @@
  */
 package br.com.bluesoft.bee.model
 
-import java.util.List
-
-import br.com.bluesoft.bee.model.message.*
+import br.com.bluesoft.bee.model.message.Message
+import br.com.bluesoft.bee.model.message.MessageLevel
+import br.com.bluesoft.bee.model.message.MessageType
 import br.com.bluesoft.bee.util.StringUtil
 
-
 class Procedure implements Validator {
-	def name
-	def text
 
-	List validateWithMetadata(metadataProcedure) {
-		if (!metadataProcedure instanceof View)
+    def name
+    def text
+
+    List validateWithMetadata(metadataProcedure) {
+		if (!metadataProcedure instanceof View) {
 			return []
-
-		def messages = []
-
-		if (!StringUtil.compare(metadataProcedure.text, this.text)) {
-			def message = new Message(objectName:name, level:MessageLevel.ERROR, objectType:ObjectType.PROCEDURE, messageType:MessageType.PROCEDURE_BODY, message:"The body of the procedure/function ${this.name} differs from metadata.")
-			messages << message
 		}
 
-		return messages
-	}
+        def messages = []
+
+        if (!StringUtil.compare(metadataProcedure.text, this.text)) {
+            def message = new Message(objectName: name, level: MessageLevel.ERROR, objectType: ObjectType.PROCEDURE, messageType: MessageType.PROCEDURE_BODY, message: "The body of the procedure/function ${this.name} differs from metadata.")
+            messages << message
+        }
+
+        return messages
+    }
 }

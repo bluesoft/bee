@@ -38,53 +38,53 @@ import br.com.bluesoft.bee.model.message.MessageType
 
 class Constraint {
 
-	String name
-	String refTable
-	String type
-	String onDelete
-	String status
-	String searchCondition
-	def columns = []
-	def refColumns = []
+    String name
+    String refTable
+    String type
+    String onDelete
+    String status
+    String searchCondition
+    def columns = []
+    def refColumns = []
 
-	def validateWithMetadata(Table table, Constraint metadataConstraint) {
-		def messages = []
+    def validateWithMetadata(Table table, Constraint metadataConstraint) {
+        def messages = []
 
-		if (metadataConstraint.type != this.type) {
-			def messageText = "The type of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.type} but it is ${this.type}"
-			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_TYPE, message:messageText)
-		}
+        if (metadataConstraint.type != this.type) {
+            def messageText = "The type of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.type} but it is ${this.type}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.CONSTRAINT, messageType: MessageType.CONSTRAINT_TYPE, message: messageText)
+        }
 
-		if (metadataConstraint.refTable != this.refTable) {
-			def messageText = "The referenced table of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.refTable} but it is ${this.refTable}"
-			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_REF_TABLE, message:messageText)
-		}
+        if (metadataConstraint.refTable != this.refTable) {
+            def messageText = "The referenced table of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.refTable} but it is ${this.refTable}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.CONSTRAINT, messageType: MessageType.CONSTRAINT_REF_TABLE, message: messageText)
+        }
 
-		if (metadataConstraint.columns != this.columns) {
-			def messageText = "The columns of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.columns} but it is ${this.columns}"
-			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_COLUMNS, message:messageText)
-		}
+        if (metadataConstraint.columns != this.columns) {
+            def messageText = "The columns of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.columns} but it is ${this.columns}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.CONSTRAINT, messageType: MessageType.CONSTRAINT_COLUMNS, message: messageText)
+        }
 
-		if (metadataConstraint.refColumns != this.refColumns) {
-			def messageText = "The columns of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.refColumns} but it is ${this.refColumns}"
-			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_REF_COLUMNS, message:messageText)
-		}
+        if (metadataConstraint.refColumns != this.refColumns) {
+            def messageText = "The columns of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.refColumns} but it is ${this.refColumns}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.CONSTRAINT, messageType: MessageType.CONSTRAINT_REF_COLUMNS, message: messageText)
+        }
 
-		if (this.type == 'R' && metadataConstraint.onDelete != this.onDelete) {
-			def messageText = "The delete action of the constraint ${this.name} should be ${metadataConstraint.onDelete} but it is ${this.onDelete}"
-			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_DELETE_RULE, message:messageText)
-		}
+        if (this.type == 'R' && metadataConstraint.onDelete != this.onDelete) {
+            def messageText = "The delete action of the constraint ${this.name} should be ${metadataConstraint.onDelete} but it is ${this.onDelete}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.CONSTRAINT, messageType: MessageType.CONSTRAINT_DELETE_RULE, message: messageText)
+        }
 
-		if (metadataConstraint.status != null && metadataConstraint.status != this.status) {
-			def messageText = "The status of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.status.toUpperCase()} but it is ${this.status.toUpperCase()}"
-			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_STATUS, message:messageText)
-		}
+        if (metadataConstraint.status != null && metadataConstraint.status != this.status) {
+            def messageText = "The status of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.status.toUpperCase()} but it is ${this.status.toUpperCase()}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.CONSTRAINT, messageType: MessageType.CONSTRAINT_STATUS, message: messageText)
+        }
 
-		if (metadataConstraint.searchCondition != null && metadataConstraint.searchCondition != this.searchCondition) {
-			def messageText = "The search condition of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.searchCondition} but it is ${this.searchCondition}"
-			messages << new Message(objectName:this.name, level:MessageLevel.ERROR, objectType:ObjectType.CONSTRAINT, messageType:MessageType.CONSTRAINT_SEARCH_CONDITION, message:messageText)
-		}
+        if (metadataConstraint.searchCondition != null && metadataConstraint.searchCondition != this.searchCondition) {
+            def messageText = "The search condition of the constraint ${this.name} of the table ${table.name} should be ${metadataConstraint.searchCondition} but it is ${this.searchCondition}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.CONSTRAINT, messageType: MessageType.CONSTRAINT_SEARCH_CONDITION, message: messageText)
+        }
 
-		return messages
-	}
+        return messages
+    }
 }

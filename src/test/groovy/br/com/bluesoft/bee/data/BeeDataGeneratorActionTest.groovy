@@ -73,7 +73,6 @@ class BeeDataGeneratorActionTest extends BeeTesterSpecification {
         when: "Quando executar o gerador"
         def result = new BeeDataGeneratorAction(options: options, out: logger).run()
 
-
         then: "Deve retorna true"
         result == true
 
