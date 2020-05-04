@@ -41,6 +41,7 @@ import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.service.MessagePrinter
+import br.com.bluesoft.bee.util.RDBMSUtil
 
 class BeeSchemaValidatorAction implements ActionRunner {
 
@@ -66,18 +67,18 @@ class BeeSchemaValidatorAction implements ActionRunner {
         def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
 
         out.log('importing schema metadata from the reference files')
-        Schema metadataSchema = importer.importMetaData()
+        Schema metadataSchema = importer.importMetaData(RDBMSUtil.getRDBMS(options))
 
-		if (objectName) {
-			metadataSchema = metadataSchema.filter(objectName)
-		}
+        if (objectName) {
+            metadataSchema = metadataSchema.filter(objectName)
+        }
 
         out.log('importing schema metadata from the database')
         Schema databaseSchema = databaseReader.getSchema(objectName)
 
-		if (objectName) {
-			databaseSchema = databaseSchema.filter(objectName)
-		}
+        if (objectName) {
+            databaseSchema = databaseSchema.filter(objectName)
+        }
 
         out.log('validating')
         def messages = databaseSchema.validateWithMetadata(metadataSchema)
@@ -94,12 +95,11 @@ class BeeSchemaValidatorAction implements ActionRunner {
     }
 
     private def getImporter() {
-		if (importer == null) {
-			return new JsonImporter(options.dataDir.canonicalPath)
-		}
+        if (importer == null) {
+            return new JsonImporter(options.dataDir.canonicalPath)
+        }
         return importer
     }
-
 
     def getDatabaseConnection(clientName) {
         if (sql != null) {

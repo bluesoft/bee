@@ -38,10 +38,11 @@ import br.com.bluesoft.bee.model.IndexColumn
 import br.com.bluesoft.bee.model.Procedure
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.model.Sequence
-import br.com.bluesoft.bee.model.Table
 import br.com.bluesoft.bee.model.TableColumn
 import br.com.bluesoft.bee.model.Trigger
 import br.com.bluesoft.bee.model.View
+import br.com.bluesoft.bee.model.postgres.PostgresPolicy
+import br.com.bluesoft.bee.model.postgres.PostgresTable
 import br.com.bluesoft.bee.util.VersionHelper
 
 class PostgresDatabaseReader implements DatabaseReader {
@@ -80,18 +81,21 @@ class PostgresDatabaseReader implements DatabaseReader {
         fillIndexes(tables, objectName, databaseVersion)
         fillCostraints(tables, objectName)
         fillCostraintsColumns(tables, objectName)
+        fillPolicies(tables, objectName)
         return tables
     }
 
     static final def TABLES_QUERY = ''' 
-	    select t.table_name, 'N'as temporary 
+	    select t.table_name, pt.rowsecurity
 		from information_schema.tables t
+		inner join pg_catalog.pg_tables pt on t.table_name = pt.tablename
 		where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
 		order by table_name
 	'''
     static final def TABLES_QUERY_BY_NAME = '''
-	    select t.table_name, 'N'as temporary 
+	    select t.table_name, pt.rowsecurity
 		from information_schema.tables t
+		inner join pg_catalog.pg_tables pt on t.table_name = pt.tablename
 		where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
 		and t.table_name = ?
 		order by table_name
@@ -107,13 +111,11 @@ class PostgresDatabaseReader implements DatabaseReader {
         }
         rows.each({
             def name = it.table_name.toLowerCase()
-            def temporary = it.temporary == 'Y' ? true : false
-            def comment = ''
-            tables[name] = new Table(name: name, temporary: temporary, comment: comment)
+            def rowSecurity = it.rowsecurity
+            tables[name] = new PostgresTable(name: name, rowSecurity: rowSecurity, temporary: false, comment: '')
         })
         return tables
     }
-
 
     static final def TABLES_COLUMNS_QUERY = '''
 		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
@@ -414,6 +416,39 @@ class PostgresDatabaseReader implements DatabaseReader {
             def table = tables[tableName]
             def constraint = table.constraints[it.constraint_name.toLowerCase()]
             constraint.columns << it.column_name.toLowerCase()
+        })
+    }
+
+    private def fillPolicies(tables, objectName) {
+        def rows
+
+        if (objectName) {
+            rows = sql.rows("""
+				select p.tablename, p.policyname, p.permissive, p.cmd, p.qual, p.with_check, p.roles::varchar
+				from pg_catalog.pg_policies p
+				where objectname = ?
+			""", objectName)
+        } else {
+            rows = sql.rows("""
+				select p.tablename, p.policyname, p.permissive, p.cmd, p.qual, p.with_check, p.roles::varchar
+				from pg_catalog.pg_policies p
+			""")
+        }
+
+        rows.each({
+            def tableName = it.tablename.toLowerCase()
+            def policyName = it.policyname
+            def table = tables[tableName]
+
+            def policy = new PostgresPolicy()
+            policy.name = it.policyname
+            policy.permissive = it.permissive == 'PERMISSIVE'
+            policy.cmd = it.cmd
+            policy.usingExpression = it.qual
+            policy.checkExpression = it.with_check
+            policy.roles = it.roles.substring(1, it.roles.size() - 1).tokenize(',')
+
+            table.policies[policyName] = policy
         })
     }
 

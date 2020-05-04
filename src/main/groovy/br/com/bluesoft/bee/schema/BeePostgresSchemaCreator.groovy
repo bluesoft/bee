@@ -72,7 +72,6 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
         file << "\n"
     }
 
-
     void createProcedures(def file, def schema) {
         schema.procedures*.value.sort().each {
             def procedure = "${it.text};\n\n"
@@ -85,5 +84,40 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
             def trigger = "${it.text};\n\n"
             file.append(trigger.toString(), 'utf-8')
         }
+    }
+
+    void createTables(def file, def schema) {
+        def tables = schema.tables.sort()
+        tables.each({
+            file << createTable(it.value)
+            file << createRowSecurity(it.value)
+            file << createPolicies(it.value)
+            file << "\n"
+        })
+    }
+
+    def createRowSecurity(def table) {
+        return table.rowSecurity ? "alter table ${table.name} enable row level security;\n" : ""
+    }
+
+    def createPolicies(def table) {
+        def result = ""
+        table.policies.each({
+            result += createPolicy(table, it.value)
+        })
+        return result;
+    }
+
+    def createPolicy(def table, def policy) {
+        def result = "create policy ${policy.name} on ${table.name}"
+        result += " as ${policy.permissive ? 'permissive' : 'restrictive'}"
+        result += " for ${policy.cmd}"
+        result += " to ${policy.roles.join(", ")}"
+        result += " using (${policy.usingExpression})"
+        if (policy.checkExpression) {
+            result += " with check (${policy.checkExpression})"
+        }
+        result += ";\n"
+        return result
     }
 }

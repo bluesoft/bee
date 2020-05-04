@@ -40,7 +40,9 @@ import br.com.bluesoft.bee.model.Table
 import br.com.bluesoft.bee.model.Trigger
 import br.com.bluesoft.bee.model.UserType
 import br.com.bluesoft.bee.model.View
+import br.com.bluesoft.bee.model.postgres.PostgresTable
 import br.com.bluesoft.bee.util.JsonUtil
+import br.com.bluesoft.bee.util.RDBMS
 import org.codehaus.jackson.map.ObjectMapper
 
 class JsonImporter implements Importer {
@@ -75,8 +77,21 @@ class JsonImporter implements Importer {
     }
 
     Schema importMetaData() {
+        importMetaData(Table.class)
+    }
+
+    Schema importMetaData(RDBMS rdbms) {
+        switch (rdbms) {
+            case RDBMS.POSTGRES:
+                return importMetaData(PostgresTable.class)
+            default:
+                return importMetaData()
+        }
+    }
+
+    Schema importMetaData(Class<? extends Table> tableClass) {
         Schema schema = new Schema()
-        schema.tables = importTables()
+        schema.tables = importTables(tableClass)
         schema.views = importViews()
         schema.sequences = importSequences()
         schema.procedures = importProcedures()
@@ -86,12 +101,12 @@ class JsonImporter implements Importer {
         return schema
     }
 
-    private def importTables() {
+    private def importTables(Class<? extends Table> tableClass) {
         checkIfFolderExists(tablesFolder)
         def tables = [:]
         tablesFolder.eachFile {
             if (it.name.endsWith(".bee")) {
-                def table = mapper.readValue(it, Table.class)
+                def table = mapper.readValue(it, tableClass)
                 tables[table.name] = table
             }
         }
