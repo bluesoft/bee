@@ -36,101 +36,102 @@ import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
 
-
 class Schema {
-	String databaseVersion
-	Map tables = [:]
-	Map views = [:]
-	Map sequences = [:]
-	Map procedures = [:]
-	Map packages = [:]
-	Map triggers = [:]
-	Map userTypes = [:]
-	boolean filtered
 
-	def validateWithMetadata(Schema metadataSchema) {
+    String databaseVersion
+    Map tables = [:]
+    Map views = [:]
+    Map sequences = [:]
+    Map procedures = [:]
+    Map packages = [:]
+    Map triggers = [:]
+    Map userTypes = [:]
+    boolean filtered
 
-		def databaseObjects = this.getAllObjects()
-		def metadataObjects = metadataSchema.getAllObjects()
+    def validateWithMetadata(Schema metadataSchema) {
 
-		def messages = []
-		messages.addAll getMissingObjectsMessages(databaseObjects, metadataObjects)
-		messages.addAll getAdditionalObjectsMessages(databaseObjects, metadataObjects)
-		messages.addAll getWrongTypesObjectMessages(databaseObjects, metadataObjects)
-		databaseObjects.each { objName, obj ->
-			if (obj instanceof Validator) {
-				def target = metadataSchema.getAllObjects()[objName]
-				if (target)
-					messages.addAll obj.validateWithMetadata(target)
-			}
-		}
+        def databaseObjects = this.getAllObjects()
+        def metadataObjects = metadataSchema.getAllObjects()
 
-		return messages
-	}
-	
-	private def getWrongTypesObjectMessages(databaseObjects, metadataObjects) {
-		def messages = []
-		databaseObjects.each { objName, obj ->
-			def objectsWithWrongType = metadataObjects.find{it.key == objName && it.value.class != obj.class}
-			objectsWithWrongType.each {
-				def messageText = "The database contain one ${obj.class.simpleName} with name ${objName}, but reference metadata too contain a ${it.value.class.simpleName} with same name.";
-				def message = new Message(objectName:objName, level:MessageLevel.ERROR, objectType:ObjectType.TABLE, messageType:MessageType.PRESENCE, message:messageText)
-				messages << message
-			}
-		}
-		return messages
-	}
+        def messages = []
+        messages.addAll getMissingObjectsMessages(databaseObjects, metadataObjects)
+        messages.addAll getAdditionalObjectsMessages(databaseObjects, metadataObjects)
+        messages.addAll getWrongTypesObjectMessages(databaseObjects, metadataObjects)
+        databaseObjects.each { objName, obj ->
+            if (obj instanceof Validator) {
+                def target = metadataSchema.getAllObjects()[objName]
+                if (target) {
+                    messages.addAll obj.validateWithMetadata(target)
+                }
+            }
+        }
 
-	private def getMissingObjectsMessages(databaseObjects, metadataObjects) {
-		def messages = []
-		def databaseMissingObjects = metadataObjects.keySet() - databaseObjects.keySet()
-		databaseMissingObjects.each {
-			def object = metadataObjects[it]
-			def objectType = ObjectType.getType(object)
-			def messageText = "The database is missing the ${objectType.description} ${it}.";
-			def message = new Message(objectName:it, level:MessageLevel.ERROR, objectType:objectType, messageType:MessageType.PRESENCE, message:messageText)
-			messages << message
-		}
-		return messages
-	}
+        return messages
+    }
 
-	private def getAdditionalObjectsMessages(databaseObjects, metadataObjects) {
-		def messages = []
-		def databaseMissingObjects = databaseObjects.keySet() - metadataObjects.keySet()
-		databaseMissingObjects.each {
-			def object = databaseObjects[it]
-			def objectType = ObjectType.getType(object)
-			def messageText = "The ${objectType.description} ${it} exists in the database but does not exist in the reference metadata.";
-			def message = new Message(objectName:it, level:MessageLevel.WARNING, objectType:objectType, messageType:MessageType.PRESENCE, message:messageText)
-			messages << message
-		}
-		return messages
-	}
+    private def getWrongTypesObjectMessages(databaseObjects, metadataObjects) {
+        def messages = []
+        databaseObjects.each { objName, obj ->
+            def objectsWithWrongType = metadataObjects.find { it.key == objName && it.value.class != obj.class }
+            objectsWithWrongType.each {
+                def messageText = "The database contain one ${obj.class.simpleName} with name ${objName}, but reference metadata too contain a ${it.value.class.simpleName} with same name.";
+                def message = new Message(objectName: objName, level: MessageLevel.ERROR, objectType: ObjectType.TABLE, messageType: MessageType.PRESENCE, message: messageText)
+                messages << message
+            }
+        }
+        return messages
+    }
 
-	def getAllObjects() {
-		def allObjects = [:]
-		allObjects.putAll tables
-		allObjects.putAll views
-		allObjects.putAll sequences
-		allObjects.putAll procedures
-		allObjects.putAll packages
-		allObjects.putAll triggers
-		allObjects.putAll userTypes
-		return allObjects
-	}
+    private def getMissingObjectsMessages(databaseObjects, metadataObjects) {
+        def messages = []
+        def databaseMissingObjects = metadataObjects.keySet() - databaseObjects.keySet()
+        databaseMissingObjects.each {
+            def object = metadataObjects[it]
+            def objectType = ObjectType.getType(object)
+            def messageText = "The database is missing the ${objectType.description} ${it}.";
+            def message = new Message(objectName: it, level: MessageLevel.ERROR, objectType: objectType, messageType: MessageType.PRESENCE, message: messageText)
+            messages << message
+        }
+        return messages
+    }
 
-	def filter(String objectName) {
-		def Schema schema = new Schema()
-		schema.tables.putAll tables.findAll { it.key == objectName }
-		schema.views.putAll views.findAll { it.key == objectName }
-		schema.sequences.putAll sequences.findAll { it.key == objectName }
-		schema.procedures.putAll procedures.findAll { it.key == objectName }
-		schema.packages.putAll packages.findAll { it.key == objectName }
-		schema.triggers.putAll triggers.findAll { it.key == objectName }
-		schema.userTypes.putAll userTypes.findAll {it.key == objectName }
-		schema.filtered = true
-		return schema
-	}
+    private def getAdditionalObjectsMessages(databaseObjects, metadataObjects) {
+        def messages = []
+        def databaseMissingObjects = databaseObjects.keySet() - metadataObjects.keySet()
+        databaseMissingObjects.each {
+            def object = databaseObjects[it]
+            def objectType = ObjectType.getType(object)
+            def messageText = "The ${objectType.description} ${it} exists in the database but does not exist in the reference metadata.";
+            def message = new Message(objectName: it, level: MessageLevel.WARNING, objectType: objectType, messageType: MessageType.PRESENCE, message: messageText)
+            messages << message
+        }
+        return messages
+    }
+
+    def getAllObjects() {
+        def allObjects = [:]
+        allObjects.putAll tables
+        allObjects.putAll views
+        allObjects.putAll sequences
+        allObjects.putAll procedures
+        allObjects.putAll packages
+        allObjects.putAll triggers
+        allObjects.putAll userTypes
+        return allObjects
+    }
+
+    def filter(String objectName) {
+        def Schema schema = new Schema()
+        schema.tables.putAll tables.findAll { it.key == objectName }
+        schema.views.putAll views.findAll { it.key == objectName }
+        schema.sequences.putAll sequences.findAll { it.key == objectName }
+        schema.procedures.putAll procedures.findAll { it.key == objectName }
+        schema.packages.putAll packages.findAll { it.key == objectName }
+        schema.triggers.putAll triggers.findAll { it.key == objectName }
+        schema.userTypes.putAll userTypes.findAll { it.key == objectName }
+        schema.filtered = true
+        return schema
+    }
 }
 
 

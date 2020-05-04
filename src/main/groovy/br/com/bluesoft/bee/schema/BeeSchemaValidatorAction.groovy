@@ -33,8 +33,7 @@
 package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.database.ConnectionInfo
-import br.com.bluesoft.bee.database.reader.DatabaseReaderChanger;
-import br.com.bluesoft.bee.database.reader.OracleDatabaseReader
+import br.com.bluesoft.bee.database.reader.DatabaseReaderChanger
 import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.model.Schema
@@ -42,67 +41,71 @@ import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.service.MessagePrinter
+import br.com.bluesoft.bee.util.RDBMSUtil
 
-class BeeSchemaValidatorAction implements ActionRunner{
+class BeeSchemaValidatorAction implements ActionRunner {
 
-	Options options
-	BeeWriter out
-	def importer
-	def sql
+    Options options
+    BeeWriter out
+    def importer
+    def sql
 
-	public boolean validateParameters() {
-		return options.arguments.size() >= 1
-	}
+    public boolean validateParameters() {
+        return options.arguments.size() >= 1
+    }
 
-	boolean run() {
+    boolean run() {
 
-		def clientName = options.arguments[0]
-		def objectName = options.arguments[1]
-		
-		MessagePrinter messagePrinter = new MessagePrinter()
+        def clientName = options.arguments[0]
+        def objectName = options.arguments[1]
 
-		def importer = getImporter()
-		out.log("connecting to " + clientName);
-		def sql = getDatabaseConnection(clientName)
-		def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
+        MessagePrinter messagePrinter = new MessagePrinter()
 
-		out.log('importing schema metadata from the reference files')
-		Schema metadataSchema = importer.importMetaData()
+        def importer = getImporter()
+        out.log("connecting to " + clientName);
+        def sql = getDatabaseConnection(clientName)
+        def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
 
-		if(objectName)
-			metadataSchema = metadataSchema.filter(objectName)
+        out.log('importing schema metadata from the reference files')
+        Schema metadataSchema = importer.importMetaData(RDBMSUtil.getRDBMS(options))
 
-		out.log('importing schema metadata from the database')
-		Schema databaseSchema = databaseReader.getSchema(objectName)
+        if (objectName) {
+            metadataSchema = metadataSchema.filter(objectName)
+        }
 
-		if(objectName)
-			databaseSchema = databaseSchema.filter(objectName)
+        out.log('importing schema metadata from the database')
+        Schema databaseSchema = databaseReader.getSchema(objectName)
 
-		out.log('validating')
-		def messages = databaseSchema.validateWithMetadata(metadataSchema)
-		def warnings = messages.findAll { it.level == MessageLevel.WARNING }
-		def errors = messages.findAll { it.level == MessageLevel.ERROR }
+        if (objectName) {
+            databaseSchema = databaseSchema.filter(objectName)
+        }
 
-		out.log("--- bee found ${warnings.size()} warning(s)" )
-		messagePrinter.print(out, warnings)
+        out.log('validating')
+        def messages = databaseSchema.validateWithMetadata(metadataSchema)
+        def warnings = messages.findAll { it.level == MessageLevel.WARNING }
+        def errors = messages.findAll { it.level == MessageLevel.ERROR }
 
-		out.log("--- bee found ${errors.size()} error(s)" )
-		messagePrinter.print(out, errors)
+        out.log("--- bee found ${warnings.size()} warning(s)")
+        messagePrinter.print(out, warnings)
 
-		return errors.size() == 0
-	}
+        out.log("--- bee found ${errors.size()} error(s)")
+        messagePrinter.print(out, errors)
 
-	private def getImporter() {
-		if(importer == null)
-			return new JsonImporter(options.dataDir.canonicalPath)
-		return importer
-	}
+        return errors.size() == 0
+    }
+
+    private def getImporter() {
+        if (importer == null) {
+            return new JsonImporter(options.dataDir.canonicalPath)
+        }
+        return importer
+    }
 
 
-	def getDatabaseConnection(clientName) {
-		if(sql != null) {
-			return sql
-		}
-		return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
-	}
+    def getDatabaseConnection(clientName) {
+        if (sql != null) {
+            return sql
+        }
+        return ConnectionInfo.createDatabaseConnection(options.configFile, clientName)
+    }
 }

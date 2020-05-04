@@ -32,165 +32,182 @@
  */
 package br.com.bluesoft.bee.importer
 
-import java.io.File;
-
-import org.codehaus.jackson.map.ObjectMapper
-
-import br.com.bluesoft.bee.model.*
 import br.com.bluesoft.bee.model.Package
+import br.com.bluesoft.bee.model.Procedure
+import br.com.bluesoft.bee.model.Schema
+import br.com.bluesoft.bee.model.Sequence
+import br.com.bluesoft.bee.model.Table
+import br.com.bluesoft.bee.model.Trigger
+import br.com.bluesoft.bee.model.UserType
+import br.com.bluesoft.bee.model.View
+import br.com.bluesoft.bee.model.postgres.PostgresTable
 import br.com.bluesoft.bee.util.JsonUtil
-
+import br.com.bluesoft.bee.util.RDBMS
+import org.codehaus.jackson.map.ObjectMapper
 
 class JsonImporter implements Importer {
 
-	def path
-	ObjectMapper mapper
-	File mainFolder
-	File tablesFolder
-	File sequencesFolder
-	File viewsFolder
-	File proceduresFolder
-	File packagesFolder
-	File triggersFolder
-	File userTypesFolder
+    def path
+    ObjectMapper mapper
+    File mainFolder
+    File tablesFolder
+    File sequencesFolder
+    File viewsFolder
+    File proceduresFolder
+    File packagesFolder
+    File triggersFolder
+    File userTypesFolder
 
-	JsonImporter() {
-		this(null)
-	}
+    JsonImporter() {
+        this(null)
+    }
 
-	JsonImporter(def path) {
-		this.path = path ?: '/tmp/bee'
-		this.mainFolder = new File(this.path)
-		this.tablesFolder = new File(mainFolder, 'tables')
-		this.sequencesFolder = new File(mainFolder, 'sequences')
-		this.viewsFolder = new File(mainFolder, 'views')
-		this.proceduresFolder = new File(mainFolder, 'procedures')
-		this.packagesFolder = new File(mainFolder, 'packages')
-		this.triggersFolder = new File(mainFolder, 'triggers')
-		this.userTypesFolder = new File(mainFolder, 'usertypes')
+    JsonImporter(def path) {
+        this.path = path ?: '/tmp/bee'
+        this.mainFolder = new File(this.path)
+        this.tablesFolder = new File(mainFolder, 'tables')
+        this.sequencesFolder = new File(mainFolder, 'sequences')
+        this.viewsFolder = new File(mainFolder, 'views')
+        this.proceduresFolder = new File(mainFolder, 'procedures')
+        this.packagesFolder = new File(mainFolder, 'packages')
+        this.triggersFolder = new File(mainFolder, 'triggers')
+        this.userTypesFolder = new File(mainFolder, 'usertypes')
 
-		this.mapper = JsonUtil.createMapper()
-	}
+        this.mapper = JsonUtil.createMapper()
+    }
 
-	Schema importMetaData(){
-		Schema schema = new Schema()
-		schema.tables = importTables()
-		schema.views = importViews()
-		schema.sequences = importSequences()
-		schema.procedures = importProcedures()
-		schema.packages = importPackages()
-		schema.triggers = importTriggers()
-		schema.userTypes = importUserTypes()
-		return schema
-	}
+    Schema importMetaData() {
+        importMetaData(Table.class)
+    }
 
-	private def importTables() {
-		checkIfFolderExists(tablesFolder)
-		def tables = [:]
-		tablesFolder.eachFile {
-			if (it.name.endsWith(".bee")) {
-				def table = mapper.readValue(it, Table.class)
-				tables[table.name] = table
-			}
-		}
-		return tables
-	}
+    Schema importMetaData(RDBMS rdbms) {
+        switch (rdbms) {
+            case RDBMS.POSTGRES:
+                return importMetaData(PostgresTable.class)
+            default:
+                return importMetaData()
+        }
+    }
 
-	private def importViews() {
-		checkIfFolderExists(viewsFolder)
-		def views = [:]
-		def files = viewsFolder.listFiles().sort { it.name }
-		files.each {
-			if (it.name.endsWith(".bee")) {
-				def view = mapper.readValue(it, View.class)
-				views[view.name] = view
-			}
-		}
-		return views
-	}
+    Schema importMetaData(Class<? extends Table> tableClass) {
+        Schema schema = new Schema()
+        schema.tables = importTables(tableClass)
+        schema.views = importViews()
+        schema.sequences = importSequences()
+        schema.procedures = importProcedures()
+        schema.packages = importPackages()
+        schema.triggers = importTriggers()
+        schema.userTypes = importUserTypes()
+        return schema
+    }
 
-	private def importSequences() {
-		def sequences = [:]
-		def sequencesFolderExists = checkIfFolderExists(sequencesFolder)
-		
-		if (sequencesFolderExists && sequencesFolder.listFiles().size() > 0) {
-			sequencesFolder.eachFile {
-				if (it.name.endsWith(".bee")) {
-					def sequence = mapper.readValue(it, Sequence.class)
-					sequences[sequence.name] = sequence
-				}
-			}
-		} else {
-			File sequenceFile = new File(mainFolder, 'sequences.bee')
-			if (sequenceFile.exists()) {
-				def sequencesJSON = mapper.readTree(sequenceFile.getText())
-								sequencesJSON.getElements().each {
-					def sequence = mapper.readValue(it.toString(), Sequence.class)
-									sequences[sequence.name] = sequence
-				}
-			}
-		}
-		
-		return sequences
-	}
+    private def importTables(Class<? extends Table> tableClass) {
+        checkIfFolderExists(tablesFolder)
+        def tables = [:]
+        tablesFolder.eachFile {
+            if (it.name.endsWith(".bee")) {
+                def table = mapper.readValue(it, tableClass)
+                tables[table.name] = table
+            }
+        }
+        return tables
+    }
 
-	private def importProcedures() {
-		checkIfFolderExists(proceduresFolder)
-		def procedures = [:]
-		proceduresFolder.eachFile {
-			if (it.name.endsWith(".bee")) {
-				def procedure = mapper.readValue(it, Procedure.class)
-				procedures[procedure.name] = procedure
-			}
-		}
+    private def importViews() {
+        checkIfFolderExists(viewsFolder)
+        def views = [:]
+        def files = viewsFolder.listFiles().sort { it.name }
+        files.each {
+            if (it.name.endsWith(".bee")) {
+                def view = mapper.readValue(it, View.class)
+                views[view.name] = view
+            }
+        }
+        return views
+    }
 
-		return procedures
-	}
+    private def importSequences() {
+        def sequences = [:]
+        def sequencesFolderExists = checkIfFolderExists(sequencesFolder)
 
-	private def importPackages() {
-		checkIfFolderExists(packagesFolder)
-		def packages = [:]
-		packagesFolder.eachFile {
-			if (it.name.endsWith(".bee")) {
-				def pack = mapper.readValue(it, Package.class)
-				packages[pack.name] = pack
-			}
-		}
-		return packages
-	}
+        if (sequencesFolderExists && sequencesFolder.listFiles().size() > 0) {
+            sequencesFolder.eachFile {
+                if (it.name.endsWith(".bee")) {
+                    def sequence = mapper.readValue(it, Sequence.class)
+                    sequences[sequence.name] = sequence
+                }
+            }
+        } else {
+            File sequenceFile = new File(mainFolder, 'sequences.bee')
+            if (sequenceFile.exists()) {
+                def sequencesJSON = mapper.readTree(sequenceFile.getText())
+                sequencesJSON.getElements().each {
+                    def sequence = mapper.readValue(it.toString(), Sequence.class)
+                    sequences[sequence.name] = sequence
+                }
+            }
+        }
 
-	private def importTriggers() {
-		checkIfFolderExists(triggersFolder)
-		def triggers = [:]
-		triggersFolder.eachFile {
-			if (it.name.endsWith(".bee")) {
-				def trigger = mapper.readValue(it, Trigger.class)
-				triggers[trigger.name] = trigger
-			}
-		}
-		return triggers
-	}
-	
-	private def importUserTypes() {
-		checkIfFolderExists(userTypesFolder)
-		def userTypes = [:]
-		userTypesFolder.eachFile {
-			if (it.name.endsWith(".bee")) {
-				def userType = mapper.readValue(it, UserType.class)
-				userTypes[userType.name] = userType
-			}
-		}
-		return userTypes
-	}
-	
-	private def checkIfFolderExists(def directory) {
-		def exists = false
-		if (!directory.isDirectory()) {
-			directory.mkdir()
-		} else {
-			exists = true
-		}
-		return exists
-	}
+        return sequences
+    }
+
+    private def importProcedures() {
+        checkIfFolderExists(proceduresFolder)
+        def procedures = [:]
+        proceduresFolder.eachFile {
+            if (it.name.endsWith(".bee")) {
+                def procedure = mapper.readValue(it, Procedure.class)
+                procedures[procedure.name] = procedure
+            }
+        }
+
+        return procedures
+    }
+
+    private def importPackages() {
+        checkIfFolderExists(packagesFolder)
+        def packages = [:]
+        packagesFolder.eachFile {
+            if (it.name.endsWith(".bee")) {
+                def pack = mapper.readValue(it, Package.class)
+                packages[pack.name] = pack
+            }
+        }
+        return packages
+    }
+
+    private def importTriggers() {
+        checkIfFolderExists(triggersFolder)
+        def triggers = [:]
+        triggersFolder.eachFile {
+            if (it.name.endsWith(".bee")) {
+                def trigger = mapper.readValue(it, Trigger.class)
+                triggers[trigger.name] = trigger
+            }
+        }
+        return triggers
+    }
+
+    private def importUserTypes() {
+        checkIfFolderExists(userTypesFolder)
+        def userTypes = [:]
+        userTypesFolder.eachFile {
+            if (it.name.endsWith(".bee")) {
+                def userType = mapper.readValue(it, UserType.class)
+                userTypes[userType.name] = userType
+            }
+        }
+        return userTypes
+    }
+
+    private def checkIfFolderExists(def directory) {
+        def exists = false
+        if (!directory.isDirectory()) {
+            directory.mkdir()
+        } else {
+            exists = true
+        }
+        return exists
+    }
 
 }

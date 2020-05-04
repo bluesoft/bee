@@ -34,39 +34,49 @@ package br.com.bluesoft.bee.model;
 
 public enum ObjectType {
 
-	TABLE("table"), VIEW("view"), SEQUENCE("sequence"), TABLE_COLUMN("table column"), INDEX('index'), CONSTRAINT('constraint'), PROCEDURE('procedure'), PACKAGE('package'), TRIGGER('trigger'), USER_TYPE('user type')
+    TABLE("table"),
+    VIEW("view"),
+    SEQUENCE("sequence"),
+    TABLE_COLUMN("table column"),
+    INDEX('index'),
+    CONSTRAINT('constraint'),
+    PROCEDURE('procedure'),
+    PACKAGE('package'),
+    TRIGGER('trigger'),
+    USER_TYPE('user type'),
+    POLICY('policy')
 
-	def description
+    def description
 
-	private ObjectType(def description) {
-		this.description = description
-	}
+    private ObjectType(def description) {
+        this.description = description
+    }
 
-	static def getType(object) {
+    static def getType(object) {
 
-		switch(object.class) {
-			case Table.class:
-				return TABLE
-			case View.class:
-				return VIEW
-			case Sequence.class:
-				return SEQUENCE
-			case TableColumn.class:
-				return TABLE_COLUMN
-			case Index.class:
-				return INDEX
-			case Constraint.class:
-				return CONSTRAINT
-			case Procedure.class:
-				return PROCEDURE
-			case Package.class:
-				return PACKAGE
-			case Trigger.class:
-				return TRIGGER
-			case UserType.class:
-				return USER_TYPE
-			default:
-				return null
-		}
-	}
+        switch (object.class) {
+            case Table.class:
+                return TABLE
+            case View.class:
+                return VIEW
+            case Sequence.class:
+                return SEQUENCE
+            case TableColumn.class:
+                return TABLE_COLUMN
+            case Index.class:
+                return INDEX
+            case Constraint.class:
+                return CONSTRAINT
+            case Procedure.class:
+                return PROCEDURE
+            case Package.class:
+                return PACKAGE
+            case Trigger.class:
+                return TRIGGER
+            case UserType.class:
+                return USER_TYPE
+            default:
+                return null
+        }
+    }
 }
