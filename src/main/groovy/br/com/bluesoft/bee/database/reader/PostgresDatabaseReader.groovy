@@ -116,7 +116,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 
 
     static final def TABLES_COLUMNS_QUERY = '''
-        select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
+        	select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
 		case 
 			when (ic.numeric_precision_radix is not null) then ic.numeric_precision
 			when (ic.character_maximum_length is not null) then ic.character_maximum_length 
