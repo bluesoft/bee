@@ -116,17 +116,17 @@ class PostgresDatabaseReader implements DatabaseReader {
 
 
     static final def TABLES_COLUMNS_QUERY = '''
-		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
+        select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
 		case 
 			when (ic.numeric_precision_radix is not null) then ic.numeric_precision
 			when (ic.character_maximum_length is not null) then ic.character_maximum_length 
 		end
-		as data_size,
-		ic.numeric_scale as data_scale, ic.column_default as data_default
+		as data_size, is_generated,
+		ic.numeric_scale as data_scale, coalesce(ic.column_default, ic.generation_expression) as data_default
 		from information_schema.columns ic
 		inner join information_schema.tables it on it.table_name = ic.table_name
 		where ic.table_schema not in ('pg_catalog' , 'information_schema')
-		and it.table_type = 'BASE TABLE'
+		and it.table_type = 'BASE TABLE\'
 		order by ic.table_name, ic.ordinal_position;
 		'''
 
@@ -136,8 +136,8 @@ class PostgresDatabaseReader implements DatabaseReader {
 			when (ic.numeric_precision_radix is not null) then ic.numeric_precision
 			when (ic.character_maximum_length is not null) then ic.character_maximum_length 
 		end
-		as data_size,
-		ic.numeric_scale as data_scale, ic.column_default as data_default
+		as data_size, is_generated,
+		ic.numeric_scale as data_scale, coalesce(ic.column_default, ic.generation_expression) as data_default
 		from information_schema.columns ic
 		inner join information_schema.tables it on it.table_name = ic.table_name
 		where ic.table_schema not in ('pg_catalog' , 'information_schema')
@@ -161,6 +161,7 @@ class PostgresDatabaseReader implements DatabaseReader {
             column.size = it.data_size
             column.scale = it.data_scale == null ? 0 : it.data_scale
             column.nullable = it.nullable == 'NO' ? false : true
+            column.virtual = it.virtual == 'ALWAYS'
             def defaultValue = it.data_default
             if (defaultValue) {
                 column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()

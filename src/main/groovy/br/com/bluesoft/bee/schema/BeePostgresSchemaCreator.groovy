@@ -19,7 +19,11 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
         }
 
         if (column.defaultValue) {
-            result += " default ${column.defaultValue}"
+            if (column.virtual) {
+                result += " generated always as ${column.defaultValue} stored"
+            } else {
+                result += " default ${column.defaultValue}"
+            }
         }
 
         if (!column.nullable) {
