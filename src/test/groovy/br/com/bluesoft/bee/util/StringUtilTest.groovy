@@ -54,9 +54,15 @@ public class StringUtilTest extends Specification {
         StringUtil.compare(str1, str2) == true
 
         where:
-        str1           | str2
-        "abc\nabc"     | "abc\n abc "
-        "abc\n\nabc"   | "abc\n abc "
-        "abc\n \n abc" | "abc\n abc "
+        str1                    | str2
+        "abc"                   | "aBc"
+        "a b c"                 | "a   b   c"
+        "a b c"                 | "a \"b\" c"
+        "a b c"                 | "a 'b' c"
+        "a \n b c"              | "a b \n c"
+        "abc\nabc"              | "abc\n abc "
+        "abc\n\nabc"            | "abc\n abc "
+        "abc\n \n abc"          | "abc\n abc "
+        "abc\n \n abc \n a b c" | "abc\n \n abc \n a  \"B'  C;"
     }
 }
