@@ -30,7 +30,7 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.util;
+package br.com.bluesoft.bee.util
 
 import spock.lang.Specification
 
@@ -54,9 +54,26 @@ public class StringUtilTest extends Specification {
         StringUtil.compare(str1, str2) == true
 
         where:
-        str1           | str2
-        "abc\nabc"     | "abc\n abc "
-        "abc\n\nabc"   | "abc\n abc "
-        "abc\n \n abc" | "abc\n abc "
+        str1                    | str2
+        "abc"                   | "aBc"
+        "a b c"                 | "a   b   c"
+        "a b c"                 | "a \"b\" c"
+        "a b c"                 | "a 'b' c"
+        "a \n b c"              | "a b \n c"
+        "abc\nabc"              | "abc\n abc "
+        "abc\n\nabc"            | "abc\n abc "
+        "abc\n \n abc"          | "abc\n abc "
+        "abc\n \n abc \n a b c" | "abc\n \n abc \n a  \"B'  C;"
+    }
+
+    void "it should normalize the string"() {
+        given: 'a text'
+        def unormalizedText = 'text\n'
+
+        when: "normalizing the text"
+        def normalizedText = StringUtil.normalizeObjectText(unormalizedText)
+
+        then: "it should have normalized the text"
+        normalizedText == 'text;'
     }
 }

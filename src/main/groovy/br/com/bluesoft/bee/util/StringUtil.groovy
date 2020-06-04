@@ -37,6 +37,32 @@ import java.util.regex.Pattern
 
 public class StringUtil {
 
+    static String normalizeObjectText(str) {
+        str = str.trim()
+
+        // remove new lines
+        str = str.replaceAll('\n', ' ')
+
+        // remove quotes
+        str = str.replaceAll("\"", "")
+        str = str.replaceAll("'", "")
+
+        // remove multiple spaces
+        str = str.replaceAll("( )+", " ");
+
+        str = str.trim()
+
+        // add semicolon to the end of string
+        if (!str.endsWith(';')) {
+            str += ';'
+        }
+
+        // trim and normalize case
+        str = str.toLowerCase()
+
+        return str
+    }
+
     static def splitString(str) {
         def arr = []
         str.eachLine {
@@ -50,8 +76,8 @@ public class StringUtil {
     }
 
     static boolean compare(String str1, String str2) {
-        def arr1 = splitString("$str1")
-        def arr2 = splitString("$str2")
+        def arr1 = splitString(normalizeObjectText(str1))
+        def arr2 = splitString(normalizeObjectText(str2))
 
         return arr1 == arr2
     }
