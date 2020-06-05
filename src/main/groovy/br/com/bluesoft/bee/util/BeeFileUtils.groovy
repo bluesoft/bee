@@ -99,11 +99,12 @@ public class BeeFileUtils {
         }
 
         Set itens = baseNames.toSet()
-        def names = source.list()
+        def names = []
+        source.eachFile { names << it }
 
         names.each {
-            if (it.lastIndexOf('-') > 0 && it.substring(0, it.lastIndexOf('-')) in itens) {
-                new File(source, it).delete()
+            if (it.name.lastIndexOf('-') > 0  && it.name.substring(0, it.name.lastIndexOf('-')) in itens) {
+                it.delete()
             }
         }
 
@@ -127,7 +128,7 @@ public class BeeFileUtils {
 
             try {
                 destination.getParentFile().mkdirs()
-                destination << source.text
+                destination.bytes = source.bytes
             } catch (Exception e) {
                 println "fatal: could not copy folder"
                 e.printStackTrace()
