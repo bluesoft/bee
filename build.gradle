@@ -11,13 +11,13 @@ plugins {
     id 'com.jfrog.bintray' version '0.5'
 }
 
-apply plugin:'application'
+apply plugin: 'application'
 
 mainClassName = "br.com.bluesoft.bee.Bee"
 
 group = 'br.com.bluesoft.bee'
 def artifact = 'bee'
-version = '1.78'
+version = '1.79'
 
 def javaVersion = JavaVersion.VERSION_1_8
 sourceCompatibility = javaVersion;
