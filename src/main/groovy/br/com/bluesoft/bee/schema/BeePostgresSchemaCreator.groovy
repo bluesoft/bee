@@ -90,4 +90,5 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
             file.append(trigger.toString(), 'utf-8')
         }
     }
+
 }
