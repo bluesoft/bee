@@ -370,7 +370,6 @@ class PostgresDatabaseReader implements DatabaseReader {
         }
 
         rows.each({
-            println it
             def tableName = it.table_name.toLowerCase()
             def table = tables[tableName]
 
@@ -473,16 +472,16 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def VIEWS_QUERY = '''
-		select table_name as view_name, view_definition as text 
-		from information_schema.views 
-		where table_schema = 'public'
+        select table_name as view_name, view_definition as text 
+        from information_schema.views
+        where table_schema not in ('information_schema', 'pg_catalog')
 		order by view_name
 	'''
     final static def VIEWS_QUERY_BY_NAME = '''
-		select table_name as view_name, view_definition as text 
-		from information_schema.views 
-		where table_schema = 'public' and table_name = upper(?)
-		order by view_name
+        select table_name as view_name, view_definition as text 
+        from information_schema.views
+        where table_schema not in ('information_schema', 'pg_catalog')
+          and table_name = lower(?)
 	'''
 
     def getViews(objectName) {
@@ -504,7 +503,7 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def PROCEDURES_NAME_QUERY = '''
-		select p.proname as name
+		select n.nspname, p.proname as name
 		from pg_namespace n
 		inner join pg_proc p on pronamespace = n.oid
 		inner join pg_type pt on (pt.oid = p.prorettype)
@@ -513,7 +512,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		order by p.proname
 	'''
     final static def PROCEDURES_NAME_QUERY_BY_NAME = '''
-		select p.proname as name
+		select n.nspname, p.proname as name
 		from pg_namespace n
 		join pg_proc p on pronamespace = n.oid
 		inner join pg_type pt on (pt.oid = p.prorettype)
@@ -530,6 +529,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 
     final static def PROCEDURES_BODY_QUERY = '''
 		select 
+            pn.nspname,
 			pp.proname as name,
 			pg_get_functiondef(pp.oid) as text
 		from pg_proc pp
@@ -543,6 +543,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 	'''
     final static def PROCEDURES_BODY_QUERY_BY_NAME = '''
 		select 
+            pn.nspname,
 			pp.proname as name,
 			pg_get_functiondef(pp.oid) as text
 		from pg_proc pp
@@ -567,8 +568,13 @@ class PostgresDatabaseReader implements DatabaseReader {
         }
 
         rows.each({
-            def procedure = new Procedure(name: it.name.toLowerCase(), text: it.text)
-            procedures[procedure.name] = procedure
+            def schema =  it.nspname == 'public' ? null : it.nspname
+            def procedure = new Procedure(name: it.name.toLowerCase(), text: it.text, schema: schema)
+            if(schema) {
+                procedures["${schema}.${procedure.name}"] = procedure
+            } else {
+                procedures[procedure.name] = procedure
+            }
         })
         return procedures
     }

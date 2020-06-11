@@ -125,7 +125,7 @@ class Schema {
         schema.tables.putAll tables.findAll { it.key == objectName }
         schema.views.putAll views.findAll { it.key == objectName }
         schema.sequences.putAll sequences.findAll { it.key == objectName }
-        schema.procedures.putAll procedures.findAll { it.key == objectName }
+        schema.procedures.putAll procedures.findAll { it.value.name == objectName }
         schema.packages.putAll packages.findAll { it.key == objectName }
         schema.triggers.putAll triggers.findAll { it.key == objectName }
         schema.userTypes.putAll userTypes.findAll { it.key == objectName }
