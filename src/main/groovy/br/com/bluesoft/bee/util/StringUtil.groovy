@@ -40,6 +40,7 @@ public class StringUtil {
     static String normalizeObjectText(str) {
         str = str.toLowerCase()
         str = str.replaceAll('\n', ' ')
+        str = str.replaceAll('\t', ' ')
         str = str.replaceAll("\"", "")
         str = str.replaceAll("'", "")
         str = str.replaceAll("( )+", " ");

@@ -64,5 +64,6 @@ public class StringUtilTest extends Specification {
         "abc\n\nabc"            | "abc\n abc "
         "abc\n \n abc"          | "abc\n abc "
         "abc\n \n abc \n a b c" | "abc\n \n abc \n a  \"B'  C;"
+        "a b c"                 | "a\t\tb\tc"
     }
 }
