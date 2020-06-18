@@ -345,7 +345,7 @@ class PostgresDatabaseReader implements DatabaseReader {
              left join information_schema.check_constraints cc using (constraint_catalog, constraint_schema, constraint_name)
         where constraint_schema not in ('pg_catalog', 'information_schema')
           and constraint_name not like '%_not_null\'
-        order by tc.table_name, tc.constraint_type, tc.constraint_name\t
+        order by tc.table_name, tc.constraint_type, tc.constraint_name	
     '''
 
     final static def CONSTRAINTS_QUERY_BY_NAME = '''
@@ -358,7 +358,7 @@ class PostgresDatabaseReader implements DatabaseReader {
         where constraint_schema not in ('pg_catalog', 'information_schema')
           and constraint_name not like '%_not_null\'
           and tc.table_name = ?
-        order by tc.table_name, tc.constraint_type, tc.constraint_name\t
+        order by tc.table_name, tc.constraint_type, tc.constraint_name	
 	'''
 
     private def fillCostraints(tables, objectName) {
@@ -503,23 +503,23 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def PROCEDURES_NAME_QUERY = '''
-		select n.nspname, p.proname as name
+		select distinct n.nspname, p.proname as name
 		from pg_namespace n
 		inner join pg_proc p on pronamespace = n.oid
 		inner join pg_type pt on (pt.oid = p.prorettype)
-		where n.nspname not like 'pg_%'
+		where n.nspname not like 'pg_%\'
 		and n.nspname not in ('information_schema','pg_catalog','pg_toast')
-		order by p.proname
+		order by nspname, p.proname
 	'''
     final static def PROCEDURES_NAME_QUERY_BY_NAME = '''
-		select n.nspname, p.proname as name
+		select distinct n.nspname, p.proname as name
 		from pg_namespace n
 		join pg_proc p on pronamespace = n.oid
 		inner join pg_type pt on (pt.oid = p.prorettype)
 		where n.nspname not like 'pg_%'
 		and n.nspname not in ('information_schema','pg_catalog','pg_toast')
 		and p.proname = ?
-		order by p.pronames	
+		order by nspname, p.proname
 '''
 
     def getProcedures(objectName) {
@@ -528,8 +528,7 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def PROCEDURES_BODY_QUERY = '''
-		select 
-            pn.nspname,
+		select pn.nspname,
 			pp.proname as name,
 			pg_get_functiondef(pp.oid) as text
 		from pg_proc pp
@@ -537,13 +536,11 @@ class PostgresDatabaseReader implements DatabaseReader {
 			inner join pg_type pt on (pt.oid = pp.prorettype)
 			inner join pg_language pl on (pp.prolang = pl.oid)
 		where pl.lanname NOT IN ('c','internal') 
-			and pn.nspname NOT LIKE 'pg_%'
-			and pn.nspname <> 'information_schema'
-		order by pp.proname
+			and pn.nspname NOT IN ('pg_catalog', 'information_schema')
+		order by pn.nspname, pp.proname
 	'''
     final static def PROCEDURES_BODY_QUERY_BY_NAME = '''
-		select 
-            pn.nspname,
+		select pn.nspname,
 			pp.proname as name,
 			pg_get_functiondef(pp.oid) as text
 		from pg_proc pp
@@ -551,10 +548,9 @@ class PostgresDatabaseReader implements DatabaseReader {
 			inner join pg_type pt on (pt.oid = pp.prorettype)
 			inner join pg_language pl on (pp.prolang = pl.oid)
 		where pl.lanname NOT IN ('c','internal') 
-			and pn.nspname NOT LIKE 'pg_%'
-			and pn.nspname <> 'information_schema'
+			and pn.nspname NOT IN ('pg_catalog', 'information_schema')
 			and pp.proname = ?
-		order by pp.proname
+		order by pn.nspname, pp.proname
 	'''
 
     def getProceduresBody(objectName) {
@@ -568,12 +564,15 @@ class PostgresDatabaseReader implements DatabaseReader {
         }
 
         rows.each({
-            def schema =  it.nspname == 'public' ? null : it.nspname
-            def procedure = new Procedure(name: it.name.toLowerCase(), text: it.text, schema: schema)
-            if(schema) {
-                procedures["${schema}.${procedure.name}"] = procedure
+            def schema = it.nspname == 'public' ? null : it.nspname
+            def name = schema ? "${schema}.${it.name.toLowerCase()}" : it.name.toLowerCase()
+
+            Procedure proc = procedures[name]
+            if(proc) {
+                proc.text += ";\n\n" + it.text
             } else {
-                procedures[procedure.name] = procedure
+                def procedure = new Procedure(name: it.name.toLowerCase(), text: it.text, schema: schema)
+                procedures[name] = procedure
             }
         })
         return procedures
