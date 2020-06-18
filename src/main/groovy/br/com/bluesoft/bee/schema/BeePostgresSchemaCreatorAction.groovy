@@ -50,6 +50,7 @@ public class BeePostgresSchemaCreatorAction implements ActionRunner {
         beeSchemaCreator.createPrimaryKeys(file, schema)
         beeSchemaCreator.createUniqueKeys(file, schema)
         beeSchemaCreator.createForeignKeys(file, schema)
+        beeSchemaCreator.createCheckConstraint(file, schema)
 
         out.println("generating indexes...")
         beeSchemaCreator.createIndexes(file, schema)

@@ -14,4 +14,16 @@ public class VersionHelper {
         return is_newer
     }
 
+    static float getVersion(String version) {
+        try {
+            return Float.parseFloat(version)
+        } catch(NumberFormatException|NullPointerException e) {
+            return 0;
+        }
+    }
+
+    static int getVersionMajor(String version) {
+        return  (int)getVersion(version)
+    }
+
 }

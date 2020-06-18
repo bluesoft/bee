@@ -91,7 +91,7 @@ class BeeSchemaGeneratorAction implements ActionRunner {
     }
 
     void applyIgnore(Schema schemaOld, Schema schemaNew) {
-        def tableNames = schemaOld.tables.findAll { it.key in schemaOld.tables }
+        def tableNames = schemaOld.tables.findAll { it.key in schemaNew.tables }
 
         tableNames.each { etable ->
             def ignoredColumns = schemaOld.tables[etable.key].columns.findAll { it.value.ignore }

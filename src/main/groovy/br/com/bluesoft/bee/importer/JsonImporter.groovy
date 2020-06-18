@@ -142,7 +142,10 @@ class JsonImporter implements Importer {
         proceduresFolder.eachFile {
             if (it.name.endsWith(".bee")) {
                 def procedure = mapper.readValue(it, Procedure.class)
-                procedures[procedure.name] = procedure
+                if(procedure.schema)
+                    procedures["${procedure.schema}.${procedure.name}"] = procedure
+                else
+                    procedures[procedure.name] = procedure
             }
         }
 
