@@ -27,5 +27,4 @@ class DatabaseReaderChanger {
         }
         return databaseReader;
     }
-
 }

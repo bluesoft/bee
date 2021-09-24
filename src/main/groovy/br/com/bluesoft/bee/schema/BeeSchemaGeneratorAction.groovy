@@ -40,6 +40,7 @@ import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.util.RDBMSUtil
 import groovy.sql.Sql
 
 class BeeSchemaGeneratorAction implements ActionRunner {
@@ -68,16 +69,19 @@ class BeeSchemaGeneratorAction implements ActionRunner {
 
         try {
             out.log "Extracting the metadata..."
-            def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
-            Schema schemaNew = databaseReader.getSchema(objectName)
-			if (objectName) {
-				schemaNew = schemaNew.filter(objectName)
-			}
 
-            Schema schemaOld = getImporter().importMetaData()
-			if (objectName) {
-				schemaOld = schemaOld.filter(objectName)
-			}
+            def rdbms = RDBMSUtil.getRDBMS(options)
+            def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
+
+            Schema schemaNew = databaseReader.getSchema(objectName)
+            if (objectName) {
+                schemaNew = schemaNew.filter(objectName)
+            }
+
+            Schema schemaOld = getImporter().importMetaData(rdbms)
+            if (objectName) {
+                schemaOld = schemaOld.filter(objectName)
+            }
 
             applyIgnore(schemaOld, schemaNew)
 
@@ -111,9 +115,9 @@ class BeeSchemaGeneratorAction implements ActionRunner {
     }
 
     private def getImporter() {
-		if (importer == null) {
-			return new JsonImporter(options.dataDir.canonicalPath)
-		}
+        if (importer == null) {
+            return new JsonImporter(options.dataDir.canonicalPath)
+        }
         return importer
     }
 }

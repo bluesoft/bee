@@ -51,11 +51,12 @@ class Table implements Validator {
     }
 
     List validateWithMetadata(metadataTable) {
-		if (!metadataTable instanceof Table) {
-			return []
-		}
+        if (!metadataTable instanceof Table) {
+            return []
+        }
 
         def messages = []
+
         if (metadataTable) {
             messages.addAll validatePresenceOfColumns(metadataTable)
             messages.addAll validatePresenceOfIndexes(metadataTable)
@@ -145,7 +146,7 @@ class Table implements Validator {
         return validateElements('constraints', metadataTable)
     }
 
-    private def validateElements(elements, metadataTable) {
+    protected def validateElements(elements, Table metadataTable) {
         def messages = []
         def metadataElementsMap = metadataTable[elements]
         def databaseElementsMap = this[elements]

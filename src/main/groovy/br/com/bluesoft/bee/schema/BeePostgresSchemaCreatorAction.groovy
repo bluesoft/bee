@@ -2,6 +2,7 @@ package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options
+import br.com.bluesoft.bee.model.postgres.PostgresTable
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 
@@ -20,11 +21,11 @@ public class BeePostgresSchemaCreatorAction implements ActionRunner {
     }
 
     public boolean run() {
-
         def objectName = options.arguments[0]
 
         out.log('importing schema metadata from the reference files')
-        def schema = getImporter().importMetaData()
+
+        def schema = getImporter().importMetaData(PostgresTable.class)
 
         if (objectName) {
             schema = schema.filter(objectName)

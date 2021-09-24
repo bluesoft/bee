@@ -15,29 +15,30 @@ abstract class BeeSchemaCreator {
         println 'BeeSchemaCreator'
 
         def result = "    ${column.name} ${column.type}"
-		if (column.type in ['char', 'varchar']) {
-			if (column.sizeType != null) {
-				result += "(${column.size} ${column.sizeType})"
-			} else {
-				result += "(${column.size})"
-			}
-		}
+        if (column.type in ['char', 'varchar']) {
+            if (column.sizeType != null) {
+                result += "(${column.size} ${column.sizeType})"
+            } else {
+                result += "(${column.size})"
+            }
+        }
 
-		if (column.type == 'number') {
-			if (column.scale > 0) {
-				result += "(${column.size}, ${column.scale})"
-			} else {
-				result += "(${column.size})"
-			}
-		}
+        if (column.type == 'number') {
+            if (column.scale > 0) {
+                result += "(${column.size}, ${column.scale})"
+            } else {
+                result += "(${column.size})"
+            }
+        }
 
-		if (column.defaultValue) {
-			result += " default ${column.defaultValue}"
-		}
+        if (column.defaultValue) {
+            result += " default ${column.defaultValue}"
+        }
 
-		if (!column.nullable) {
-			result += ' not null'
-		}
+        if (!column.nullable) {
+            result += ' not null'
+        }
+
         return result
     }
 
@@ -47,20 +48,23 @@ abstract class BeeSchemaCreator {
             columns << createColumn(it.value)
         })
         def temp = table.temporary ? " global temporary" : ""
-        def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n\n"
+        return "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n"
     }
 
     void createTables(def file, def schema) {
         def tables = schema.tables.sort()
-        tables.each({ file << createTable(it.value) })
+        tables.each({
+            file << createTable(it.value)
+            file << "\n"
+        })
     }
 
     def createPrimaryKey(table) {
         def constraint = table.constraints.find({ it.value.type == 'P' })
 
-		if (constraint == null) {
-			return ""
-		}
+        if (constraint == null) {
+            return ""
+        }
 
         constraint = constraint.value
 
@@ -143,12 +147,12 @@ abstract class BeeSchemaCreator {
 
     def createIndex(tableName, index) {
         def result = "create"
-		if (index.type == 'b') {
-			result += ' bitmap'
-		}
-		if (index.unique) {
-			result += ' unique'
-		}
+        if (index.type == 'b') {
+            result += ' bitmap'
+        }
+        if (index.unique) {
+            result += ' unique'
+        }
         result += " index ${index.name} on ${tableName}(" + index.columns.join(',') + ");\n"
 
         return result

@@ -49,7 +49,6 @@ class Schema {
     boolean filtered
 
     def validateWithMetadata(Schema metadataSchema) {
-
         def databaseObjects = this.getAllObjects()
         def metadataObjects = metadataSchema.getAllObjects()
 
@@ -60,9 +59,9 @@ class Schema {
         databaseObjects.each { objName, obj ->
             if (obj instanceof Validator) {
                 def target = metadataSchema.getAllObjects()[objName]
-				if (target) {
-					messages.addAll obj.validateWithMetadata(target)
-				}
+                if (target) {
+                    messages.addAll obj.validateWithMetadata(target)
+                }
             }
         }
 
