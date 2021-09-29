@@ -228,7 +228,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		order by table_name, index_name, column_name;
 	'''
 
-    final static def INDEXES_QUERY_9_6 = '''
+    final static def INDEXES_QUERY_VERSION_9_6_AND_UP = '''
 		select n.nspname schemaname,  ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, 
 		      am.amname as index_type, pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name,
 			  case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
@@ -248,7 +248,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		order by table_name, index_name, (i.keys).n
 	'''
 
-    final static def INDEXES_QUERY_BY_NAME_9_6 = '''
+    final static def INDEXES_QUERY_BY_NAME_VERSION_9_6_AND_UP = '''
 		select n.nspname schemaname,  ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, 
 		      am.amname as index_type, pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name,
 			  case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
@@ -298,13 +298,13 @@ class PostgresDatabaseReader implements DatabaseReader {
         if (databaseVersion != null) {
             if (objectName) {
                 if (VersionHelper.isNewerThan9_6(databaseVersion)) {
-                    rows = sql.rows(INDEXES_QUERY_BY_NAME_9_6, [objectName])
+                    rows = sql.rows(INDEXES_QUERY_BY_NAME_VERSION_9_6_AND_UP, [objectName])
                 } else {
                     rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
                 }
             } else {
                 if (VersionHelper.isNewerThan9_6(databaseVersion)) {
-                    rows = sql.rows(INDEXES_QUERY_9_6)
+                    rows = sql.rows(INDEXES_QUERY_VERSION_9_6_AND_UP)
                 } else {
                     rows = sql.rows(INDEXES_QUERY)
                 }
@@ -314,13 +314,13 @@ class PostgresDatabaseReader implements DatabaseReader {
                 try {
                     rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
                 } catch (Exception e) {
-                    rows = sql.rows(INDEXES_QUERY_BY_NAME_9_6, [objectName])
+                    rows = sql.rows(INDEXES_QUERY_BY_NAME_VERSION_9_6_AND_UP, [objectName])
                 }
             } else {
                 try {
                     rows = sql.rows(INDEXES_QUERY)
                 } catch (Exception e) {
-                    rows = sql.rows(INDEXES_QUERY_9_6)
+                    rows = sql.rows(INDEXES_QUERY_VERSION_9_6_AND_UP)
                 }
             }
         }
