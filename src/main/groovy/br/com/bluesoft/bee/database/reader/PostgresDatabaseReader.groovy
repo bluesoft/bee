@@ -182,53 +182,6 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def INDEXES_QUERY = '''
-		select ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, am.amname as index_type, 
-		      pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name, 
-		      case am.amcanorder 
-		        when true then case i.indoption[(i.keys).n - 1] & 1 
-		          when 1 then 'desc' 
-		            else 'asc' 
-		          end 
-		        else null 
-		      end as descend
-		from pg_class ct 
-		join pg_namespace n on (ct.relnamespace = n.oid) 
-		join (
-		      select i.indexrelid, i.indrelid, i.indoption, i.indisunique, i.indisclustered, i.indpred, i.indexprs, 
-		      information_schema._pg_expandarray(i.indkey) as keys 
-		      from pg_catalog.pg_index i
-		     ) i on (ct.oid = i.indrelid) 
-		join pg_class ci on (ci.oid = i.indexrelid) 
-		join pg_am am on (ci.relam = am.oid)
-		where ct.relname !~ '^(pg_|sql_)'
-		order by table_name, index_name, column_name;
-	'''
-
-    final static def INDEXES_QUERY_BY_NAME = '''
-		select ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, am.amname as index_type, 
-		      pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name, 
-		      case am.amcanorder 
-		        when true then case i.indoption[(i.keys).n - 1] & 1 
-		          when 1 then 'desc' 
-		            else 'asc' 
-		          end 
-		        else null 
-		      end as descend
-		from pg_class ct 
-		join pg_namespace n on (ct.relnamespace = n.oid) 
-		join (
-		      select i.indexrelid, i.indrelid, i.indoption, i.indisunique, i.indisclustered, i.indpred, i.indexprs, 
-		      information_schema._pg_expandarray(i.indkey) as keys 
-		      from pg_catalog.pg_index i
-		     ) i on (ct.oid = i.indrelid) 
-		join pg_class ci on (ci.oid = i.indexrelid) 
-		join pg_am am on (ci.relam = am.oid)
-		where ct.relname !~ '^(pg_|sql_)'
-		and  ct.relname = ? 
-		order by table_name, index_name, column_name;
-	'''
-
-    final static def INDEXES_QUERY_VERSION_9_6_AND_UP = '''
 		select n.nspname schemaname,  ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, 
 		      am.amname as index_type, pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name,
 			  case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
@@ -248,7 +201,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		order by table_name, index_name, (i.keys).n
 	'''
 
-    final static def INDEXES_QUERY_BY_NAME_VERSION_9_6_AND_UP = '''
+    final static def INDEXES_QUERY_BY_NAME = '''
 		select n.nspname schemaname,  ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, 
 		      am.amname as index_type, pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name,
 			  case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
@@ -297,31 +250,15 @@ class PostgresDatabaseReader implements DatabaseReader {
         def rows = null
         if (databaseVersion != null) {
             if (objectName) {
-                if (VersionHelper.isNewerThan9_6(databaseVersion)) {
-                    rows = sql.rows(INDEXES_QUERY_BY_NAME_VERSION_9_6_AND_UP, [objectName])
-                } else {
-                    rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
-                }
+                rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
             } else {
-                if (VersionHelper.isNewerThan9_6(databaseVersion)) {
-                    rows = sql.rows(INDEXES_QUERY_VERSION_9_6_AND_UP)
-                } else {
-                    rows = sql.rows(INDEXES_QUERY)
-                }
+                rows = sql.rows(INDEXES_QUERY)
             }
         } else {
             if (objectName) {
-                try {
-                    rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
-                } catch (Exception e) {
-                    rows = sql.rows(INDEXES_QUERY_BY_NAME_VERSION_9_6_AND_UP, [objectName])
-                }
+                rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
             } else {
-                try {
-                    rows = sql.rows(INDEXES_QUERY)
-                } catch (Exception e) {
-                    rows = sql.rows(INDEXES_QUERY_VERSION_9_6_AND_UP)
-                }
+                rows = sql.rows(INDEXES_QUERY)
             }
         }
     }

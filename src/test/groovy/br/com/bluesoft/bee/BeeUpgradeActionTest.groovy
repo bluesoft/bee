@@ -5,11 +5,10 @@ import br.com.bluesoft.bee.upgrade.BeeVersionModule
 import org.junit.Test
 import spock.lang.Specification
 
-public class BeeUpgradeActionTest extends Specification {
+class BeeUpgradeActionTest extends Specification {
 
-    @Test
     def "deve verificar que o bee está atualizado e retornar true"() {
-        given: ""
+        given:
         GroovyMock(BeeVersionModule, global: true)
         BeeVersionModule.getCurrentVersion() >> "1.1"
         BeeVersionModule.getLatestVersion() >> "1.1"
@@ -22,7 +21,6 @@ public class BeeUpgradeActionTest extends Specification {
         isLatest == true
     }
 
-    @Test
     def "deve verificar que o bee está desatualizado e retornar false"() {
         given: ""
         GroovyMock(BeeVersionModule, global: true)
@@ -37,7 +35,6 @@ public class BeeUpgradeActionTest extends Specification {
         isLatest == false
     }
 
-    @Test
     def "deve pegar a última versão e ela deve ser igual à versão retornada no módulo BeeVersionModule"() {
         given: ""
         def beeVersionLatest = BeeVersionModule.getLatestVersion()
@@ -50,7 +47,6 @@ public class BeeUpgradeActionTest extends Specification {
         beeUpgradeLatest == beeVersionLatest
     }
 
-    @Test
     def "deve abortar a execução porque o nome do release está fora do padrão"() {
         given: ""
         GroovyMock(BeeVersionModule, global: true)
