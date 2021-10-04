@@ -32,14 +32,26 @@
  */
 package br.com.bluesoft.bee.dbchange
 
+import br.com.bluesoft.bee.util.RDBMS
+
 class SQLFileParser {
 
     static final String DELIMITER = ";"
+
+    RDBMS rdbms;
+
+    def RDBMS getRDBMS(String line) {
+        def parts = line.split("(::)")
+        if(parts.size() < 3) return null
+
+        return RDBMS.getByName(parts[2])
+    }
 
     def parseFile(def file) {
         def statementsUp = null
         def statementsDown = null
         def statements = null
+        def statementsUndef = []
         def header = null
         def statement = ""
         def blockCode = false
@@ -65,17 +77,27 @@ class SQLFileParser {
                 return
             }
 
-            if (it.trim() == "::up") {
-                statementsUp = []
-                statements = statementsUp
-                return
-            }
+                if (it.trim().startsWith("::up")) {
+                    def type = getRDBMS(it)
+                    if(type == null || type == rdbms) {
+                        statementsUp = []
+                        statements = statementsUp
+                    } else {
+                        statements = statementsUndef
+                    }
+                    return
+                }
 
-            if (it.trim() == "::down") {
-                statementsDown = []
-                statements = statementsDown
-                return
-            }
+                if (it.trim().startsWith("::down")) {
+                    def type = getRDBMS(it)
+                    if(type == null || type == rdbms) {
+                        statementsDown = []
+                        statements = statementsDown
+                    } else {
+                        statements = statementsUndef
+                    }
+                    return
+                }
 
             if (!blockCode && it.trim().endsWith(DELIMITER)) {
                 def pos = it.lastIndexOf(DELIMITER)

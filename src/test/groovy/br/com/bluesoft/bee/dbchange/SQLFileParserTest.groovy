@@ -1,14 +1,14 @@
 package br.com.bluesoft.bee.dbchange
 
+import br.com.bluesoft.bee.util.RDBMS
 import spock.lang.Specification
 
 class SQLFileParserTest extends Specification {
 
-    def parser = new SQLFileParser()
-
     def "deve fazer o parse de um arquivo"() {
 
         expect:
+        def parser = new SQLFileParser()
         resultado == parser.parseFile(arquivo)
 
         where:
@@ -46,4 +46,51 @@ class SQLFileParserTest extends Specification {
         ]
 
     }
+
+    def 'should find corret database type'() {
+        expect:
+        def parser = new SQLFileParser(rdbms: type)
+        parser.getRDBMS(line) == type
+
+        where:
+        line << [
+                "nothing",
+                "::up",
+                "::up::oracle",
+                "::up::postgres",
+                "::up::mysql"
+        ]
+        type << [
+                null,
+                null,
+                RDBMS.ORACLE,
+                RDBMS.POSTGRES,
+                RDBMS.MYSQL
+        ]
+    }
+
+    def 'should parse a speficic rdsms type'() {
+        expect:
+        def parser = new SQLFileParser(rdbms: RDBMS.ORACLE)
+        resultado == parser.parseFile(arquivo)
+
+        where:
+        arquivo << [
+                "::up\nselect * from a;\n",
+                "::up\nselect * from a;\n::up::oracle\nselect * from b;\n",
+                "::up\nselect * from a;\n::up::oracle\nselect * from b;\n::up::postgres\nselect * from c;\n",
+                "::down\nselect * from a;\n",
+                "::down\nselect * from a;\n::down::oracle\nselect * from b;\n",
+                "::down\nselect * from a;\n::down::oracle\nselect * from b;\n::up::postgres\nselect * from c;\n",
+        ]
+        resultado << [
+                [up: ["select * from a\n"], header: null, down: null],
+                [up: ["select * from b\n"], header: null, down: null],
+                [up: ["select * from b\n"], header: null, down: null],
+                [up: null, header: null, down: ["select * from a\n"]],
+                [up: null, header: null, down: ["select * from b\n"]],
+                [up: null, header: null, down: ["select * from b\n"]],
+        ]
+    }
+
 }
