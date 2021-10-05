@@ -35,6 +35,7 @@ package br.com.bluesoft.bee.dbchange
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.QueryDialectHelper
+import br.com.bluesoft.bee.util.RDBMSUtil
 
 import java.sql.SQLException
 
@@ -358,7 +359,7 @@ ${group ? "-- group: ${group}" : ""}
         if (parser) {
             return parser
         }
-        return new SQLFileParser()
+        return new SQLFileParser(rdbms: RDBMSUtil.getRDBMS(configFile, clientName))
     }
 
     def getDirectoryFile() {
