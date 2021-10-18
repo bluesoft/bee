@@ -40,6 +40,8 @@ dependencies {
     testImplementation 'org.spockframework:spock-junit4:2.0-groovy-3.0'
     testImplementation 'cglib:cglib-nodep:3.2.12'
     testImplementation 'org.mockito:mockito-core:2.27.0'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.8.1"
+    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.8.1"
     testRuntimeOnly 'org.slf4j:slf4j-api:1.7.10'
 }
 
