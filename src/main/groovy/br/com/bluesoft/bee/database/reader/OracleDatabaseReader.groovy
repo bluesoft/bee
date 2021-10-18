@@ -12,6 +12,7 @@ import br.com.bluesoft.bee.model.TableColumn
 import br.com.bluesoft.bee.model.Trigger
 import br.com.bluesoft.bee.model.UserType
 import br.com.bluesoft.bee.model.View
+import br.com.bluesoft.bee.util.RDBMS
 
 class OracleDatabaseReader implements DatabaseReader {
 
@@ -374,7 +375,7 @@ class OracleDatabaseReader implements DatabaseReader {
         rows.each({
             def view = new View()
             view.name = it.view_name.toLowerCase()
-            view.text = it.text
+            view.text_oracle = it.text
             views[view.name] = view
         })
         return views
@@ -441,7 +442,7 @@ class OracleDatabaseReader implements DatabaseReader {
                 if (name) {
                     def procedure = procedures[name]
 					if (procedure) {
-						procedure.text = body
+						procedure.text_oracle = body
 					}
                 }
                 name = it.name.toLowerCase()
@@ -451,7 +452,7 @@ class OracleDatabaseReader implements DatabaseReader {
         })
         def procedure = procedures[name]
 		if (procedure) {
-			procedure.text = body
+			procedure.text_oracle = body
 		}
     }
 
@@ -520,9 +521,8 @@ class OracleDatabaseReader implements DatabaseReader {
 
         rows.each({
             def triggerName = it.name.toLowerCase()
-            def trigger = triggers[triggerName] ?: new Trigger()
-            trigger.name = triggerName
-            trigger.text += it.text
+            def trigger = triggers[triggerName] ?: new Trigger(name: triggerName, text_oracle: '')
+            trigger.text_oracle += it.text
             triggers[triggerName] = trigger
         })
 
@@ -552,5 +552,9 @@ class OracleDatabaseReader implements DatabaseReader {
         })
 
         return userTypes
+    }
+
+    def cleanupSchema(Schema schema) {
+
     }
 }

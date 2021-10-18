@@ -32,6 +32,9 @@
  */
 package br.com.bluesoft.bee.model
 
+import org.codehaus.jackson.annotate.JsonAutoDetect
+
+@JsonAutoDetect(isGetterVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.ANY)
 class IndexColumn {
 
     String name
@@ -53,4 +56,5 @@ class IndexColumn {
     boolean equals(other) {
         this.name == other.name && this.descend == other.descend
     }
+
 }

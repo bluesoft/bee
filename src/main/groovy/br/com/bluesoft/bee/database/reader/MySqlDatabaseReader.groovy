@@ -338,7 +338,7 @@ class MySqlDatabaseReader implements DatabaseReader {
         rows.each({
             def view = new View()
             view.name = it.view_name
-            view.text = it.text
+            view.text_mysql = it.text
             views[view.name] = view
         })
         return views
@@ -399,7 +399,7 @@ class MySqlDatabaseReader implements DatabaseReader {
                 if (name) {
                     def procedure = procedures[name]
 					if (procedure) {
-						procedure.text = body
+						procedure.text_mysql = body
 					}
                 }
                 name = it.name
@@ -409,7 +409,7 @@ class MySqlDatabaseReader implements DatabaseReader {
         })
         def procedure = procedures[name]
 		if (procedure) {
-			procedure.text = body
+			procedure.text_mysql = body
 		}
     }
 
@@ -440,12 +440,17 @@ class MySqlDatabaseReader implements DatabaseReader {
 
         rows.each({
             def triggerName = it.name
-            def trigger = triggers[triggerName] ?: new Trigger()
-            trigger.name = triggerName
-            trigger.text += it.text
+            def trigger = triggers[triggerName] ?: new Trigger(name: triggerName, text_mysql: '')
+            trigger.text_mysql += it.text
             triggers[triggerName] = trigger
         })
 
         return triggers
     }
+
+    def cleanupSchema(Schema schema) {
+        schema.userTypes.clear()
+        schema.packages.clear()
+    }
+
 }

@@ -32,9 +32,14 @@
  */
 package br.com.bluesoft.bee.database.reader
 
+
+import java.text.SimpleDateFormat
+
 public class TableDataReader {
 
     def sql
+    SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd")
+    SimpleDateFormat sdfTimestamp = new SimpleDateFormat("yyyy-MM-dd HH:MM:SS")
 
     def TableDataReader(def sql) {
         this.sql = sql
@@ -67,17 +72,36 @@ public class TableDataReader {
 
     def getData(def table) {
         def query = buildQuery(table)
-
-        def columnNames = table.columns.findAll { !it.value.ignore }*.value.name
-
+        def columns = table.columns.findAll { !it.value.ignore }*.value
         def result = []
 
         sql.eachRow(query, {
             def rowArray = []
             def row = it
-            columnNames.each {
-                def row1 = row[it] as String
-                rowArray << (row1?.trim())
+            columns.each {
+                def col = row[it.name]
+                String col1
+                switch (it.type) {
+                    case "date":
+                        col1 = sdfDate.format(col)
+                        break
+                    case "timestamp":
+                        col1 = sdfTimestamp.format(col)
+                        break
+                    case "boolean":
+                        col1 = (col as Boolean) ? '1' : '0'
+                        break
+                    case "number":
+                        if(it.scale > 0) {
+                            col1 = (col as Double) as String
+                        } else {
+                            col1 = (col as Long) as String
+                        }
+                        break
+                    default:
+                        col1 = col as String
+                }
+                rowArray << (col1?.trim())
             }
 
             result << rowArray

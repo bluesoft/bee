@@ -4,6 +4,8 @@ import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.service.RulesConverter
+import br.com.bluesoft.bee.util.RDBMS
 
 class BeeMySqlSchemaCreatorAction implements ActionRunner {
 
@@ -25,6 +27,8 @@ class BeeMySqlSchemaCreatorAction implements ActionRunner {
 
         out.log('importing schema metadata from the reference files')
         def schema = getImporter().importMetaData()
+        schema.rdbms = RDBMS.MYSQL
+        schema = new RulesConverter().toSchema(schema)
 
 		if (objectName) {
 			schema = schema.filter(objectName)

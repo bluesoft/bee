@@ -65,11 +65,11 @@ class SchemaPresenceValidationTest extends spock.lang.Specification {
 
         given: "a database schema with two views"
         Schema databaseSchema = new Schema()
-        databaseSchema.views = [view_menu: new View(name: 'view_menu', text: ""), view_carneiro: new View(name: 'view_carneiro', text: "")]
+        databaseSchema.views = [view_menu: new View(name: 'view_menu', text: "x"), view_carneiro: new View(name: 'view_carneiro', text: "x")]
 
         and: "a metadata schema with two views"
         Schema metadataSchema = new Schema()
-        metadataSchema.views = [view_menu: new View(name: 'view_menu', text: ""), view_cavalo: new View(name: 'view_cavalo')]
+        metadataSchema.views = [view_menu: new View(name: 'view_menu', text: "x"), view_cavalo: new View(name: 'view_cavalo', text: "x")]
 
         when: "the schema is validated"
         def messages = databaseSchema.validateWithMetadata(metadataSchema)
@@ -105,7 +105,7 @@ class SchemaPresenceValidationTest extends spock.lang.Specification {
 
         given: "a database schema with one view called saldo_contabil_atual"
         Schema databaseSchema = new Schema()
-        databaseSchema.views = [saldo_contabil_atual: new View(name: 'saldo_contabil_atual', text: "")]
+        databaseSchema.views = [saldo_contabil_atual: new View(name: 'saldo_contabil_atual', text: "x")]
 
         and: "a metadata schema with one table also called saldo_contabil_atual"
         Schema metadataSchema = new Schema()
@@ -172,11 +172,11 @@ class SchemaPresenceValidationTest extends spock.lang.Specification {
 
         given: "a database schema with two procedures"
         Schema databaseSchema = new Schema()
-        databaseSchema.views = [proc1: new Procedure(name: 'proc1', text: ""), proc2: new Procedure(name: 'proc2', text: "")]
+        databaseSchema.views = [proc1: new Procedure(name: 'proc1', text: "x"), proc2: new Procedure(name: 'proc2', text: "x")]
 
         and: "a metadata schema with two procedures"
         Schema metadataSchema = new Schema()
-        metadataSchema.procedures = [proc1: new Procedure(name: 'proc1', text: ""), proc3: new Procedure(name: 'proc3')]
+        metadataSchema.procedures = [proc1: new Procedure(name: 'proc1', text: "x"), proc3: new Procedure(name: 'proc3', text: "x")]
 
         when: "the schema is validated"
         def messages = databaseSchema.validateWithMetadata(metadataSchema)

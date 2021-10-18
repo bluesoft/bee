@@ -46,6 +46,7 @@
       name : "data_nascimento",
       type : "date",
       size : 7,
+      defaultValue: "sysdate",
       nullable : true
     },
     insc : {
@@ -74,8 +75,9 @@
     },
     fundacao : {
       name : "fundacao",
-      type : "date",
+      type : "timestamp",
       size : 7,
+      defaultValue: "sysdate",
       nullable : true
     },
     ean : {

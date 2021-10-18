@@ -35,7 +35,11 @@ package br.com.bluesoft.bee.model
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
+import groovy.transform.AutoClone
+import org.codehaus.jackson.annotate.JsonAutoDetect
 
+@AutoClone
+@JsonAutoDetect(isGetterVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.ANY)
 class Table implements Validator {
 
     String name
@@ -157,4 +161,5 @@ class Table implements Validator {
         }
         return messages
     }
+
 }

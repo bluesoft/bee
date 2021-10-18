@@ -41,6 +41,9 @@ import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.service.MessagePrinter
+import br.com.bluesoft.bee.service.RulesConverter
+import br.com.bluesoft.bee.util.RDBMS
+import br.com.bluesoft.bee.util.RDBMSUtil
 
 class BeeSchemaValidatorAction implements ActionRunner {
 
@@ -67,6 +70,9 @@ class BeeSchemaValidatorAction implements ActionRunner {
 
         out.log('importing schema metadata from the reference files')
         Schema metadataSchema = importer.importMetaData()
+        databaseReader.cleanupSchema(metadataSchema)
+        metadataSchema.rdbms = RDBMSUtil.getRDBMS(options)
+        metadataSchema = new RulesConverter().toSchema(metadataSchema)
 
 		if (objectName) {
 			metadataSchema = metadataSchema.filter(objectName)
@@ -74,6 +80,7 @@ class BeeSchemaValidatorAction implements ActionRunner {
 
         out.log('importing schema metadata from the database')
         Schema databaseSchema = databaseReader.getSchema(objectName)
+        databaseSchema.rdbms = RDBMSUtil.getRDBMS(options)
 
 		if (objectName) {
 			databaseSchema = databaseSchema.filter(objectName)

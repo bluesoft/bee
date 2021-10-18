@@ -1,6 +1,8 @@
 package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.util.CsvUtil
+import br.com.bluesoft.bee.util.RDBMS
+import br.com.bluesoft.bee.util.RDBMSUtil
 
 import java.text.SimpleDateFormat
 
@@ -189,7 +191,7 @@ abstract class BeeSchemaCreator {
 
     void createViews(def file, def schema) {
         schema.views*.value.each {
-            def view = "create or replace view ${it.name} as ${it.text};\n\n"
+            def view = "create or replace view ${it.name} as ${it.getCanonical(schema.rdbms).text};\n\n"
             file.append(view.toString(), 'utf-8')
         }
     }
@@ -215,9 +217,13 @@ abstract class BeeSchemaCreator {
 
     void createTriggers(def file, def schema) {
         schema.triggers*.value.sort().each {
-            def trigger = "create or replace ${it.text}\n/\n\n"
+            def trigger = "create or replace ${it.getCanonical(schema.rdbms).text}\n/\n\n"
             file.append(trigger.toString(), 'utf-8')
         }
+    }
+
+    String toBoolean(String fieldValue) {
+        fieldValue
     }
 
     void createCsvData(def file, def csvFile, def schema) {
@@ -259,30 +265,24 @@ abstract class BeeSchemaCreator {
                 }
                 query << ") "
                 query << "values ("
-                def params = []
                 fileData[i].eachWithIndex { columnValue, index2 ->
                     def fieldValue = columnValue.toString()
-                    params.add(fieldValue)
                     def columnType = columnTypes[index2]
                     def columnName = columnNames[index2]
                     def isVirtual = isVirtualColumn[columnName]
                     def isString = columnType == 'varchar' || columnType == 'varchar2' || columnType == 'character' || columnType == 'character varying' || columnType == 'text'
                     def isDate = columnType == 'date'
-                    def isNotNumber = !fieldValue?.isNumber()
+                    def isBoolean = columnType == 'boolean'
+                    def isNumber = fieldValue?.isNumber()
                     if (!isVirtual) {
-                        if (isNotNumber && !isDate || isString) {
+                        if (!isNumber && !isDate || isString) {
                             fieldValue = fieldValue.replaceAll("\'", "\''")
                             if (fieldValue != 'null') {
                                 fieldValue = "\'" + fieldValue + "\'"
                             }
                         }
-                        if (isDate && fieldValue != 'null') {
-                            fieldValue = fieldValue.replaceAll("\'", "")
-                            SimpleDateFormat inputSdf = new SimpleDateFormat('yyyy-MM-dd')
-                            SimpleDateFormat outputSdf = new SimpleDateFormat('yyyy-MM-dd')
-                            def date = inputSdf.parse(fieldValue);
-                            fieldValue = outputSdf.format(date)
-                            fieldValue = "\'" + fieldValue + "\'"
+                        if(isBoolean) {
+                            fieldValue = toBoolean(columnValue)
                         }
                         query << fieldValue
                     }
@@ -301,10 +301,17 @@ abstract class BeeSchemaCreator {
     }
 
     void createScriptData(def file, def csvFile, def schema) {
+        RDBMS rdbms
         def lines = csvFile.readLines()
         lines.each {
-            file.append(it, "utf-8")
-            file.append("\n", "utf-8")
+            if(it.startsWith('--db')) {
+                def items = it.split()
+                rdbms = RDBMS.getByName(items?[1])
+            }
+            if(rdbms == null || rdbms == schema.rdbms) {
+                file.append(it, "utf-8")
+                file.append("\n", "utf-8")
+            }
         }
     }
 

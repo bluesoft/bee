@@ -35,7 +35,9 @@ package br.com.bluesoft.bee.model
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
+import groovy.transform.AutoClone
 
+@AutoClone
 class Constraint {
 
     String name

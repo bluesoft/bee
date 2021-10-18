@@ -40,6 +40,8 @@ import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.service.RulesConverter
+import br.com.bluesoft.bee.util.RDBMSUtil
 import groovy.sql.Sql
 
 class BeeSchemaGeneratorAction implements ActionRunner {
@@ -79,7 +81,15 @@ class BeeSchemaGeneratorAction implements ActionRunner {
 				schemaOld = schemaOld.filter(objectName)
 			}
 
+            schemaNew.rules = schemaOld.rules
+            def converter = new RulesConverter()
+            schemaNew.rdbms = RDBMSUtil.getRDBMS(options)
+            schemaNew = converter.fromSchema(schemaNew)
+
             applyIgnore(schemaOld, schemaNew)
+            applyList(schemaOld, schemaNew, 'views')
+            applyList(schemaOld, schemaNew, 'procedures')
+            applyList(schemaOld, schemaNew, 'triggers')
 
             def exporter = new JsonExporter(schemaNew, options.dataDir.canonicalPath)
             exporter.export();
@@ -100,6 +110,17 @@ class BeeSchemaGeneratorAction implements ActionRunner {
                     schemaNew.tables[etable.key].columns[it.key].ignore = true
                 }
             }
+        }
+    }
+
+    void applyList(Schema schemaOld, Schema schemaNew, String field) {
+        def items = schemaOld[field].findAll { it.key in schemaNew[field] }
+        items.each {
+            def item = it.value
+            item.text_oracle = schemaNew[field][it.key].text_oracle ?: item.text_oracle
+            item.text_postgres = schemaNew[field][it.key].text_postgres ?: item.text_postgres
+            item.text_mysql = schemaNew[field][it.key].text_mysql ?: item.text_mysql
+            schemaNew[field][it.key] = item
         }
     }
 

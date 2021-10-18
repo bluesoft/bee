@@ -2,15 +2,15 @@ package br.com.bluesoft.bee.database.reader
 
 import org.junit.Before
 import org.junit.Test
+import spock.lang.Specification
 
 import static org.junit.Assert.assertEquals
 
-class OracleDatabaseTriggerTest {
+class OracleDatabaseTriggerTest extends Specification {
 
     def reader
 
-    @Before
-    void 'set up'() {
+    void setup() {
         def triggers = [
                 [name: 'TRIGGER1', text: 'line11\n'],
                 [name: 'TRIGGER1', text: 'line12\n'],
@@ -23,17 +23,19 @@ class OracleDatabaseTriggerTest {
         reader = new OracleDatabaseReader(sql)
     }
 
-    @Test
-    void 'it should fill the triggers'() {
+    def 'it should fill the triggers'() {
+        expect:
         final def triggers = reader.getTriggers()
-        assertEquals 2, triggers.size()
+        triggers.size() == 2
     }
 
-    @Test
-    void 'it should fill the package name, text and body'() {
+    def 'it should fill the package name, text and body'() {
+        given:
         final def triggers = reader.getTriggers(null)
         def trigger = triggers['trigger1']
-        assertEquals('trigger1', trigger.name)
-        assertEquals('line11\nline12\nline13\n', trigger.text)
+
+        expect:
+        'trigger1' == trigger.name
+        'line11\nline12\nline13\n' == trigger.text_oracle
     }
 }

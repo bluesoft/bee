@@ -10,7 +10,7 @@ class SchemaTest extends Specification {
         given:
         Schema schema = new Schema()
         schema.tables = [horses: new Table(name: 'horses')]
-        schema.views = [sheeps: new View(name: 'sheeps')]
+        schema.views = [sheeps: new View(name: 'sheeps', text: 'x')]
         schema.sequences = [bee: new Sequence(name: 'bee')]
 
         when:

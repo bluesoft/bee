@@ -11,7 +11,6 @@ public class BeeFileUtilsTest extends Specification {
     @Rule
     public TemporaryFolder temporaryFolder
 
-    @Test
     def "deve criar a pasta enviada como parâmetro"() {
         given: ""
         String tempFile = System.getProperty("java.io.tmpdir") + "/bee-tests"
@@ -25,7 +24,6 @@ public class BeeFileUtilsTest extends Specification {
         dir.deleteOnExit()
     }
 
-    @Test
     def "deve remover a pasta enviada como parâmetro"() {
         setup: ""
         def tempFile = temporaryFolder.newFile('test.txt')
@@ -37,7 +35,6 @@ public class BeeFileUtilsTest extends Specification {
         tempFile.exists() == false
     }
 
-    @Test
     def testListBaseJars() {
         given: "Lista de arquivos para testar"
         def files = [
@@ -62,7 +59,6 @@ public class BeeFileUtilsTest extends Specification {
         result == ['bee', 'commons-cli', 'groovy', 'groovy-cli-commons', 'groovy-sql', 'jackson-core-lgpl', 'jackson-mapper-lgpl']
     }
 
-    @Test
     def testRemoveOldJars() {
         given: ""
         Set files = [
