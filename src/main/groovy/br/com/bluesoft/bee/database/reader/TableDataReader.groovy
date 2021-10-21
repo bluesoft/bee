@@ -80,26 +80,28 @@ public class TableDataReader {
             def row = it
             columns.each {
                 def col = row[it.name]
-                String col1
-                switch (it.type) {
-                    case "date":
-                        col1 = sdfDate.format(col)
-                        break
-                    case "timestamp":
-                        col1 = sdfTimestamp.format(col)
-                        break
-                    case "boolean":
-                        col1 = (col as Boolean) ? '1' : '0'
-                        break
-                    case "number":
-                        if(it.scale > 0) {
-                            col1 = (col as Double) as String
-                        } else {
-                            col1 = (col as Long) as String
-                        }
-                        break
-                    default:
-                        col1 = col as String
+                String col1 = null
+                if(col != null) {
+                    switch (it.type) {
+                        case "date":
+                            col1 = sdfDate.format(col)
+                            break
+                        case "timestamp":
+                            col1 = sdfTimestamp.format(col)
+                            break
+                        case "boolean":
+                            col1 = (col as Boolean) ? '1' : '0'
+                            break
+                        case "number":
+                            if (it.scale == 0 || (col as Double) % 1 == 0) {
+                                col1 = (col as Long) as String
+                            } else {
+                                col1 = (col as Double) as String
+                            }
+                            break
+                        default:
+                            col1 = col as String
+                    }
                 }
                 rowArray << (col1?.trim())
             }
