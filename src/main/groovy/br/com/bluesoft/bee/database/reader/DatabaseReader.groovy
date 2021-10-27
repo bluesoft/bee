@@ -37,4 +37,5 @@ import br.com.bluesoft.bee.model.Schema
 interface DatabaseReader {
 
     def Schema getSchema(objectName)
+    def cleanupSchema(Schema schema)
 }

@@ -56,6 +56,12 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
         }
     }
 
+    void createCoreData(def file, def schema, def dataFolderPath) {
+        if (!schema.filtered) {
+            super.createCoreData(file, schema, dataFolderPath)
+        }
+    }
+
     void createIndexes(def file, def schema) {
         def tables = schema.tables.sort()
         tables.each {
@@ -79,16 +85,21 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
     void createProcedures(def file, def schema) {
         schema.procedures*.value.sort().each {
-            def procedure = "${it.text};\n\n"
+            def procedure = "${it.getCanonical(schema.rdbms).text};\n\n"
             file.append(procedure.toString(), 'utf-8')
         }
     }
 
     void createTriggers(def file, def schema) {
         schema.triggers*.value.sort().each {
-            def trigger = "${it.text};\n\n"
+            def trigger = "${it.getCanonical(schema.rdbms).text};\n\n"
             file.append(trigger.toString(), 'utf-8')
         }
     }
 
+    String toBoolean(String fieldValue) {
+        if(fieldValue == '0') return 'false'
+        if(fieldValue == '1') return 'true'
+        fieldValue
+    }
 }

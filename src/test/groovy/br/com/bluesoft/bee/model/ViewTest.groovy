@@ -3,8 +3,9 @@ package br.com.bluesoft.bee.model
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
+import br.com.bluesoft.bee.util.RDBMS
 
-public class ViewStructrueValidationTest extends spock.lang.Specification {
+public class ViewTest extends spock.lang.Specification {
 
     def "it should return an error for each difference between the database and the reference metadata"() {
         given:
@@ -20,5 +21,20 @@ public class ViewStructrueValidationTest extends spock.lang.Specification {
         where:
         databaseView                        | messageType           | messageText
         new View(name: 'vw1', text: 'xyzw') | MessageType.VIEW_BODY | "The body of the view vw1 differs from metadata."
+    }
+
+    def getCanonicalTest() {
+        given:
+        def view_default = new View(name: "test", text: "default", text_oracle: "oracle", text_postgres: "postgres")
+        def view_nondefault = new View(name: "test", text_oracle: "oracle", text_postgres: "postgres")
+
+        expect:
+        view_default.getCanonical(RDBMS.ORACLE).text == "oracle"
+        view_default.getCanonical(RDBMS.POSTGRES).text == "postgres"
+        view_default.getCanonical(RDBMS.MYSQL).text == "default"
+
+        view_nondefault.getCanonical(RDBMS.ORACLE).text == "oracle"
+        view_nondefault.getCanonical(RDBMS.POSTGRES).text == "postgres"
+        view_nondefault.getCanonical(RDBMS.MYSQL).text == null
     }
 }

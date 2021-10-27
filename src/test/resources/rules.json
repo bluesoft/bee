@@ -1,0 +1,21 @@
+{
+  "postgres": {
+    "dataTypeOut": [
+      { "fromType": "number", "fromSize": 6, "fromScale":  0, "toType": "integer", "toSize":  0, "toScale":  0 },
+      { "fromType": "boolean", "fromSize": -1, "fromScale":  -1, "toType": "number", "toSize":  1, "toScale":  0 }
+    ],
+    "checkConditionOut": {
+      "codigo_complementar > 0": "codigo_complementar <> 0"
+    },
+    "columnDefaultOut": {
+      "date": {
+        "sysdate": "current_date"
+      },
+      "timestamp": {
+        "sysdate": "current_timestamp"
+      }
+    },
+    "dataTypeIn": [
+    ]
+  }
+}

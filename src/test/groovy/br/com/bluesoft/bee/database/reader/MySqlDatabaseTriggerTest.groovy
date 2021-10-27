@@ -1,16 +1,15 @@
 package br.com.bluesoft.bee.database.reader
 
-import org.junit.Before
-import org.junit.Test
+
+import spock.lang.Specification
 
 import static org.junit.Assert.assertEquals
 
-class MySqlDatabaseTriggerTest {
+class MySqlDatabaseTriggerTest extends Specification {
 
     def reader
 
-    @Before
-    void 'set up'() {
+    void setup() {
         def triggers = [
                 [name: 'TRIGGER1', text: 'line11\n'],
                 [name: 'TRIGGER1', text: 'line12\n'],
@@ -23,17 +22,19 @@ class MySqlDatabaseTriggerTest {
         reader = new MySqlDatabaseReader(sql, 'test')
     }
 
-    @Test
-    void 'it should fill the triggers'() {
+    def 'it should fill the triggers'() {
+        expect:
         final def triggers = reader.getTriggers()
-        assertEquals 2, triggers.size()
+        2 == triggers.size()
     }
 
-    @Test
-    void 'it should fill the package name, text and body'() {
+    def 'it should fill the package name, text and body'() {
+        given:
         final def triggers = reader.getTriggers(null)
         def trigger = triggers['TRIGGER1']
-        assertEquals('TRIGGER1', trigger.name)
-        assertEquals('line11\nline12\nline13\n', trigger.text)
+
+        expect:
+        'TRIGGER1' == trigger.name
+        'line11\nline12\nline13\n' == trigger.text_mysql
     }
 }

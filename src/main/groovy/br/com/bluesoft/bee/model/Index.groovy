@@ -35,7 +35,9 @@ package br.com.bluesoft.bee.model
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
+import org.codehaus.jackson.annotate.JsonAutoDetect
 
+@JsonAutoDetect(isGetterVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.ANY)
 class Index {
 
     String name
@@ -63,4 +65,5 @@ class Index {
 
         return messages
     }
+
 }

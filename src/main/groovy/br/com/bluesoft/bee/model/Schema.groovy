@@ -35,10 +35,15 @@ package br.com.bluesoft.bee.model
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
+import br.com.bluesoft.bee.model.rule.Rule
+import br.com.bluesoft.bee.util.RDBMS
+import groovy.transform.AutoClone
 
+@AutoClone
 class Schema {
 
     String databaseVersion
+    RDBMS rdbms
     Map tables = [:]
     Map views = [:]
     Map sequences = [:]
@@ -46,6 +51,7 @@ class Schema {
     Map packages = [:]
     Map triggers = [:]
     Map userTypes = [:]
+    Map<RDBMS, Rule> rules = [:]
     boolean filtered
 
     def validateWithMetadata(Schema metadataSchema) {
@@ -108,14 +114,18 @@ class Schema {
         return messages
     }
 
+    private def listFilter(def lista) {
+        lista.collectEntries({ [it.key , it.value.getCanonical(rdbms)] } ).findAll { it.value.text }
+    }
+
     def getAllObjects() {
         def allObjects = [:]
         allObjects.putAll tables
-        allObjects.putAll views
         allObjects.putAll sequences
-        allObjects.putAll procedures
+        allObjects.putAll listFilter(views)
+        allObjects.putAll listFilter(procedures)
         allObjects.putAll packages
-        allObjects.putAll triggers
+        allObjects.putAll listFilter(triggers)
         allObjects.putAll userTypes
         return allObjects
     }
@@ -129,6 +139,8 @@ class Schema {
         schema.packages.putAll packages.findAll { it.key == objectName }
         schema.triggers.putAll triggers.findAll { it.key == objectName }
         schema.userTypes.putAll userTypes.findAll { it.key == objectName }
+        schema.rules = rules
+        schema.rdbms = rdbms
         schema.filtered = true
         return schema
     }

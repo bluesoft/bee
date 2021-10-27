@@ -117,11 +117,13 @@ class PostgresDatabaseReader implements DatabaseReader {
 
 
     static final def TABLES_COLUMNS_QUERY = '''
-        	select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
-		case 
-			when (ic.numeric_precision_radix is not null) then ic.numeric_precision
-			when (ic.character_maximum_length is not null) then ic.character_maximum_length 
-		end
+     	select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
+        case data_type
+            when 'numeric' then ic.numeric_precision
+            when 'character varying' then ic.character_maximum_length 
+            when '"char"' then ic.character_maximum_length 
+            else 0
+        end
 		as data_size, is_generated,
 		ic.numeric_scale as data_scale, coalesce(ic.column_default, ic.generation_expression) as data_default
 		from information_schema.columns ic
@@ -132,19 +134,21 @@ class PostgresDatabaseReader implements DatabaseReader {
 		'''
 
     static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
-		select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
-		case 
-			when (ic.numeric_precision_radix is not null) then ic.numeric_precision
-			when (ic.character_maximum_length is not null) then ic.character_maximum_length 
-		end
-		as data_size, is_generated,
-		ic.numeric_scale as data_scale, coalesce(ic.column_default, ic.generation_expression) as data_default
-		from information_schema.columns ic
-		inner join information_schema.tables it on it.table_name = ic.table_name
-		where ic.table_schema not in ('pg_catalog' , 'information_schema')
-		and it.table_type = 'BASE TABLE'
-		and ic.table_name = ?
-		order by ic.table_name, ic.ordinal_position;
+        select ic.table_name, ic.column_name, ic.data_type, ic.is_nullable as nullable,
+        case data_type
+            when 'numeric' then ic.numeric_precision
+            when 'character varying' then ic.character_maximum_length 
+            when '"char"' then ic.character_maximum_length 
+            else 0
+        end
+        as data_size, is_generated,
+        ic.numeric_scale as data_scale, coalesce(ic.column_default, ic.generation_expression) as data_default
+        from information_schema.columns ic
+        inner join information_schema.tables it on it.table_name = ic.table_name
+        where ic.table_schema not in ('pg_catalog' , 'information_schema')
+        and it.table_type = 'BASE TABLE\'
+        and ic.table_name = ?
+        order by ic.table_name, ic.ordinal_position;
 	'''
 
     private def fillColumns(tables, objectName) {
@@ -274,8 +278,8 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def CONSTRAINTS_QUERY = '''
-        select tc.table_name, tc.constraint_name, ccu.table_name as ref_table, tc.constraint_type, rc.delete_rule as delete_rule, 'enabled' as status
-               ,cc.check_clause
+        select tc.table_name, tc.constraint_name, nullif(ccu.table_name, tc.table_name) as ref_table, tc.constraint_type, 
+               rc.delete_rule as delete_rule, 'enabled' as status, cc.check_clause
         from information_schema.table_constraints tc
              left join information_schema.referential_constraints rc using(constraint_catalog, constraint_schema, constraint_name)
              left join information_schema.constraint_column_usage ccu using (constraint_catalog, constraint_schema, constraint_name)
@@ -286,8 +290,8 @@ class PostgresDatabaseReader implements DatabaseReader {
     '''
 
     final static def CONSTRAINTS_QUERY_BY_NAME = '''
-        select tc.table_name, tc.constraint_name, ccu.table_name as ref_table, tc.constraint_type, rc.delete_rule as delete_rule, 'enabled' as status
-               ,cc.check_clause
+        select tc.table_name, tc.constraint_name, nullif(ccu.table_name, tc.table_name) as ref_table, tc.constraint_type, 
+               rc.delete_rule as delete_rule, 'enabled' as status, cc.check_clause
         from information_schema.table_constraints tc
              left join information_schema.referential_constraints rc using(constraint_catalog, constraint_schema, constraint_name)
              left join information_schema.constraint_column_usage ccu using (constraint_catalog, constraint_schema, constraint_name)
@@ -433,7 +437,7 @@ class PostgresDatabaseReader implements DatabaseReader {
         rows.each({
             def view = new View()
             view.name = it.view_name.toLowerCase()
-            view.text = it.text
+            view.text_postgres = it.text
             views[view.name] = view
         })
         return views
@@ -506,9 +510,9 @@ class PostgresDatabaseReader implements DatabaseReader {
 
             Procedure proc = procedures[name]
             if(proc) {
-                proc.text += ";\n\n" + it.text
+                proc.text_postgres += ";\n\n" + it.text
             } else {
-                def procedure = new Procedure(name: it.name.toLowerCase(), text: it.text, schema: schema)
+                def procedure = new Procedure(name: it.name.toLowerCase(), text_postgres: it.text, schema: schema)
                 procedures[name] = procedure
             }
         })
@@ -560,7 +564,7 @@ class PostgresDatabaseReader implements DatabaseReader {
             text += "${it.action_timing} ${it.event_manipulation} ON ${it.event_object_table}\n"
             text += "FOR EACH ${it.action_orientation}\n"
             text += "${it.action_statement}\n"
-            trigger.text = text
+            trigger.text_postgres = text
             triggers[triggerName] = trigger
         })
 
@@ -571,4 +575,10 @@ class PostgresDatabaseReader implements DatabaseReader {
         def packages = [:]
         return packages
     }
+
+    def cleanupSchema(Schema schema) {
+        schema.userTypes.clear()
+        schema.packages.clear()
+    }
+
 }

@@ -35,12 +35,16 @@ package br.com.bluesoft.bee.model
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
+import br.com.bluesoft.bee.util.RDBMS
 import br.com.bluesoft.bee.util.StringUtil
 
 class Procedure implements Validator {
 
     def name
     def text
+    def text_oracle
+    def text_postgres
+    def text_mysql
     def schema
 
     List validateWithMetadata(metadataProcedure) {
@@ -57,4 +61,25 @@ class Procedure implements Validator {
 
         return messages
     }
-}
+
+    Procedure getCanonical(RDBMS rdbms) {
+        if(rdbms == null) {
+            return this
+        }
+
+        String text
+        switch(rdbms) {
+            case RDBMS.ORACLE:
+                text = text_oracle ?: this.text
+                break
+            case RDBMS.POSTGRES:
+                text = text_postgres ?: this.text
+                break
+            case RDBMS.MYSQL:
+                text = text_mysql ?: this.text
+                break
+        }
+
+        new Procedure(name: name, text: text)
+    }}
+

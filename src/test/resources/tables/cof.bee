@@ -44,7 +44,7 @@
     },
     basico : {
       name : "basico",
-      type : "number",
+      type : "boolean",
       size : 1,
       nullable : true
     },
@@ -92,6 +92,18 @@
     }
   },
   constraints : {
+    ck_test : {
+      name : "ck_test",
+      searchCondition : "codigo_complementar > 0",
+      status : "enabled",
+      type : "C"
+    },
+    ck_test2 : {
+      name : "ck_test2",
+      searchCondition : "codigo_complementar < 0",
+      status : "enabled",
+      type : "C"
+    },
     pk_cof : {
       name : "pk_cof",
       type : "P",

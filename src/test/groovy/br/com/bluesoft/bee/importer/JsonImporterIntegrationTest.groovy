@@ -62,6 +62,7 @@ class JsonImporterIntegrationTest {
         }
 
         new File('/tmp/bee/sequences.bee') << new File(this.getClass().getResource('/sequences.bee').getFile()).getText()
+        new File('/tmp/bee/rules.json') << new File(this.getClass().getResource('/rules.json').getFile()).getText()
         importer = new JsonImporter()
     }
 

@@ -4,6 +4,8 @@ import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
+import br.com.bluesoft.bee.service.RulesConverter
+import br.com.bluesoft.bee.util.RDBMS
 
 public class BeeOracleSchemaCreatorAction implements ActionRunner {
 
@@ -26,6 +28,8 @@ public class BeeOracleSchemaCreatorAction implements ActionRunner {
 
         out.log('importing schema metadata from the reference files')
         def schema = getImporter().importMetaData()
+        schema.rdbms = RDBMS.ORACLE
+        schema = new RulesConverter().toSchema(schema)
 
         if (objectName) {
             schema = schema.filter(objectName)

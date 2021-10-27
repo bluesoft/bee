@@ -35,9 +35,14 @@ package br.com.bluesoft.bee.model
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
+import groovy.transform.AutoClone
+import org.codehaus.jackson.annotate.JsonAutoDetect
+import org.codehaus.jackson.annotate.JsonIgnore
 
 import java.text.MessageFormat
 
+@AutoClone
+@JsonAutoDetect(isGetterVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.ANY)
 class TableColumn {
 
     String name

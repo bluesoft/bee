@@ -34,6 +34,7 @@ package br.com.bluesoft.bee.importer
 
 import br.com.bluesoft.bee.model.Package
 import br.com.bluesoft.bee.model.Procedure
+import br.com.bluesoft.bee.model.rule.Rule
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.model.Sequence
 import br.com.bluesoft.bee.model.Table
@@ -41,6 +42,7 @@ import br.com.bluesoft.bee.model.Trigger
 import br.com.bluesoft.bee.model.UserType
 import br.com.bluesoft.bee.model.View
 import br.com.bluesoft.bee.util.JsonUtil
+import br.com.bluesoft.bee.util.RDBMS
 import org.codehaus.jackson.map.ObjectMapper
 
 class JsonImporter implements Importer {
@@ -55,6 +57,7 @@ class JsonImporter implements Importer {
     File packagesFolder
     File triggersFolder
     File userTypesFolder
+    File rulesFile
 
     JsonImporter() {
         this(null)
@@ -70,6 +73,7 @@ class JsonImporter implements Importer {
         this.packagesFolder = new File(mainFolder, 'packages')
         this.triggersFolder = new File(mainFolder, 'triggers')
         this.userTypesFolder = new File(mainFolder, 'usertypes')
+        this.rulesFile = new File(mainFolder, "rules.json")
 
         this.mapper = JsonUtil.createMapper()
     }
@@ -83,6 +87,7 @@ class JsonImporter implements Importer {
         schema.packages = importPackages()
         schema.triggers = importTriggers()
         schema.userTypes = importUserTypes()
+        schema.rules = importRules();
         return schema
     }
 
@@ -186,6 +191,19 @@ class JsonImporter implements Importer {
             }
         }
         return userTypes
+    }
+
+    private def importRules() {
+        def rules = [:]
+        if(!rulesFile.exists()) return
+        def tree = mapper.readTree(rulesFile)
+        tree.fields.forEachRemaining({
+            def rdbms = RDBMS.getByName(it.key)
+            if(rdbms)
+                rules[rdbms] = mapper.readValue(it.value, Rule.class)
+        })
+
+        rules.size() > 0 ? rules : null
     }
 
     private def checkIfFolderExists(def directory) {
