@@ -83,8 +83,8 @@ public class BeeDataValidatorAction implements ActionRunner {
 
         def messages = []
 
-        if (fileData.size != databaseData.size) {
-            messages << new Message(messageType: MessageType.DATA_MISMATCH, level: MessageLevel.ERROR, objectName: objectName, message: "There are ${fileData.size} (file) and ${databaseData.size} (database) lines in table $objectName")
+        if (fileData.size() != databaseData.size()) {
+            messages << new Message(messageType: MessageType.DATA_MISMATCH, level: MessageLevel.ERROR, objectName: objectName, message: "There are ${fileData.size()} (file) and ${databaseData.size()} (database) lines in table $objectName")
         }
 
         messages.addAll(validateTableFromSource(databaseData, fileData, MessageLevel.WARNING, objectName, "This line was found in the database table [${objectName}] but was not found in the schema:"))

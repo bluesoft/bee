@@ -22,6 +22,6 @@ abstract class ActionRunnerParameterValidate implements ActionRunner {
         def min = minParameters()
         def max = maxParameters()
 
-        return !(options.arguments.size > max || options.arguments.size < min)
+        return !(options.arguments.size() > max || options.arguments.size() < min)
     }
 }

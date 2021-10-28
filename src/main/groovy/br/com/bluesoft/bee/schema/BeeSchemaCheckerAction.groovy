@@ -23,11 +23,11 @@ public class BeeSchemaCheckerAction implements ActionRunner {
 
         validateForeignKeys(schema, errors)
 
-        if (errors.size > 0) {
+        if (errors.size() > 0) {
             errors.each { println it }
         }
 
-        return errors.size != 0
+        return errors.size() != 0
     }
 
     def validateForeignKeys(def schema, def errors) {

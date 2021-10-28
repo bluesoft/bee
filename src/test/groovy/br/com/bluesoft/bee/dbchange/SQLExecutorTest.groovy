@@ -22,7 +22,7 @@ class SQLExecutorTest {
 
         def retorno = executor.execute("select 1 from dual")
 
-        assert messages.size == 2
+        assert messages.size() == 2
         assert messages[0] == ("select 1 from dual")
         assert messages[1].startsWith("Time elapsed:")
         assert retorno == true
@@ -40,7 +40,7 @@ class SQLExecutorTest {
                 "select a from b"
         ])
 
-        assert messages.size == 6
+        assert messages.size() == 6
         assert messages[5].startsWith("Time elapsed:")
         assert retorno == true
     }
@@ -53,7 +53,7 @@ class SQLExecutorTest {
 
         def retorno = executor.execute(["select 1 from dual"])
 
-        assert messages.size == 2
+        assert messages.size() == 2
         assert messages[0] == "select 1 from dual"
         assert messages[1] == "!!!Error: Erro"
         assert retorno == false

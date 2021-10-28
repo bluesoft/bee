@@ -250,7 +250,7 @@ abstract class BeeSchemaCreator {
             def counterValue = 1
 
             def query = new StringBuilder()
-            for (int i = 0; i < fileData.size; i++) {
+            for (int i = 0; i < fileData.size(); i++) {
                 query << "insert into ${tableName} ("
                 columnNames.eachWithIndex { columName, index ->
                     def isVirtual = isVirtualColumn[columName]

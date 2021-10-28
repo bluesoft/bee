@@ -83,7 +83,7 @@ class DbSeedManager {
             return false
         }
 
-        if (listaDeInstrucoes.size == 0) {
+        if (listaDeInstrucoes.size() == 0) {
             logger.log MESSAGE_NO_COMMANDS_IN_FILE
             salvarExecucao(sql, arquivo, upDown)
             return true
@@ -117,9 +117,9 @@ class DbSeedManager {
     def salvarExecucao(def sql, def arquivo, def upDown) {
         boolean autocommit = sql.connection.getAutoCommit()
 
-		if (!autocommit) {
-			sql.commit()
-		}
+        if (!autocommit) {
+            sql.commit()
+        }
 
         if (!criarTabelaDbseedsSeNaoExistir(sql)) {
             return false
@@ -135,9 +135,9 @@ class DbSeedManager {
             sql.execute(deleteQuery, [timestamp])
         }
 
-		if (!autocommit) {
-			sql.commit()
-		}
+        if (!autocommit) {
+            sql.commit()
+        }
     }
 
     def podeExecutar(def arquivo, def sql, def upDown) {
@@ -150,9 +150,9 @@ class DbSeedManager {
             if (force) {
                 return true
             }
-            return rows.size == 0
+            return rows.size() == 0
         } else {
-            return rows.size > 0
+            return rows.size() > 0
         }
     }
 
@@ -167,7 +167,7 @@ class DbSeedManager {
         def listaParaExecutar = (listaArquivo - listaBanco)
         listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
 
-        logger.log "Found ${listaParaExecutar.size} file(s)"
+        logger.log "Found ${listaParaExecutar.size()} file(s)"
         listaParaExecutar.each { logger.log "${it.ARQUIVO_NOME}" }
         return listaParaExecutar*.ARQUIVO_NOME
     }
@@ -249,9 +249,9 @@ class DbSeedManager {
 
     def mark(def arquivo) {
         def sql = getDatabaseConnection()
-		if (podeExecutar(arquivo, sql, UpDown.UP)) {
-			salvarExecucao(sql, arquivo, UpDown.UP)
-		}
+        if (podeExecutar(arquivo, sql, UpDown.UP)) {
+            salvarExecucao(sql, arquivo, UpDown.UP)
+        }
     }
 
     def markAll() {
@@ -262,8 +262,8 @@ class DbSeedManager {
         def listaParaExecutar = (listaArquivo - listaBanco)
         listaParaExecutar = listaParaExecutar.sort({ it.ARQUIVO_NOME })
 
-        if (listaParaExecutar.size > 0) {
-            logger.log "marking ${listaParaExecutar.size} file(s)"
+        if (listaParaExecutar.size() > 0) {
+            logger.log "marking ${listaParaExecutar.size()} file(s)"
             listaParaExecutar.each {
                 def timestamp = obterTimestamp("${it.ARQUIVO_NOME}")
                 String arquivo_nome = "${it.ARQUIVO_NOME}"

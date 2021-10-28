@@ -91,7 +91,7 @@ public class BeeDataGeneratorAction extends ActionRunnerMultipleParameter {
 
     @Override
     boolean validateParameters() {
-        return options.arguments.size >= 2
+        return options.arguments.size() >= 2
     }
 
     def getDatabaseConnection(clientName) {
