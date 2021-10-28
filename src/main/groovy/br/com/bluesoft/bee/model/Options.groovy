@@ -72,7 +72,7 @@ public class Options {
     boolean parse(def args) {
         def cli = cliBuilder.parse(args)
 
-        if (cli == null || cli == false || cli.arguments().size < 1) {
+        if (cli == null || cli == false || cli.arguments().size() < 1) {
             return false;
         }
 
