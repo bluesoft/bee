@@ -208,10 +208,12 @@ abstract class BeeSchemaCreator {
     void createProcedures(def file, def schema) {
         schema.procedures*.value.sort().each {
             def text = []
-            it.text.eachLine { text << it }
-            def text2 = text[1..text.size() - 1].join("\n")
-            def procedure = "create or replace ${text2}\n/\n\n"
-            file.append(procedure.toString(), 'utf-8')
+            if (it.text) {
+                it.text.eachLine { text << it }
+                def text2 = text[1..text.size() - 1].join("\n")
+                def procedure = "create or replace ${text2}\n/\n\n"
+                file.append(procedure.toString(), 'utf-8')
+            }
         }
     }
 
@@ -271,11 +273,11 @@ abstract class BeeSchemaCreator {
                     def columnName = columnNames[index2]
                     def isVirtual = isVirtualColumn[columnName]
                     def isString = columnType == 'varchar' || columnType == 'varchar2' || columnType == 'character' || columnType == 'character varying' || columnType == 'text'
-                    def isDate = columnType == 'date'
+                    def isDate = columnType == 'date' || columnType == 'timestamp'
                     def isBoolean = columnType == 'boolean'
                     def isNumber = fieldValue?.isNumber()
                     if (!isVirtual) {
-                        if (!isNumber && !isDate || isString) {
+                        if (!isNumber && isDate || isString) {
                             fieldValue = fieldValue.replaceAll("\'", "\''")
                             if (fieldValue != 'null') {
                                 fieldValue = "\'" + fieldValue + "\'"
