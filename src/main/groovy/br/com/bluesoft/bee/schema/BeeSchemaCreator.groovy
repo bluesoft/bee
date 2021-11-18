@@ -272,8 +272,8 @@ abstract class BeeSchemaCreator {
                     def columnType = columnTypes[index2]
                     def columnName = columnNames[index2]
                     def isVirtual = isVirtualColumn[columnName]
-                    def isString = columnType == 'varchar' || columnType == 'varchar2' || columnType == 'character' || columnType == 'character varying' || columnType == 'text'
-                    def isDate = columnType == 'date' || columnType == 'timestamp'
+                    def isString = columnType in ['varchar', 'varchar2', 'character', 'character varying', 'text', 'char']
+                    def isDate = columnType in ['date', 'timestamp']
                     def isBoolean = columnType == 'boolean'
                     def isNumber = fieldValue?.isNumber()
                     if (!isVirtual) {
