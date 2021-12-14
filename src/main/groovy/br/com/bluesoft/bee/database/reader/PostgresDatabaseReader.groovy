@@ -121,6 +121,7 @@ class PostgresDatabaseReader implements DatabaseReader {
         case data_type
             when 'numeric' then ic.numeric_precision
             when 'character varying' then ic.character_maximum_length 
+            when 'character' then ic.character_maximum_length 
             when '"char"' then ic.character_maximum_length 
             else 0
         end
@@ -138,6 +139,7 @@ class PostgresDatabaseReader implements DatabaseReader {
         case data_type
             when 'numeric' then ic.numeric_precision
             when 'character varying' then ic.character_maximum_length 
+            when 'character' then ic.character_maximum_length 
             when '"char"' then ic.character_maximum_length 
             else 0
         end
