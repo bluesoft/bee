@@ -77,14 +77,17 @@ class Bee {
     }
 
     static getVersion() {
-        def resources = Thread.currentThread().getContextClassLoader().
-                getResources(JarFile.MANIFEST_NAME)
+        def resources = Thread.currentThread().getContextClassLoader().getResources(JarFile.MANIFEST_NAME)
         def version = "test"
 
         resources.each {
-            Manifest manifest = new Manifest(it.openStream())
-            if (manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_TITLE] == 'bee') {
-                version = manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_VERSION]
+            try {
+                Manifest manifest = new Manifest(it.openStream())
+                if (manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_TITLE] == 'bee') {
+                    version = manifest.mainAttributes[Attributes.Name.IMPLEMENTATION_VERSION]
+                }
+            } catch (Exception e) {
+                // silent ignore
             }
         }
 
