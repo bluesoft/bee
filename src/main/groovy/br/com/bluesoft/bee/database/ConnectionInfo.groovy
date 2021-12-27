@@ -11,6 +11,7 @@ class ConnectionInfo {
 
             Properties props = new Properties()
             props.put("useFetchSizeWithLongColumn", "true")
+            props.put("oracle.jdbc.J2EE13Compliant", "true")
             props.put("user", config.user)
             props.put("password", config.password)
 
