@@ -209,7 +209,7 @@ abstract class BeeSchemaCreator {
         schema.procedures*.value.sort().each {
             def text = []
             if (it.text) {
-                it.text.eachLine { text << it }
+                it.getCanonical(schema.rdbms).text.eachLine { text << it }
                 def text2 = text[1..text.size() - 1].join("\n")
                 def procedure = "create or replace ${text2}\n/\n\n"
                 file.append(procedure.toString(), 'utf-8')
