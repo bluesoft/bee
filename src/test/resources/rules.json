@@ -13,6 +13,9 @@
       },
       "timestamp": {
         "sysdate": "current_timestamp"
+      },
+      "varchar": {
+        "~(.*)'$": "$1'::character varying"
       }
     },
     "dataTypeIn": [

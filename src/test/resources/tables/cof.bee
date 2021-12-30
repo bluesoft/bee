@@ -9,6 +9,7 @@
     descricao : {
       name : "descricao",
       type : "varchar",
+      defaultValue : "teste",
       size : 100,
       nullable : true
     },
@@ -56,6 +57,7 @@
     cof_nf_str : {
       name : "cof_nf_str",
       type : "varchar",
+      defaultValue : "'1'",
       size : 4,
       nullable : true
     },

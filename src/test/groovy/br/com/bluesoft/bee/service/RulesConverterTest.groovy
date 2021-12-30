@@ -48,6 +48,8 @@ class RulesConverterTest extends Specification {
         table    |  column                     |  type       |  size  |  scale  |  defaultValue
         'cof'    |  'codigo_operacao_fiscal'   | 'integer'   |  0     |  0      |  null
         'cof'    |  'basico'                   | 'number'    |  1     |  0      |  null
+        'cof'    |  'descricao'                | 'varchar'   |  100   |  0      |  "teste"
+        'cof'    |  'cof_nf_str'               | 'varchar'   |  4     |  0      |  "'1'::character varying"
         'pessoa' |  'data_nascimento'          | 'date'      |  7     |  0      |  'current_date'
         'pessoa' |  'fundacao'                 | 'timestamp' |  7     |  0      |  'current_timestamp'
 

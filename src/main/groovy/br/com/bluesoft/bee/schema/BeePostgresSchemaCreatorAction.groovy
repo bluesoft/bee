@@ -28,11 +28,11 @@ public class BeePostgresSchemaCreatorAction implements ActionRunner {
         out.log('importing schema metadata from the reference files')
         def schema = getImporter().importMetaData()
         schema.rdbms = RDBMS.POSTGRES
-        schema = new RulesConverter().toSchema(schema)
 
         if (objectName) {
             schema = schema.filter(objectName)
         }
+        schema = new RulesConverter().toSchema(schema)
 
         def file = new File('bee.sql')
         if (file.exists()) {
