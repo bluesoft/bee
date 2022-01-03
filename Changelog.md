@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.91] - 2022-01-03
 ### Fixed
 - data type with precision on schema:recreate
+- order on get procedures on postgresql
+- filter procedures from extensions on postgresql
+- filter temporary table on postgresql
 
 ## [1.90] - 2021-12-30
 ### Added
