@@ -471,29 +471,35 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def PROCEDURES_BODY_QUERY = '''
-		select pn.nspname,
-			pp.proname as name,
-			pg_get_functiondef(pp.oid) as text
-		from pg_proc pp
-			inner join pg_namespace pn on (pp.pronamespace = pn.oid)
-			inner join pg_type pt on (pt.oid = pp.prorettype)
-			inner join pg_language pl on (pp.prolang = pl.oid)
-		where pl.lanname NOT IN ('c','internal') 
-			and pn.nspname NOT IN ('pg_catalog', 'information_schema')
-		order by pn.nspname, pp.proname
+        select distinct pn.nspname,
+            pp.proname as name,
+            pg_get_functiondef(pp.oid) as text, e.oid
+        from pg_proc pp
+            inner join pg_namespace pn on (pp.pronamespace = pn.oid)
+            inner join pg_type pt on (pt.oid = pp.prorettype)
+            inner join pg_language pl on (pp.prolang = pl.oid)
+            left  join pg_depend d on (pp.oid = d.objid and d.deptype = 'e')
+            left  join pg_extension e on (d.refobjid = e.oid)
+        where pl.lanname NOT IN ('c','internal') 
+            and pn.nspname NOT IN ('pg_catalog', 'information_schema')
+            and e.oid is null
+        order by pn.nspname, pp.proname, text
 	'''
     final static def PROCEDURES_BODY_QUERY_BY_NAME = '''
-		select pn.nspname,
-			pp.proname as name,
-			pg_get_functiondef(pp.oid) as text
-		from pg_proc pp
-			inner join pg_namespace pn on (pp.pronamespace = pn.oid)
-			inner join pg_type pt on (pt.oid = pp.prorettype)
-			inner join pg_language pl on (pp.prolang = pl.oid)
-		where pl.lanname NOT IN ('c','internal') 
-			and pn.nspname NOT IN ('pg_catalog', 'information_schema')
+        select distinct pn.nspname,
+            pp.proname as name,
+            pg_get_functiondef(pp.oid) as text, e.oid
+        from pg_proc pp
+            inner join pg_namespace pn on (pp.pronamespace = pn.oid)
+            inner join pg_type pt on (pt.oid = pp.prorettype)
+            inner join pg_language pl on (pp.prolang = pl.oid)
+            left  join pg_depend d on (pp.oid = d.objid and d.deptype = 'e')
+            left  join pg_extension e on (d.refobjid = e.oid)
+        where pl.lanname NOT IN ('c','internal') 
+            and pn.nspname NOT IN ('pg_catalog', 'information_schema')
+            and e.oid is null
 			and pp.proname = ?
-		order by pn.nspname, pp.proname
+        order by pn.nspname, pp.proname, text
 	'''
 
     def getProceduresBody(objectName) {
