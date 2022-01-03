@@ -587,6 +587,7 @@ class PostgresDatabaseReader implements DatabaseReader {
     def cleanupSchema(Schema schema) {
         schema.userTypes.clear()
         schema.packages.clear()
+        schema.tables = schema.tables.findAll { !it.value.temporary }
     }
 
 }
