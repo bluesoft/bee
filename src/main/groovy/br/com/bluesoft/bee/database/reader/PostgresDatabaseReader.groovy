@@ -525,7 +525,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		select 
 			trigger_name as name, 
 			action_timing, 
-			array_to_string(array_agg(event_manipulation::text),' or ') as event_manipulation,
+			array_to_string(array_agg(event_manipulation::text order by event_manipulation),' or ') as event_manipulation,
 			event_object_table, 
 			action_orientation, 
 			action_statement 
@@ -537,7 +537,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		select 
 			trigger_name as name, 
 			action_timing, 
-			array_to_string(array_agg(event_manipulation::text),' or ') as event_manipulation,
+			array_to_string(array_agg(event_manipulation::text order by event_manipulation),' or ') as event_manipulation,
 			event_object_table, 
 			action_orientation, 
 			action_statement 
