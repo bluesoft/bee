@@ -269,7 +269,7 @@ abstract class BeeSchemaCreator {
                 query << "values ("
                 fileData[i].eachWithIndex { columnValue, index2 ->
                     def fieldValue = columnValue.toString()
-                    def columnType = columnTypes[index2]
+                    def columnType = columnType = columnTypes[index2].split('\\(')[0]
                     def columnName = columnNames[index2]
                     def isVirtual = isVirtualColumn[columnName]
                     def isString = columnType in ['varchar', 'varchar2', 'character', 'character varying', 'text', 'char']
