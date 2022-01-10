@@ -188,44 +188,34 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def INDEXES_QUERY = '''
-		select n.nspname schemaname,  ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, 
-		      am.amname as index_type, pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name,
-			  case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
-		from pg_class ct 
-		join pg_namespace n on (ct.relnamespace = n.oid) 
-		join (
-		      select i.indexrelid, i.indrelid, i.indoption, i.indisunique, i.indisclustered, i.indpred, i.indexprs, 
-		      information_schema._pg_expandarray(i.indkey) as keys 
-		      from pg_catalog.pg_index i
-		     ) i on (ct.oid = i.indrelid) 
-		join pg_class ci on (ci.oid = i.indexrelid) 
-		join pg_am am on (ci.relam = am.oid)
-		where n.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
-		  and (n.nspname, ci.relname) not in (
-		    select constraint_schema, constraint_name 
-		    from information_schema.table_constraints)
-		order by table_name, index_name, (i.keys).n
+        select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
+               pg_get_indexdef(ci.oid, generate_series(1, i.indnatts), false) as column_name, generate_series(1, i.indnatts) n,
+               case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
+        from pg_index i
+            join pg_class ct on i.indrelid = ct.oid
+            join pg_class ci on i.indexrelid = ci.oid
+            join pg_namespace ns on ct.relnamespace = ns.oid
+            join pg_am am on (ci.relam = am.oid)
+            left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
+        where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
+          and tc.constraint_name is null
+        order by table_name, index_name, n
 	'''
 
     final static def INDEXES_QUERY_BY_NAME = '''
-		select n.nspname schemaname,  ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness, 
-		      am.amname as index_type, pg_get_indexdef(ci.oid, (i.keys).n, false) as column_name,
-			  case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
-		from pg_class ct 
-		join pg_namespace n on (ct.relnamespace = n.oid) 
-		join (
-		      select i.indexrelid, i.indrelid, i.indoption, i.indisunique, i.indisclustered, i.indpred, i.indexprs, 
-		      information_schema._pg_expandarray(i.indkey) as keys 
-		      from pg_catalog.pg_index i
-		     ) i on (ct.oid = i.indrelid) 
-		join pg_class ci on (ci.oid = i.indexrelid) 
-		join pg_am am on (ci.relam = am.oid)
-		where n.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
-		  and (n.nspname, ci.relname) not in (
-		    select constraint_schema, constraint_name 
-		    from information_schema.table_constraints)
-  		and  ct.relname = ? 
-		order by table_name, index_name, (i.keys).n	
+        select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
+               pg_get_indexdef(ci.oid, generate_series(1, i.indnatts), false) as column_name, generate_series(1, i.indnatts) n,
+               case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
+        from pg_index i
+            join pg_class ct on i.indrelid = ct.oid
+            join pg_class ci on i.indexrelid = ci.oid
+            join pg_namespace ns on ct.relnamespace = ns.oid
+            join pg_am am on (ci.relam = am.oid)
+            left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
+        where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
+          and tc.constraint_name is null
+          and ct.relname = ?
+        order by table_name, index_name, n
 	'''
 
     private def fillIndexes(tables, objectName, databaseVersion) {
@@ -280,28 +270,28 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def CONSTRAINTS_QUERY = '''
-        select tc.table_name, tc.constraint_name, nullif(ccu.table_name, tc.table_name) as ref_table, tc.constraint_type, 
-               rc.delete_rule as delete_rule, 'enabled' as status, cc.check_clause
+        select tc.table_name, tc.constraint_name, tc2.table_name as ref_table, tc.constraint_type, 
+               nullif(rc.delete_rule, 'NO ACTION') as delete_rule, 'enabled' as status, cc.check_clause
         from information_schema.table_constraints tc
-             left join information_schema.referential_constraints rc using(constraint_catalog, constraint_schema, constraint_name)
-             left join information_schema.constraint_column_usage ccu using (constraint_catalog, constraint_schema, constraint_name)
-             left join information_schema.check_constraints cc using (constraint_catalog, constraint_schema, constraint_name)
-        where constraint_schema not in ('pg_catalog', 'information_schema')
-          and constraint_name not like '%_not_null\'
-        order by tc.table_name, tc.constraint_type, tc.constraint_name	
+             left join information_schema.referential_constraints rc on (tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name)
+             left join information_schema.table_constraints tc2 on (tc2.constraint_schema = rc.unique_constraint_schema and tc2.constraint_name = rc.unique_constraint_name)
+             left join information_schema.check_constraints cc on (tc.constraint_schema = cc.constraint_schema and tc.constraint_name = cc.constraint_name)
+        where tc.constraint_schema not in ('pg_catalog', 'information_schema')
+            and (check_clause not like '%IS NOT NULL' or check_clause is null)
+        order by tc.table_name, tc.constraint_type, tc.constraint_name
     '''
 
     final static def CONSTRAINTS_QUERY_BY_NAME = '''
-        select tc.table_name, tc.constraint_name, nullif(ccu.table_name, tc.table_name) as ref_table, tc.constraint_type, 
-               rc.delete_rule as delete_rule, 'enabled' as status, cc.check_clause
+        select tc.table_name, tc.constraint_name, tc2.table_name as ref_table, tc.constraint_type, 
+               nullif(rc.delete_rule, 'NO ACTION') as delete_rule, 'enabled' as status, cc.check_clause
         from information_schema.table_constraints tc
-             left join information_schema.referential_constraints rc using(constraint_catalog, constraint_schema, constraint_name)
-             left join information_schema.constraint_column_usage ccu using (constraint_catalog, constraint_schema, constraint_name)
-             left join information_schema.check_constraints cc using (constraint_catalog, constraint_schema, constraint_name)
-        where constraint_schema not in ('pg_catalog', 'information_schema')
-          and constraint_name not like '%_not_null\'
-          and tc.table_name = ?
-        order by tc.table_name, tc.constraint_type, tc.constraint_name	
+             left join information_schema.referential_constraints rc on (tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name)
+             left join information_schema.table_constraints tc2 on (tc2.constraint_schema = rc.unique_constraint_schema and tc2.constraint_name = rc.unique_constraint_name)
+             left join information_schema.check_constraints cc on (tc.constraint_schema = cc.constraint_schema and tc.constraint_name = cc.constraint_name)
+        where tc.constraint_schema not in ('pg_catalog', 'information_schema')
+            and (check_clause not like '%IS NOT NULL' or check_clause is null)
+            and tc.table_name = ?
+        order by tc.table_name, tc.constraint_type, tc.constraint_name
 	'''
 
     private def fillCostraints(tables, objectName) {
@@ -321,12 +311,12 @@ class PostgresDatabaseReader implements DatabaseReader {
             constraint.refTable = it.ref_table?.toLowerCase()
             constraint.type = getConstraintType(it.constraint_type.toLowerCase())
             def onDelete = it.delete_rule?.toLowerCase()
-            constraint.onDelete = onDelete == 'no action' ? null : onDelete
+            constraint.onDelete = onDelete == 'NO ACTION' ? null : onDelete
             def status = it.status?.toLowerCase()
             constraint.status = status
             if (constraint.type == 'C') {
                 constraint.refTable = null
-                constraint.searchCondition = it.check_clause[2..-2]
+                constraint.searchCondition = it.check_clause[2..-3]
             }
 
             table.constraints[constraint.name] = constraint
@@ -352,21 +342,25 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def CONSTRAINTS_COLUMNS_QUERY = '''
-        select tc.table_name, tc.constraint_name, kcu.column_name
-        from information_schema.table_constraints tc
-             join information_schema.key_column_usage kcu using(constraint_catalog, constraint_schema, constraint_name)
-        where constraint_schema not in ('pg_catalog', 'information_schema')
-          and constraint_name not like '%_not_null\'
-        order by tc.table_name, tc.constraint_type, tc.constraint_name, kcu.ordinal_position
+        select kcu.table_name, kcu.constraint_name, kcu.column_name,
+               case when t.constraint_type <> 'PRIMARY KEY' then kcu2.column_name else '' end ref_column_name
+        from information_schema.key_column_usage kcu
+             left join information_schema.referential_constraints r on kcu.constraint_schema = r.constraint_schema and kcu.constraint_name = r.constraint_name
+             left join information_schema.table_constraints t on r.unique_constraint_schema = t.constraint_schema and r.unique_constraint_name = t.constraint_name
+             left join information_schema.key_column_usage kcu2 on kcu2.constraint_schema = t.constraint_schema and kcu2.constraint_name = t.constraint_name and kcu2.ordinal_position = kcu.position_in_unique_constraint
+        where kcu.constraint_schema not in ('pg_catalog', 'information_schema')
+        order by kcu.table_name, kcu.constraint_name, kcu.ordinal_position
 	'''
     final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
-        select tc.table_name, tc.constraint_name, kcu.column_name
-        from information_schema.table_constraints tc
-             join information_schema.key_column_usage kcu using(constraint_catalog, constraint_schema, constraint_name)
-        where constraint_schema not in ('pg_catalog', 'information_schema')
-          and constraint_name not like '%_not_null\'
-          and tc.table_name = ?
-        order by tc.table_name, tc.constraint_type, tc.constraint_name, kcu.ordinal_position
+        select kcu.table_name, kcu.constraint_name, kcu.column_name,
+               case when t.constraint_type <> 'PRIMARY KEY' then kcu2.column_name else '' end ref_column_name
+        from information_schema.key_column_usage kcu
+             left join information_schema.referential_constraints r on kcu.constraint_schema = r.constraint_schema and kcu.constraint_name = r.constraint_name
+             left join information_schema.table_constraints t on r.unique_constraint_schema = t.constraint_schema and r.unique_constraint_name = t.constraint_name
+             left join information_schema.key_column_usage kcu2 on kcu2.constraint_schema = t.constraint_schema and kcu2.constraint_name = t.constraint_name and kcu2.ordinal_position = kcu.position_in_unique_constraint
+        where kcu.constraint_schema not in ('pg_catalog', 'information_schema')
+          and kcu.table_name = ?
+        order by kcu.table_name, kcu.constraint_name, kcu.ordinal_position
 	'''
 
     private def fillCostraintsColumns(tables, objectName) {
@@ -380,6 +374,9 @@ class PostgresDatabaseReader implements DatabaseReader {
             def tableName = it.table_name.toLowerCase()
             def table = tables[tableName]
             def constraint = table.constraints[it.constraint_name.toLowerCase()]
+            if (it.ref_column_name) {
+                constraint.refColumns << it.ref_column_name.toLowerCase()
+            }
             constraint.columns << it.column_name.toLowerCase()
         })
     }

@@ -48,11 +48,6 @@ class Index {
     def validateWithMetadata(Table table, Index metadataIndex) {
         def messages = []
 
-        if (metadataIndex.type != this.type) {
-            def messageText = "The type of the index ${this.name} of the table ${table.name} should be ${metadataIndex.type} but it is ${this.type}"
-            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.INDEX, messageType: MessageType.INDEX_TYPE, message: messageText)
-        }
-
         if (metadataIndex.unique != this.unique) {
             def messageText = "The uniqueness of the index ${this.name} of the table ${table.name} should be ${metadataIndex.unique} but it is ${this.unique}"
             messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.INDEX, messageType: MessageType.INDEX_UNIQUENESS, message: messageText)

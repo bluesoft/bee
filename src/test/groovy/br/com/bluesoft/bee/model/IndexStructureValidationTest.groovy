@@ -21,7 +21,6 @@ class IndexStructureValidationTest extends spock.lang.Specification {
 
         where:
         databaseIndex                                                                   | metadataIndex                                                | messageType                  | messageText
-        new Index(name: 'idx_person', type: 'N')                                        | new Index(type: 'F')                                         | MessageType.INDEX_TYPE       | 'The type of the index idx_person of the table people should be F but it is N'
         new Index(name: 'idx_person', unique: true)                                     | new Index(unique: false)                                     | MessageType.INDEX_UNIQUENESS | 'The uniqueness of the index idx_person of the table people should be false but it is true'
         new Index(name: 'uk_person', columns: [indexColumn('id'), indexColumn('name')]) | new Index(columns: [indexColumn('name'), indexColumn('id')]) | MessageType.INDEX_COLUMNS    | 'The columns of the index uk_person of the table people should be [name asc, id asc] but it is [id asc, name asc]'
         new Index(name: 'idx_age', columns: [indexColumn('name')])                      | new Index(columns: [indexColumn('age')])                     | MessageType.INDEX_COLUMNS    | 'The columns of the index idx_age of the table people should be [age asc] but it is [name asc]'
