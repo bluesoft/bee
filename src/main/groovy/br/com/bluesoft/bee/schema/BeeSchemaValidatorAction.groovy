@@ -72,11 +72,11 @@ class BeeSchemaValidatorAction implements ActionRunner {
         Schema metadataSchema = importer.importMetaData()
         databaseReader.cleanupSchema(metadataSchema)
         metadataSchema.rdbms = RDBMSUtil.getRDBMS(options)
-        metadataSchema = new RulesConverter().toSchema(metadataSchema)
 
 		if (objectName) {
 			metadataSchema = metadataSchema.filter(objectName)
 		}
+        metadataSchema = new RulesConverter().toSchema(metadataSchema)
 
         out.log('importing schema metadata from the database')
         Schema databaseSchema = databaseReader.getSchema(objectName)
