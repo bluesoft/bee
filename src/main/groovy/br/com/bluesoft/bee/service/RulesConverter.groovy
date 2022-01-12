@@ -1,6 +1,8 @@
 package br.com.bluesoft.bee.service
 
 import br.com.bluesoft.bee.model.Constraint
+import br.com.bluesoft.bee.model.Index
+import br.com.bluesoft.bee.model.IndexColumn
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.model.Table
 import br.com.bluesoft.bee.model.TableColumn
@@ -16,6 +18,8 @@ class RulesConverter {
     List<String[]> checksRegex = []
     Map<String, Map<String, String>> colDefConst = [:]
     Map<String, List<String[]>> colDefRegex = [:]
+    Map<String, String> indColConst = [:]
+    Map<String, String> indFilterConst = [:]
 
 
     Schema toSchema(Schema source) {
@@ -23,7 +27,7 @@ class RulesConverter {
             return source
 
         Rule rule = source.rules[source.rdbms]
-        prepareRules(rule.columnDefaultOut, rule.checkConditionOut)
+        prepareRules(rule.columnDefaultOut, rule.checkConditionOut, rule.indexColumnOut, rule.indexFilterOut)
         def schema = source.clone()
         schema.tables = source.tables.collectEntries { k, v -> [k, convertTable(v, rule.dataTypeOut)]}
         return schema
@@ -34,7 +38,7 @@ class RulesConverter {
             return source
 
         Rule rule = source.rules[source.rdbms]
-        prepareRules(rule.columnDefaultIn, rule.checkConditionIn)
+        prepareRules(rule.columnDefaultIn, rule.checkConditionIn, rule.indexColumnIn, [:])
         def schema = source.clone()
         schema.tables = source.tables.collectEntries { k, v -> [k, convertTable(v, rule.dataTypeIn)]}
         return schema
@@ -48,7 +52,24 @@ class RulesConverter {
             return [k, convertColumn(v, dataType, defaultValue)]
         })
         result.constraints = source.constraints.collectEntries { [it.key, convertCheckConstraint(it.value)] }
+        result.indexes = source.indexes.collectEntries { [it.key, convertIndex(it.value)]}
         return result
+    }
+
+    Index convertIndex(Index source) {
+        Index result = source
+        if(source.columns*.name.intersect(indColConst.keySet()).size() > 0) {
+            result = source.clone()
+            result.columns = source.columns.collect({
+                new IndexColumn(name: indColConst.getOrDefault(it.name, it.name) , descend: it.descend)
+            }).findAll({it.name != ''})
+        }
+
+        if(result.name in indFilterConst) {
+            result = result.clone()
+            result.where = indFilterConst[result.name]
+        }
+        return result;
     }
 
     Constraint convertCheckConstraint(Constraint source) {
@@ -119,7 +140,7 @@ class RulesConverter {
         }
     }
 
-    void prepareRules(Map<String, Map<String, String>> colDefRules, Map<String, String> checkRules) {
+    void prepareRules(Map<String, Map<String, String>> colDefRules, Map<String, String> checkRules, Map<String, String> indColRules, Map<String, String> indFilterOut) {
         colDefConst = colDefRules.collectEntries { k, v ->
             Map<String, String> c = v.findAll {!it.key.startsWith("~")}
             return [k, c]
@@ -130,5 +151,8 @@ class RulesConverter {
         }
         checksConst = checkRules.findAll { !it.key.startsWith("~")}
         checksRegex = checkRules.findAll { it.key.startsWith("~")}.collect { [it.key.substring(1), it.value]}
+
+        indColConst = indColRules
+        indFilterConst = indFilterOut
     }
 }

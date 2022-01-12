@@ -8,4 +8,9 @@ class Rule {
     List<DataType> dataTypeIn = []
     Map<String, Map<String, String>> columnDefaultIn = [:]
     Map<String, String> checkConditionOut = [:]
+
+    Map<String, String> indexColumnOut = [:]
+    Map<String, String> indexColumnIn = [:]
+
+    Map<String, String> indexFilterOut = [:]
 }

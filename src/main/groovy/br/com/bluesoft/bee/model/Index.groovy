@@ -35,8 +35,10 @@ package br.com.bluesoft.bee.model
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
+import groovy.transform.AutoClone
 import org.codehaus.jackson.annotate.JsonAutoDetect
 
+@AutoClone
 @JsonAutoDetect(isGetterVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.ANY)
 class Index {
 
@@ -44,6 +46,7 @@ class Index {
     String type = "N" //N,B,F
     Boolean unique = false
     List<IndexColumn> columns = []
+    String where
 
     def validateWithMetadata(Table table, Index metadataIndex) {
         def messages = []
@@ -56,6 +59,11 @@ class Index {
         if (metadataIndex.columns != this.columns) {
             def messageText = "The columns of the index ${this.name} of the table ${table.name} should be ${metadataIndex.columns} but it is ${this.columns}"
             messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.INDEX, messageType: MessageType.INDEX_COLUMNS, message: messageText)
+        }
+
+        if (metadataIndex.where != this.where) {
+            def messageText = "The filter of the index ${this.name} of the table ${table.name} should be ${metadataIndex.where} but it is ${this.where}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.INDEX, messageType: MessageType.INDEX_FILTER, message: messageText)
         }
 
         return messages

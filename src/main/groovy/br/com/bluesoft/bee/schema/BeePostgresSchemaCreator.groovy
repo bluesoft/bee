@@ -39,11 +39,14 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
         if (index.unique) {
             result += ' unique'
         }
-        if (index.columns.size() == 1 && index.columns[0].name.contains('(')) {
-            result += " index ${index.name} on ${tableName} USING ${indexType} (" + index.columns[0].name + ");\n"
-        } else {
-            result += " index ${index.name} on ${tableName} USING ${indexType} (" + index.columns.join(',') + ");\n"
+
+        result += " index ${index.name} on ${tableName} USING ${indexType} (" + index.columns.join(',') + ")"
+
+        if(index.where) {
+            result += " where ${index.where}"
         }
+
+        result += ";\n"
 
         return result
     }
