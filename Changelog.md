@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.92] - 2022-01-12
+### Added
+- functional indexes on PostgreSQL
+- partial indexes on PostgreSQL
+### Fixed
+- issues getting indexes and constratins info from PostgreSQL
+
 ## [1.91] - 2022-01-03
 ### Fixed
 - data type with precision on schema:recreate
