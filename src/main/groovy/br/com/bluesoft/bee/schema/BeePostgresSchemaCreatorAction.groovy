@@ -58,6 +58,7 @@ public class BeePostgresSchemaCreatorAction implements ActionRunner {
 
         out.println("generating indexes...")
         beeSchemaCreator.createIndexes(file, schema)
+        beeSchemaCreator.createFunctionalIndexes(file, schema)
 
         out.println("generating views...")
         beeSchemaCreator.createViews(file, schema)

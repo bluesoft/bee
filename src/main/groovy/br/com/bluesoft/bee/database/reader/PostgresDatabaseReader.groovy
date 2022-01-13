@@ -188,33 +188,41 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def INDEXES_QUERY = '''
-        select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
-               pg_get_indexdef(ci.oid, generate_series(1, i.indnatts), false) as column_name, generate_series(1, i.indnatts) n,
-               case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
-        from pg_index i
-            join pg_class ct on i.indrelid = ct.oid
-            join pg_class ci on i.indexrelid = ci.oid
-            join pg_namespace ns on ct.relnamespace = ns.oid
-            join pg_am am on (ci.relam = am.oid)
-            left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
-        where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
-          and tc.constraint_name is null
+        select schemaname, table_name, index_name, uniqueness, index_type, 
+               pg_get_indexdef(coid, n, false) as column_name, pg_get_indexdef(coid, 0, false) definition,
+               case when pg_index_column_has_property(coid,n, 'asc') then 'asc' else 'desc' end as descend
+        from  (
+                select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
+                       generate_series(1, i.indnatts) n, ci.oid coid
+                from pg_index i
+                    join pg_class ct on i.indrelid = ct.oid
+                    join pg_class ci on i.indexrelid = ci.oid
+                    join pg_namespace ns on ct.relnamespace = ns.oid
+                    join pg_am am on (ci.relam = am.oid)
+                    left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
+                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
+                  and tc.constraint_name is null
+        ) t
         order by table_name, index_name, n
 	'''
 
     final static def INDEXES_QUERY_BY_NAME = '''
-        select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
-               pg_get_indexdef(ci.oid, generate_series(1, i.indnatts), false) as column_name, generate_series(1, i.indnatts) n,
-               case when pg_index_column_has_property(ci.oid,1, 'asc') then 'asc' else 'desc' end as descend
-        from pg_index i
-            join pg_class ct on i.indrelid = ct.oid
-            join pg_class ci on i.indexrelid = ci.oid
-            join pg_namespace ns on ct.relnamespace = ns.oid
-            join pg_am am on (ci.relam = am.oid)
-            left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
-        where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
-          and tc.constraint_name is null
-          and ct.relname = ?
+        select schemaname, table_name, index_name, uniqueness, index_type, 
+               pg_get_indexdef(coid, n, false) as column_name, pg_get_indexdef(coid, 0, false) definition,
+               case when pg_index_column_has_property(coid,n, 'asc') then 'asc' else 'desc' end as descend
+        from  (
+                select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
+                       generate_series(1, i.indnatts) n, ci.oid coid
+                from pg_index i
+                    join pg_class ct on i.indrelid = ct.oid
+                    join pg_class ci on i.indexrelid = ci.oid
+                    join pg_namespace ns on ct.relnamespace = ns.oid
+                    join pg_am am on (ci.relam = am.oid)
+                    left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
+                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
+                  and tc.constraint_name is null
+                  and ct.relname = ?
+        ) t
         order by table_name, index_name, n
 	'''
 
@@ -233,6 +241,8 @@ class PostgresDatabaseReader implements DatabaseReader {
                 index.name = indexName
                 index.type = getIndexType(it.index_type)
                 index.unique = it.uniqueness
+                def parts = (it.definition as String).split('\\) WHERE ')
+                index.where = parts.size() > 1 ? parts[1] : null
                 table.indexes[index.name] = index
             }
             def indexColumn = new IndexColumn()
