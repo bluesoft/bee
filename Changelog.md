@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.93] - 2022-01-24
+### Fixed
+- temporary tables on PostgreSQL
+- text(0) datatype
+- timestamp datatype
+### Changed
+- removed commits on schema:recreate_postgre
+
 ## [1.92] - 2022-01-12
 ### Added
 - functional indexes on PostgreSQL
