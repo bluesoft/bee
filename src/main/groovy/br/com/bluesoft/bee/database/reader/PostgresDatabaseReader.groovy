@@ -384,10 +384,12 @@ class PostgresDatabaseReader implements DatabaseReader {
             def tableName = it.table_name.toLowerCase()
             def table = tables[tableName]
             def constraint = table.constraints[it.constraint_name.toLowerCase()]
-            if (it.ref_column_name) {
-                constraint.refColumns << it.ref_column_name.toLowerCase()
+            if(constraint != null) {
+                if (it.ref_column_name) {
+                    constraint.refColumns << it.ref_column_name.toLowerCase()
+                }
+                constraint.columns << it.column_name.toLowerCase()
             }
-            constraint.columns << it.column_name.toLowerCase()
         })
     }
 
