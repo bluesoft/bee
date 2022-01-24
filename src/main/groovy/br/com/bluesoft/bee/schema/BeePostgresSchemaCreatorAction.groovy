@@ -2,6 +2,7 @@ package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.importer.JsonImporter
 import br.com.bluesoft.bee.model.Options
+import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.service.RulesConverter
@@ -26,7 +27,7 @@ public class BeePostgresSchemaCreatorAction implements ActionRunner {
         def objectName = options.arguments[0]
 
         out.log('importing schema metadata from the reference files')
-        def schema = getImporter().importMetaData()
+        def schema = cleanupSchema(getImporter().importMetaData())
         schema.rdbms = RDBMS.POSTGRES
 
         if (objectName) {
@@ -85,5 +86,13 @@ public class BeePostgresSchemaCreatorAction implements ActionRunner {
         }
         return importer
     }
+
+    Schema cleanupSchema(Schema schema) {
+        schema.userTypes.clear()
+        schema.packages.clear()
+        schema.tables = schema.tables.findAll { !it.value.temporary }
+        return schema
+    }
+
 }
 

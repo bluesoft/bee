@@ -228,7 +228,7 @@ abstract class BeeSchemaCreator {
         fieldValue
     }
 
-    void createCsvData(def file, def csvFile, def schema) {
+    void createCsvData(def file, def csvFile, def schema, def useCommit) {
         def tableName = csvFile.name.split('\\.')[0]
         def fileData = CsvUtil.read(csvFile)
         def table = schema.tables[tableName]
@@ -269,15 +269,14 @@ abstract class BeeSchemaCreator {
                 query << "values ("
                 fileData[i].eachWithIndex { columnValue, index2 ->
                     def fieldValue = columnValue.toString()
-                    def columnType = columnTypes[index2].split('\\(')[0]
+                    def columnType = columnTypes[index2].split(' ')[0].split('\\(')[0]
                     def columnName = columnNames[index2]
                     def isVirtual = isVirtualColumn[columnName]
                     def isString = columnType in ['varchar', 'varchar2', 'character', 'character varying', 'text', 'char']
                     def isDate = columnType in ['date', 'timestamp']
                     def isBoolean = columnType == 'boolean'
-                    def isNumber = fieldValue?.isNumber()
                     if (!isVirtual) {
-                        if (!isNumber && isDate || isString) {
+                        if (isDate || isString) {
                             fieldValue = fieldValue.replaceAll("\'", "\''")
                             if (fieldValue != 'null') {
                                 fieldValue = "\'" + fieldValue + "\'"
@@ -297,7 +296,9 @@ abstract class BeeSchemaCreator {
                 counterColumnNames = 1
                 counterValue = 1
             }
-            query << "commit;\n"
+            if(useCommit) {
+                query << "commit;\n"
+            }
             file.append(query.toString(), 'utf-8')
         }
     }
@@ -308,7 +309,7 @@ abstract class BeeSchemaCreator {
         lines.each {
             if(it.startsWith('--db')) {
                 def items = it.split()
-                rdbms = RDBMS.getByName(items?[1])
+                rdbms = RDBMS.getByName(items[1])
             }
             if(rdbms == null || rdbms == schema.rdbms) {
                 file.append(it, "utf-8")
@@ -317,7 +318,7 @@ abstract class BeeSchemaCreator {
         }
     }
 
-    void createCoreData(def file, def schema, def dataFolderPath) {
+    void createCoreData(def file, def schema, def dataFolderPath, def useCommit=true) {
         def dataFolder = new File(dataFolderPath, 'data')
         def dataFolderFiles = dataFolder.listFiles()
         def seedsFolder = new File(dataFolderPath, 'dbseeds')
@@ -325,12 +326,12 @@ abstract class BeeSchemaCreator {
 
         dataFolderFiles.each {
             if (it.name.endsWith(".csv")) {
-                createCsvData(file, it, schema)
+                createCsvData(file, it, schema, useCommit)
             }
         }
         seedsFolderFiles.each {
             if (it.name.endsWith(".csv")) {
-                createCsvData(file, it, schema)
+                createCsvData(file, it, schema, useCommit)
             }
         }
         seedsFolderFiles.each {

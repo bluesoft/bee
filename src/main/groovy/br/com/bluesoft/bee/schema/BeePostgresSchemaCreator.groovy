@@ -1,10 +1,12 @@
 package br.com.bluesoft.bee.schema
 
+import br.com.bluesoft.bee.util.RDBMS
+
 class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
     def createColumn(def column) {
         def result = "    ${column.name} ${column.type}"
-        if (column.type in ['character', 'character varying', 'text']) {
+        if (column.type in ['character', 'character varying']) {
             if (column.size != null) {
                 result += "(${column.size})"
             }
@@ -61,7 +63,7 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
     void createCoreData(def file, def schema, def dataFolderPath) {
         if (!schema.filtered) {
-            super.createCoreData(file, schema, dataFolderPath)
+            super.createCoreData(file, schema, dataFolderPath, false)
         }
     }
 
