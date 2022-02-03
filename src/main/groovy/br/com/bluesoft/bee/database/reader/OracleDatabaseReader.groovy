@@ -555,6 +555,10 @@ class OracleDatabaseReader implements DatabaseReader {
     }
 
     def cleanupSchema(Schema schema) {
-
+        schema.tables.each {
+            it.value.indexes.each {
+                it.value.where = null
+            }
+        }
     }
 }

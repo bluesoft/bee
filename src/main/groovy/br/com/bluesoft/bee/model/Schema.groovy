@@ -44,7 +44,7 @@ class Schema {
 
     String databaseVersion
     RDBMS rdbms
-    Map tables = [:]
+    Map<String, Table> tables = [:]
     Map views = [:]
     Map sequences = [:]
     Map procedures = [:]
