@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.94] - 2022-02-03
+### Fixed
+- Exception on schema:generate with postgresql extensions
+### Changed
+- included 'alter session set nls_timestamp_format' on schema:recreate_oracle
+
 ## [1.93] - 2022-01-24
 ### Fixed
 - temporary tables on PostgreSQL

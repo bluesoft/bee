@@ -5,6 +5,7 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
     void createCoreData(def file, def schema, def dataFolderPath) {
         if (!schema.filtered) {
             file.append("alter session set nls_date_format = 'yyyy-mm-dd';\n", 'utf-8')
+            file.append("alter session set nls_timestamp_format = 'yyyy-mm-dd hh24:mi:ss';\n", 'utf-8')
             file.append("set define off;\n\n", 'utf-8')
             super.createCoreData(file, schema, dataFolderPath)
         }

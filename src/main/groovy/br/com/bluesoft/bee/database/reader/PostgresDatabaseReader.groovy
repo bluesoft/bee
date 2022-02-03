@@ -232,23 +232,25 @@ class PostgresDatabaseReader implements DatabaseReader {
             def tableName = it.table_name.toLowerCase()
             def table = tables[tableName]
             def indexName = it.index_name.toLowerCase()
-            def indexAlreadyExists = table.indexes[indexName] ? true : false
-            def index = null;
-            if (indexAlreadyExists) {
-                index = table.indexes[indexName]
-            } else {
-                index = new Index()
-                index.name = indexName
-                index.type = getIndexType(it.index_type)
-                index.unique = it.uniqueness
-                def parts = (it.definition as String).split('\\) WHERE ')
-                index.where = parts.size() > 1 ? parts[1] : null
-                table.indexes[index.name] = index
+            if (table) {
+                def indexAlreadyExists = table.indexes[indexName] ? true : false
+                def index = null;
+                if (indexAlreadyExists) {
+                    index = table.indexes[indexName]
+                } else {
+                    index = new Index()
+                    index.name = indexName
+                    index.type = getIndexType(it.index_type)
+                    index.unique = it.uniqueness
+                    def parts = (it.definition as String).split('\\) WHERE ')
+                    index.where = parts.size() > 1 ? parts[1] : null
+                    table.indexes[index.name] = index
+                }
+                def indexColumn = new IndexColumn()
+                indexColumn.name = it.column_name.toLowerCase()
+                indexColumn.descend = it.descend.toLowerCase() == 'desc' ? true : false
+                index.columns << indexColumn
             }
-            def indexColumn = new IndexColumn()
-            indexColumn.name = it.column_name.toLowerCase()
-            indexColumn.descend = it.descend.toLowerCase() == 'desc' ? true : false
-            index.columns << indexColumn
         })
     }
 
