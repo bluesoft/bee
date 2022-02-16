@@ -282,8 +282,13 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     final static def CONSTRAINTS_QUERY = '''
-        select tc.table_name, tc.constraint_name, tc2.table_name as ref_table, tc.constraint_type, 
-               nullif(rc.delete_rule, 'NO ACTION') as delete_rule, 'enabled' as status, cc.check_clause
+        select tc.table_name, tc.constraint_name, 
+               tc2.table_name as ref_table, 
+               tc.constraint_type, 
+               nullif(rc.delete_rule, 'NO ACTION') as delete_rule, 
+               nullif(rc.update_rule, 'NO ACTION') as update_rule, 
+               'enabled' as status, 
+               cc.check_clause
         from information_schema.table_constraints tc
              left join information_schema.referential_constraints rc on (tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name)
              left join information_schema.table_constraints tc2 on (tc2.constraint_schema = rc.unique_constraint_schema and tc2.constraint_name = rc.unique_constraint_name)
@@ -294,8 +299,13 @@ class PostgresDatabaseReader implements DatabaseReader {
     '''
 
     final static def CONSTRAINTS_QUERY_BY_NAME = '''
-        select tc.table_name, tc.constraint_name, tc2.table_name as ref_table, tc.constraint_type, 
-               nullif(rc.delete_rule, 'NO ACTION') as delete_rule, 'enabled' as status, cc.check_clause
+        select tc.table_name, tc.constraint_name, 
+               tc2.table_name as ref_table, 
+               tc.constraint_type, 
+               nullif(rc.delete_rule, 'NO ACTION') as delete_rule, 
+               nullif(rc.update_rule, 'NO ACTION') as update_rule, 
+               'enabled' as status, 
+               cc.check_clause
         from information_schema.table_constraints tc
              left join information_schema.referential_constraints rc on (tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name)
              left join information_schema.table_constraints tc2 on (tc2.constraint_schema = rc.unique_constraint_schema and tc2.constraint_name = rc.unique_constraint_name)
@@ -322,8 +332,8 @@ class PostgresDatabaseReader implements DatabaseReader {
             constraint.name = it.constraint_name.toLowerCase()
             constraint.refTable = it.ref_table?.toLowerCase()
             constraint.type = getConstraintType(it.constraint_type.toLowerCase())
-            def onDelete = it.delete_rule?.toLowerCase()
-            constraint.onDelete = onDelete == 'NO ACTION' ? null : onDelete
+            constraint.onDelete = it.delete_rule?.toLowerCase()
+            constraint.onUpdate = it.update_rule?.toLowerCase()
             def status = it.status?.toLowerCase()
             constraint.status = status
             if (constraint.type == 'C') {

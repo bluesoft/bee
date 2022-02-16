@@ -44,6 +44,7 @@ class Constraint {
     String refTable
     String type
     String onDelete
+    String onUpdate
     String status
     String searchCondition
     def columns = []
@@ -74,6 +75,11 @@ class Constraint {
 
         if (this.type == 'R' && metadataConstraint.onDelete != this.onDelete) {
             def messageText = "The delete action of the constraint ${this.name} should be ${metadataConstraint.onDelete} but it is ${this.onDelete}"
+            messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.CONSTRAINT, messageType: MessageType.CONSTRAINT_DELETE_RULE, message: messageText)
+        }
+
+        if (this.type == 'R' && metadataConstraint.onUpdate != this.onUpdate) {
+            def messageText = "The update action of the constraint ${this.name} should be ${metadataConstraint.onUpdate} but it is ${this.onUpdate}"
             messages << new Message(objectName: this.name, level: MessageLevel.ERROR, objectType: ObjectType.CONSTRAINT, messageType: MessageType.CONSTRAINT_DELETE_RULE, message: messageText)
         }
 

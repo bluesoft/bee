@@ -35,6 +35,21 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
         return result
     }
 
+    def createForeignKey(table) {
+        def constraints = table.constraints.findAll { it.value.type == 'R' }*.value
+
+        def result = ""
+
+        constraints.each {
+            def onDelete = it.onDelete ? " on delete ${it.onDelete}" : ""
+            def onUpdate = it.onUpdate ? " on upadte ${it.onUpdate}" : ""
+            def refColumns = it.refColumns ? "(" + it.refColumns.join(',') + ")" : ""
+            result += "alter table ${table.name} add constraint ${it.name} foreign key (" + it.columns.join(',') + ") references ${it.refTable}${refColumns}${onDelete}${onUpdate};\n"
+        }
+
+        return result
+    }
+
     def createIndex(tableName, index) {
         def result = "create"
         def indexType = getIndexType(index.type)
