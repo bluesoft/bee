@@ -17,7 +17,7 @@ mainClassName = "br.com.bluesoft.bee.Bee"
 
 group = 'br.com.bluesoft.bee'
 def artifact = 'bee'
-version = '1.95'
+version = '1.96'
 
 def javaVersion = JavaVersion.VERSION_1_8
 sourceCompatibility = javaVersion;

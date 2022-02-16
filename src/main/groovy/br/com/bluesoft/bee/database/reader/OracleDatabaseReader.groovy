@@ -559,6 +559,9 @@ class OracleDatabaseReader implements DatabaseReader {
             it.value.indexes.each {
                 it.value.where = null
             }
+            it.value.constraints.each {
+                it.value.onUpdate = null
+            }
         }
     }
 }
