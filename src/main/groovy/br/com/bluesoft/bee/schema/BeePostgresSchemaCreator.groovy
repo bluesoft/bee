@@ -42,7 +42,7 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
         constraints.each {
             def onDelete = it.onDelete ? " on delete ${it.onDelete}" : ""
-            def onUpdate = it.onUpdate ? " on upadte ${it.onUpdate}" : ""
+            def onUpdate = it.onUpdate ? " on update ${it.onUpdate}" : ""
             def refColumns = it.refColumns ? "(" + it.refColumns.join(',') + ")" : ""
             result += "alter table ${table.name} add constraint ${it.name} foreign key (" + it.columns.join(',') + ") references ${it.refTable}${refColumns}${onDelete}${onUpdate};\n"
         }
