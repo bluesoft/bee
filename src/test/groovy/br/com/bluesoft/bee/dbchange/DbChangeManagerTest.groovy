@@ -414,32 +414,6 @@ class DbChangeManagerTest extends Specification {
         mensagens[2] == "!!!Error: Erro"
     }
 
-    def "deve retornar mensagem de erro quando a lista de instrucoes nao existir"() {
-
-        given:
-        def mensagens = []
-        def sql = mockSql()
-        def parser = Mock(SQLFileParser)
-        def logger = ["log": { msg -> mensagens << msg }] as BeeWriter
-        def directoryFile = [list: { ["abc", "xyz"] }]
-        def arquivo = "989898-test.dbchange"
-        def dbchange = [header: "carneiro", up: null, down: []]
-
-        1 * parser.parseFile(_) >> dbchange
-
-        def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
-        manager.metaClass.getFile = { def a, def b -> return [] }
-
-        when:
-        def resultado = manager.executarDbChange(arquivo, UpDown.UP)
-
-        then:
-        resultado == false
-        mensagens.size() == 2
-        mensagens[0] == "Executing dbchange: 989898-test.dbchange -- carneiro"
-        mensagens[1] == DbChangeManager.MESSAGE_THERE_IS_NO_INSTRUCTIONS
-    }
-
     def "deve retornar false quando nao existir um execucao anterior e parametro UpDown = DOWN"() {
 
         given:
