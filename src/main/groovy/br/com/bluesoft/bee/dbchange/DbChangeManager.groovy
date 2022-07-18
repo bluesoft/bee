@@ -104,11 +104,6 @@ class DbChangeManager {
             listaDeInstrucoes = dbchange.down
         }
 
-        if (listaDeInstrucoes == null) {
-            logger.log MESSAGE_THERE_IS_NO_INSTRUCTIONS
-            return false
-        }
-
         if (listaDeInstrucoes.size() == 0) {
             logger.log MESSAGE_NO_COMMANDS_IN_FILE
             return true
