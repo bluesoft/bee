@@ -104,23 +104,15 @@ class DbChangeManager {
             listaDeInstrucoes = dbchange.down
         }
 
-        if (listaDeInstrucoes == null) {
-            logger.log MESSAGE_THERE_IS_NO_INSTRUCTIONS
-            return false
-        }
-
-        if (listaDeInstrucoes.size() == 0) {
-            logger.log MESSAGE_NO_COMMANDS_IN_FILE
-            return true
-        }
-
         criarTabelaDbchangesSeNaoExistir(sql)
 
-        def resultado
+        def resultado = true
         if (podeExecutar(arquivo, sql, upDown)) {
 
             def executor = new SQLExecutor(sql: sql, logger: logger)
-            resultado = executor.execute(listaDeInstrucoes)
+            if(listaDeInstrucoes) {
+                resultado = executor.execute(listaDeInstrucoes)
+            }
 
             def start = System.currentTimeMillis()
             if (resultado) {
