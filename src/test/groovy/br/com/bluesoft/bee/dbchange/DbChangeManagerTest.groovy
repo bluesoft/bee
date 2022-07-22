@@ -359,32 +359,6 @@ class DbChangeManagerTest extends Specification {
         mensagens[5].startsWith("Execution time:")
     }
 
-    def "deve retornar mensagem quando nao houver comandos no arquivo"() {
-
-        given:
-        def mensagens = []
-        def sql = mockSql()
-        def parser = Mock(SQLFileParser)
-        def logger = ["log": { msg -> mensagens << msg }] as BeeWriter
-        def directoryFile = [list: { ["abc", "xyz"] }]
-        def arquivo = "989898-test.dbchange"
-        def dbchange = [header: "carneiro", up: [], down: []]
-
-        1 * parser.parseFile(_) >> dbchange
-
-        def manager = new DbChangeManager(sql: sql, directoryFile: directoryFile, logger: logger, parser: parser)
-        manager.metaClass.getFile = { def a, def b -> return [] }
-
-        when:
-        def resultado = manager.executarDbChange(arquivo, UpDown.UP)
-
-        then:
-        resultado == true
-        mensagens.size() == 2
-        mensagens[0] == "Executing dbchange: 989898-test.dbchange -- carneiro"
-        mensagens[1] == DbChangeManager.MESSAGE_NO_COMMANDS_IN_FILE
-    }
-
     def "deve retornar false quando ocorrer um erro de sql"() {
 
         given:
