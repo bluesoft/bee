@@ -30,7 +30,9 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.model;
+package br.com.bluesoft.bee.model
+
+import groovy.cli.commons.CliBuilder;
 
 public class Options {
 
