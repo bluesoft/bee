@@ -1,6 +1,8 @@
 package br.com.bluesoft.bee.database
 
 import br.com.bluesoft.bee.util.PropertiesUtil
+import br.com.bluesoft.bee.util.RDBMS
+import br.com.bluesoft.bee.util.RDBMSUtil
 import groovy.sql.Sql
 
 class ConnectionInfo {
@@ -8,10 +10,13 @@ class ConnectionInfo {
     static Sql createDatabaseConnection(File configFile, def key) {
         def config = PropertiesUtil.readDatabaseConfig(configFile, key)
         if (config != null) {
-
+            RDBMS rdbms = RDBMSUtil.getRDBMS(configFile, key)
             Properties props = new Properties()
-            props.put("useFetchSizeWithLongColumn", "true")
-            props.put("oracle.jdbc.J2EE13Compliant", "true")
+
+            if (rdbms == RDBMS.ORACLE) {
+                props.put("useFetchSizeWithLongColumn", "true")
+                props.put("oracle.jdbc.J2EE13Compliant", "true")
+            }
             props.put("user", config.user)
             props.put("password", config.password)
 
