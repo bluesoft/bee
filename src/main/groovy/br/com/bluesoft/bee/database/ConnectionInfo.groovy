@@ -26,9 +26,16 @@ class ConnectionInfo {
                     properties: props
             )
 
+            from.connection.autoCommit = false
+
             from.withStatement { stmt ->
                 stmt.fetchSize = 5000
             }
+            
+            if (rdbms == RDBMS.ORACLE) {
+                from.execute "alter session set ddl_lock_timeout=15"
+            }
+
             return from
         }
         return null
