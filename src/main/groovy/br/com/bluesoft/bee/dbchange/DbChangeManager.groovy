@@ -36,6 +36,7 @@ import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.QueryDialectHelper
 import br.com.bluesoft.bee.util.RDBMSUtil
+import groovy.sql.Sql
 
 import java.sql.SQLException
 
@@ -80,7 +81,7 @@ class DbChangeManager {
             return false
         }
 
-        sql = getDatabaseConnection()
+        Sql sql = getDatabaseConnection()
         if (sql == null) {
             logger.log(MESSAGE_COULD_NOT_GET_CONNECTION)
             return false
@@ -104,30 +105,32 @@ class DbChangeManager {
             listaDeInstrucoes = dbchange.down
         }
 
-        criarTabelaDbchangesSeNaoExistir(sql)
-
         def resultado = true
-        if (podeExecutar(arquivo, sql, upDown)) {
+        sql.withTransaction {
+            criarTabelaDbchangesSeNaoExistir(sql)
 
-            def executor = new SQLExecutor(sql: sql, logger: logger)
-            if(listaDeInstrucoes) {
-                resultado = executor.execute(listaDeInstrucoes)
-            }
+            if (podeExecutar(arquivo, sql, upDown)) {
 
-            def start = System.currentTimeMillis()
-            if (resultado) {
-                salvarExecucao(sql, arquivo, upDown)
-            }
+                def executor = new SQLExecutor(sql: sql, logger: logger)
+                if (listaDeInstrucoes) {
+                    resultado = executor.execute(listaDeInstrucoes)
+                }
 
-            def end = System.currentTimeMillis()
-            logger.log("Execution time: ${(end - start) / 1000} seconds")
-        } else {
-            if (upDown == UpDown.UP) {
-                logger.log(MESSAGE_DBCHANGE_ALREADY_EXECUTED)
+                def start = System.currentTimeMillis()
+                if (resultado) {
+                    salvarExecucao(sql, arquivo, upDown)
+                }
+
+                def end = System.currentTimeMillis()
+                logger.log("Execution time: ${(end - start) / 1000} seconds")
             } else {
-                logger.log(MESSAGE_DBCHANGE_NOT_EXECUTED)
+                if (upDown == UpDown.UP) {
+                    logger.log(MESSAGE_DBCHANGE_ALREADY_EXECUTED)
+                } else {
+                    logger.log(MESSAGE_DBCHANGE_NOT_EXECUTED)
+                }
+                resultado = false
             }
-            resultado = false
         }
 
         return resultado

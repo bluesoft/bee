@@ -611,6 +611,7 @@ class DbChangeManagerTest extends Specification {
         connection.getMetaData() >> databaseMetaData
         def sql = Mock(Sql)
         sql.connection >> connection
+        sql.withTransaction(_) >> { args -> args[0].call() }
         return sql
     }
 
