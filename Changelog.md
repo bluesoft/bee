@@ -4,12 +4,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.100] - 2023-01-09
+### Fixed
+- Commit on markAll
+
+## [1.99] - 2022-11-18
+### Added
+- Transaction on each file on PostgreSQL
+- DDL lock timeout on Oracle
+### Changed
+- Upgraded to groovy 4
+
+## [1.98] - 2022-07-22
+### Fixed
+- Running dbchange without script
+
 ## [1.97] - 2022-02-21
 ## Fixed
 - syntax error on alter table add foreign kye
 
 ## [1.96] - 2022-02-16
-## Added
+### Added
 - on update foreign key option on postgresql
 
 ## [1.95] - 2022-02-03

@@ -319,12 +319,14 @@ ${group ? "-- group: ${group}" : ""}
 
         if (listaParaExecutar.size() > 0) {
             logger.log "marking ${listaParaExecutar.size()} file(s)"
-            listaParaExecutar.each {
-                def timestamp = obterTimestamp("${it.ARQUIVO_NOME}")
-                String arquivo_nome = "${it.ARQUIVO_NOME}"
-                def insertQuery = QueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
-                sql.execute(insertQuery, [arquivo_nome, timestamp])
-                logger.log "${it.ARQUIVO_NOME} marked as implemented"
+            String insertQuery = QueryDialectHelper.getInsertIntoDbchangesQuery(configFile, clientName)
+            sql.withTransaction {
+                listaParaExecutar.each {
+                    String arquivo_nome = "${it.ARQUIVO_NOME}"
+                    def timestamp = obterTimestamp("${it.ARQUIVO_NOME}")
+                    sql.executeUpdate(insertQuery, [arquivo_nome, timestamp])
+                    logger.log "${it.ARQUIVO_NOME} marked as implemented"
+                }
             }
         } else {
             logger.log "All files are already marked as implemented"

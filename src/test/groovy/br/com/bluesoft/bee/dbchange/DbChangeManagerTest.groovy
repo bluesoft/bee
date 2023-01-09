@@ -4,6 +4,7 @@ import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.QueryDialectHelper
 import br.com.bluesoft.bee.util.RDBMSUtilTest
+import groovy.sql.BatchingPreparedStatementWrapper
 import groovy.sql.Sql
 import org.junit.After
 import org.junit.Before
@@ -611,7 +612,7 @@ class DbChangeManagerTest extends Specification {
         connection.getMetaData() >> databaseMetaData
         def sql = Mock(Sql)
         sql.connection >> connection
-        sql.withTransaction(_) >> { args -> args[0].call() }
+        sql.withTransaction(_) >> { args -> args[0].call(connection) }
         return sql
     }
 
