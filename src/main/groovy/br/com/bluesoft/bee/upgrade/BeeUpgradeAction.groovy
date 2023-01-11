@@ -76,11 +76,16 @@ public class BeeUpgradeAction implements ActionRunner {
         return version_latest
     }
 
-    def static isLatestVersion() {
-        def version_current = Float.parseFloat(BeeVersionModule.getCurrentVersion())
-        def version_latest = Float.parseFloat(VERSION)
+    static int intVersion(String version) {
+        def parts = version.split("\\.")
+        return Integer.parseInt(parts[0]) * 1000 + Integer.parseInt(parts[1])
+    }
 
-        return (version_latest <= version_current) ? true : false
+    static boolean isLatestVersion() {
+        def version_current = intVersion(BeeVersionModule.getCurrentVersion())
+        def version_latest = intVersion(getLatestVersion())
+
+        return (version_latest <= version_current)
     }
 
     def static downloadLatestVersion() {

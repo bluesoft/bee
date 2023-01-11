@@ -35,6 +35,20 @@ class BeeUpgradeActionTest extends Specification {
         isLatest == false
     }
 
+    def "deve validar versao maior que 100"() {
+        given: ""
+        GroovyMock(BeeVersionModule, global: true)
+        BeeVersionModule.getCurrentVersion() >> "1.99"
+        BeeVersionModule.getLatestVersion() >> "1.100"
+
+        when: ""
+        BeeUpgradeAction upgrade = new BeeUpgradeAction()
+        def isLatest = upgrade.isLatestVersion()
+
+        then: ""
+        isLatest == false
+    }
+
     def "deve pegar a última versão e ela deve ser igual à versão retornada no módulo BeeVersionModule"() {
         given: ""
         def beeVersionLatest = BeeVersionModule.getLatestVersion()
