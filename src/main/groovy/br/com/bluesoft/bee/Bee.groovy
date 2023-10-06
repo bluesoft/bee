@@ -47,8 +47,6 @@ import java.util.jar.Manifest
 
 class Bee {
 
-    static def cliBuilder
-
     static getRunner(options) {
         def runner = null
 

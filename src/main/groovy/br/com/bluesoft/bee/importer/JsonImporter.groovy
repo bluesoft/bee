@@ -43,7 +43,7 @@ import br.com.bluesoft.bee.model.UserType
 import br.com.bluesoft.bee.model.View
 import br.com.bluesoft.bee.util.JsonUtil
 import br.com.bluesoft.bee.util.RDBMS
-import org.codehaus.jackson.map.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 
 class JsonImporter implements Importer {
 
@@ -131,7 +131,7 @@ class JsonImporter implements Importer {
             File sequenceFile = new File(mainFolder, 'sequences.bee')
             if (sequenceFile.exists()) {
                 def sequencesJSON = mapper.readTree(sequenceFile.getText())
-                sequencesJSON.getElements().each {
+                sequencesJSON.elements().each {
                     def sequence = mapper.readValue(it.toString(), Sequence.class)
                     sequences[sequence.name] = sequence
                 }
@@ -197,10 +197,10 @@ class JsonImporter implements Importer {
         def rules = [:]
         if(!rulesFile.exists()) return
         def tree = mapper.readTree(rulesFile)
-        tree.fields.forEachRemaining({
+        tree.fields().forEachRemaining({
             def rdbms = RDBMS.getByName(it.key)
             if(rdbms)
-                rules[rdbms] = mapper.readValue(it.value, Rule.class)
+                rules[rdbms] = mapper.treeToValue(it.value, Rule.class)
         })
 
         rules.size() > 0 ? rules : null

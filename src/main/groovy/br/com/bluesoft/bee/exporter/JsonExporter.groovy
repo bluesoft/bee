@@ -34,7 +34,7 @@ package br.com.bluesoft.bee.exporter
 
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.util.JsonUtil
-import org.codehaus.jackson.map.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 
 public class JsonExporter implements Exporter {
 

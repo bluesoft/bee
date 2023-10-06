@@ -38,13 +38,14 @@ import br.com.bluesoft.bee.model.message.MessageType
 import br.com.bluesoft.bee.util.RDBMS
 import br.com.bluesoft.bee.util.StringUtil
 
-class View implements Validator {
+class View implements Validator, WithDependencies {
 
-    def name
+    String name
     def text
     def text_oracle
     def text_postgres
     def text_mysql
+    List<String> dependencies = []
 
     List validateWithMetadata(metadataView) {
         if (!(metadataView instanceof View)) {
