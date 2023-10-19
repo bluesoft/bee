@@ -483,7 +483,7 @@ class PostgresDatabaseReader implements DatabaseReader {
           and dependent_view.relkind  = 'v'
           and pg_depend.deptype = 'n'
           and source_table.relname != dependent_view.relname
-		  and dependent_view.relname = lower(?)
+          and dependent_view.relname = lower(?)
 	'''
 
     def getViews(objectName) {

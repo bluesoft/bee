@@ -380,7 +380,7 @@ class OracleDatabaseReader implements DatabaseReader {
 
     def getViews(objectName) {
         def views = new LinkedHashMap<String, View>()
-        List<GroovyRowResult>  rows
+        List<GroovyRowResult> rows
         Map<String, List<GroovyRowResult>> dependenciesByView
         if (objectName) {
             rows = sql.rows(VIEWS_QUERY_BY_NAME, [objectName])
