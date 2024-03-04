@@ -32,19 +32,23 @@
  */
 package br.com.bluesoft.bee.util
 
-import org.codehaus.jackson.map.ObjectMapper
-import org.codehaus.jackson.map.SerializationConfig
-import org.codehaus.jackson.map.annotate.JsonSerialize
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.json.JsonReadFeature
+import com.fasterxml.jackson.core.json.JsonWriteFeature
+import com.fasterxml.jackson.databind.MapperFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.json.JsonMapper
 
 class JsonUtil {
 
     static ObjectMapper createMapper() {
-        def mapper = new ObjectMapper()
-        mapper.configure(org.codehaus.jackson.map.SerializationConfig.Feature.INDENT_OUTPUT, true);
-        mapper.configure org.codehaus.jackson.JsonGenerator.Feature.QUOTE_FIELD_NAMES, false
-        mapper.configure org.codehaus.jackson.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true
-        mapper.configure(SerializationConfig.Feature.SORT_PROPERTIES_ALPHABETICALLY, true)
-        mapper.getSerializationConfig().setSerializationInclusion JsonSerialize.Inclusion.NON_DEFAULT
-        return mapper
+        return JsonMapper.builder()
+            .configure(SerializationFeature.INDENT_OUTPUT, true)
+            .configure(JsonWriteFeature.QUOTE_FIELD_NAMES, false)
+            .configure(JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES, true)
+            .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
+            .serializationInclusion(JsonInclude.Include.NON_DEFAULT)
+            .build()
     }
 }
