@@ -1,5 +1,6 @@
 package br.com.bluesoft.bee.schema
 
+import br.com.bluesoft.bee.util.CsvUtil
 import br.com.bluesoft.bee.util.RDBMS
 
 class BeePostgresSchemaCreator extends BeeSchemaCreator {
@@ -73,6 +74,69 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
             return ' btree'
         } else {
             return ' btree'
+        }
+    }
+
+    void createCsvData(def file, def csvFile, def schema, def useCommit) {
+        def tableName = csvFile.name.split('\\.')[0]
+        def fileData = CsvUtil.read(csvFile)
+        def table = schema.tables[tableName]
+        def columnNames = []
+        def columns = [:]
+        def columnTypes = [:]
+        def isVirtualColumn = [:]
+        def numberOfVirtualColumns = 0
+
+        if (table != null) {
+            table.columns.findAll { !it.value.ignore }.each {
+                columns[it.value.name] = it.value.type
+                columnNames << it.value.name
+                isVirtualColumn[it.value.name] = it.value.virtual
+                if (it.value.virtual) {
+                    numberOfVirtualColumns++
+                }
+            }
+
+            columnNames.eachWithIndex { columName, index ->
+                columnTypes[index] = columns[columName]
+            }
+
+            def counterValue = 1
+
+            def query = new StringBuilder()
+            query << "copy ${tableName} (${table.columns.findAll({!it.value.virtual && !it.value.ignore})*.value.name.join(",")}) from stdin;\n"
+
+            for (int i = 0; i < fileData.size(); i++) {
+                fileData[i].eachWithIndex { columnValue, index2 ->
+                    def fieldValue = columnValue.toString().replace('\t', '\\t').replace('\\', '\\\\')
+                    def columnType = columnTypes[index2].split(' ')[0].split('\\(')[0]
+                    def columnName = columnNames[index2]
+                    def isVirtual = isVirtualColumn[columnName]
+                    def isBoolean = columnType == 'boolean'
+                    if (!isVirtual) {
+                        if(isBoolean) {
+                            fieldValue = toBoolean(fieldValue)
+                        }
+                        if(fieldValue == "null") {
+                            fieldValue = '\\N'
+                        }
+                        query << fieldValue
+                    }
+                    if ((counterValue + numberOfVirtualColumns) < (columnNames.size())) {
+                        query << "\t"
+                    }
+                    counterValue++
+                }
+                query << "\n"
+                counterValue = 1
+            }
+
+            query << "\\.\n\n"
+
+            if(useCommit) {
+                query << "commit;\n"
+            }
+            file.append(query.toString(), 'utf-8')
         }
     }
 
