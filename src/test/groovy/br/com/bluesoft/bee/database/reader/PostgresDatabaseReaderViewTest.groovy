@@ -1,33 +1,42 @@
 package br.com.bluesoft.bee.database.reader
 
+import groovy.sql.Sql
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
+import org.mockito.Mockito
 
 import static org.junit.Assert.assertEquals
+import static org.mockito.Mockito.when
 
 class PostgresDatabaseReaderTableTest {
 
-    def reader
+    PostgresDatabaseReader reader
 
     @Before
     void 'set up'() {
         def tableRows = [
                 [table_name: 'resumo_crescimento_loja', temporary: 'N']
         ]
+        def views = [
+                [view_name: 'VIEW_MENU', text: 'aaa'],
+                [view_name: 'VIEW_USERS', text: 'bbb']
+        ]
+        def dependencies = [
+                [name: 'VIEW_MENU', referenced_name: 'VIEW_USERS']
+        ]
 
         def columns = createColumns()
         def indexes = createIndexes()
         def indexesColumns = createIndexesColumns()
 
-        def sql = [rows: { query ->
-            switch (query) {
-                case PostgresDatabaseReader.TABLES_QUERY: return tableRows; break;
-                case PostgresDatabaseReader.TABLES_COLUMNS_QUERY: return columns; break;
-                case PostgresDatabaseReader.INDEXES_QUERY: return indexes; break;
-                case PostgresDatabaseReader.INDEXES_COLUMNS_QUERY: return indexesColumns; break;
-            }
-        }]
+
+        def sql = Mockito.mock(Sql)
+        when(sql.rows(PostgresDatabaseReader.TABLES_QUERY)).thenReturn(tableRows)
+        when(sql.rows(PostgresDatabaseReader.TABLES_COLUMNS_QUERY)).thenReturn(columns)
+        when(sql.rows(PostgresDatabaseReader.INDEXES_QUERY)).thenReturn(indexes)
+        when(sql.rows(PostgresDatabaseReader.VIEWS_QUERY)).thenReturn(views)
+        when(sql.rows(PostgresDatabaseReader.VIEW_DEPENDENCIES)).thenReturn(dependencies)
 
         reader = new PostgresDatabaseReader(sql)
     }
@@ -37,6 +46,16 @@ class PostgresDatabaseReaderTableTest {
     void 'it should fill the tables'() {
         def tables = reader.getTables(null)
         assertEquals(2, tables.size())
+    }
+
+    @Test
+    void 'it should fill the view attributes'() {
+        def views = reader.getViews(null)
+        assertEquals 'view_menu', views['view_menu'].name
+        assertEquals 'aaa', views['view_menu'].text_postgres
+        assertEquals 'view_users', views['view_users'].name
+        assertEquals 'bbb', views['view_users'].text_postgres
+        assertEquals(['view_users'], views['view_menu'].dependencies)
     }
 
 
