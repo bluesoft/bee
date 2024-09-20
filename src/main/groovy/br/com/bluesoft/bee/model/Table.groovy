@@ -45,6 +45,7 @@ class Table implements Validator {
     String name
     Boolean temporary = false
     String comment
+    String distStyle
 
     Map<String, TableColumn> columns = [:] as LinkedHashMap
     Map<String, Index> indexes = [:]

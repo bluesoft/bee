@@ -32,12 +32,12 @@
  */
 package br.com.bluesoft.bee.util
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.json.JsonWriteFeature
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.json.JsonMapper
 
 class JsonUtil {
@@ -48,9 +48,8 @@ class JsonUtil {
             .disable(JsonWriteFeature.QUOTE_FIELD_NAMES)
             .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
             .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .defaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_DEFAULT, JsonInclude.Include.NON_EMPTY))
             .build()
-
-//        mapper.getSerializationConfig().setSerializationInclusion JsonSerialize.Inclusion.NON_DEFAULT
         return mapper
     }
 }
