@@ -25,6 +25,8 @@ public class RDBMSUtil {
             return RDBMS.ORACLE
         } else if (databaseType.equals("postgresql")) {
             return RDBMS.POSTGRES
+        } else if (databaseType.equals("redshift")) {
+            return RDBMS.REDSHIFT
         } else {
             def mensagemDeErro = MessageFormat.format(MENSAGEM_DE_ERRO_BANCO_NAO_SUPORTADO, databaseType)
             throw new IllegalArgumentException(mensagemDeErro)

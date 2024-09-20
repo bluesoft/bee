@@ -14,17 +14,25 @@ class DatabaseReaderChanger {
         def databaseReader
         RDBMS banco = RDBMSUtil.getRDBMS(options)
 
-        if (banco == RDBMS.MYSQL) {
-            String databaseName = RDBMSUtil.getMySqlDatabaseName(options)
-            databaseReader = new MySqlDatabaseReader(sql, databaseName)
-        } else if (banco == RDBMS.ORACLE) {
-            databaseReader = new OracleDatabaseReader(sql)
-        } else if (banco == RDBMS.POSTGRES) {
-            databaseReader = new PostgresDatabaseReader(sql)
-        } else {
-            def mensagemDeErro = MessageFormat.format(MENSAGEM_DE_ERRO_BANCO_NAO_SUPORTADO, banco)
-            throw new IllegalArgumentException(mensagemDeErro)
+        switch (banco) {
+            case RDBMS.MYSQL:
+                String databaseName = RDBMSUtil.getMySqlDatabaseName(options)
+                databaseReader = new MySqlDatabaseReader(sql, databaseName)
+                break
+            case RDBMS.ORACLE:
+                databaseReader = new OracleDatabaseReader(sql)
+                break
+            case RDBMS.POSTGRES:
+                databaseReader = new PostgresDatabaseReader(sql)
+                break
+            case RDBMS.REDSHIFT:
+                databaseReader = new RedshiftDatabaseReader(sql)
+                break
+            default:
+                def mensagemDeErro = MessageFormat.format(MENSAGEM_DE_ERRO_BANCO_NAO_SUPORTADO, banco)
+                throw new IllegalArgumentException(mensagemDeErro)
         }
+
         return databaseReader;
     }
 

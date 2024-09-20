@@ -8,7 +8,6 @@ buildscript {
 plugins {
     id 'groovy'
     id 'eclipse'
-    id 'com.jfrog.bintray' version '0.5'
 }
 
 apply plugin: 'application'
@@ -31,10 +30,10 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.apache.groovy:groovy:4.0.6'
-    implementation 'org.apache.groovy:groovy-sql:4.0.6'
-    implementation 'org.apache.groovy:groovy-cli-commons:4.0.6'
-    implementation 'org.codehaus.jackson:jackson-mapper-lgpl:1.9.13'
+    implementation 'org.apache.groovy:groovy:4.0.22'
+    implementation 'org.apache.groovy:groovy-sql:4.0.22'
+    implementation 'org.apache.groovy:groovy-cli-commons:4.0.22'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
     testImplementation "org.spockframework:spock-core:2.3-groovy-4.0"
     testImplementation 'org.spockframework:spock-junit4:2.3-groovy-4.0'
     testImplementation 'cglib:cglib-nodep:3.2.12'
