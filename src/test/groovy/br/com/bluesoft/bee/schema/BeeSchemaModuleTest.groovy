@@ -23,6 +23,7 @@ Actions:
          schema:recreate_mysql [object] - build a MySql DDL script
          schema:recreate_oracle [object] - build a Oracle DDL script
          schema:recreate_postgres [object] - build a Postgres DDL script
+         schema:recreate_redshift [object] - build a Redshift DDL script
          schema:check - validate structure correctness
 """
     }
