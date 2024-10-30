@@ -5,38 +5,47 @@ class QueryDialectHelper {
     static final def String CREATE_TABLE_DBCHANGES_MYSQL = "create table dbchanges(arquivo_timestamp bigint, arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
     static final def String CREATE_TABLE_DBCHANGES_ORACLE = "create table dbchanges(arquivo_timestamp number(14), arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
     static final def String CREATE_TABLE_DBCHANGES_POSTGRES = "create table dbchanges(arquivo_timestamp bigint, arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
+    static final def String CREATE_TABLE_DBCHANGES_REDSHIFT = "create table dbchanges(arquivo_timestamp bigint, arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbchanges primary key (arquivo_timestamp))"
 
     static final def String INSERT_INTO_DBCHANGES_MYSQL = "insert into dbchanges(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?, current_timestamp)"
     static final def String INSERT_INTO_DBCHANGES_ORACLE = "insert into dbchanges(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?, current_timestamp)"
     static final def String INSERT_INTO_DBCHANGES_POSTGRES = "insert into dbchanges(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?::bigint, current_timestamp)"
+    static final def String INSERT_INTO_DBCHANGES_REDSHIFT = "insert into dbchanges(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?::bigint, current_timestamp)"
 
     static final def String DELETE_FROM_DBCHANGES_MYSQL = "delete from dbchanges where arquivo_timestamp = ?"
     static final def String DELETE_FROM_DBCHANGES_ORACLE = "delete from dbchanges where arquivo_timestamp = ?"
     static final def String DELETE_FROM_DBCHANGES_POSTGRES = "delete from dbchanges where arquivo_timestamp = ?::bigint"
+    static final def String DELETE_FROM_DBCHANGES_REDSHIFT = "delete from dbchanges where arquivo_timestamp = ?::bigint"
 
     static final def String SELECT_FROM_DBCHANGES_MYSQL = "select * from dbchanges where arquivo_timestamp = ?"
     static final def String SELECT_FROM_DBCHANGES_ORACLE = "select * from dbchanges where arquivo_timestamp = ?"
     static final def String SELECT_FROM_DBCHANGES_POSTGRES = "select * from dbchanges where arquivo_timestamp = ?::bigint"
+    static final def String SELECT_FROM_DBCHANGES_REDSHIFT = "select * from dbchanges where arquivo_timestamp = ?"
 
     static final def String CREATE_TABLE_DBSEEDS_MYSQL = "create table dbseeds(arquivo_timestamp bigint, arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbseeds primary key (arquivo_timestamp))"
     static final def String CREATE_TABLE_DBSEEDS_ORACLE = "create table dbseeds(arquivo_timestamp number(14), arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbseeds primary key (arquivo_timestamp))"
     static final def String CREATE_TABLE_DBSEEDS_POSTGRES = "create table dbseeds(arquivo_timestamp bigint, arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbseeds primary key (arquivo_timestamp))"
+    static final def String CREATE_TABLE_DBSEEDS_REDSHIFT = "create table dbseeds(arquivo_timestamp bigint, arquivo_nome varchar(200) not null, data_execucao date, constraint pk_dbseeds primary key (arquivo_timestamp))"
 
     static final def String INSERT_INTO_DBSEEDS_MYSQL = "insert into dbseeds(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?, current_timestamp)"
     static final def String INSERT_INTO_DBSEEDS_ORACLE = "insert into dbseeds(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?, current_timestamp)"
     static final def String INSERT_INTO_DBSEEDS_POSTGRES = "insert into dbseeds(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?::bigint, current_timestamp)"
+    static final def String INSERT_INTO_DBSEEDS_REDSHIFT = "insert into dbseeds(arquivo_nome, arquivo_timestamp, data_execucao) values (?, ?::bigint, current_timestamp)"
 
     static final def String DELETE_FROM_DBSEEDS_MYSQL = "delete from dbseeds where arquivo_timestamp = ?"
     static final def String DELETE_FROM_DBSEEDS_ORACLE = "delete from dbseeds where arquivo_timestamp = ?"
     static final def String DELETE_FROM_DBSEEDS_POSTGRES = "delete from dbseeds where arquivo_timestamp = ?::bigint"
+    static final def String DELETE_FROM_DBSEEDS_REDSHIFT = "delete from dbseeds where arquivo_timestamp = ?::bigint"
 
     static final def String SELECT_FROM_DBSEEDS_MYSQL = "select * from dbseeds where arquivo_timestamp = ?"
     static final def String SELECT_FROM_DBSEEDS_ORACLE = "select * from dbseeds where arquivo_timestamp = ?"
     static final def String SELECT_FROM_DBSEEDS_POSTGRES = "select * from dbseeds where arquivo_timestamp = ?::bigint"
+    static final def String SELECT_FROM_DBSEEDS_REDSHIFT = "select * from dbseeds where arquivo_timestamp = ?::bigint"
 
     static final def String LIST_DBSEEDS_MYSQL = "select arquivo_nome as ARQUIVO_NOME from dbseeds order by arquivo_timestamp desc"
     static final def String LIST_DBSEEDS_ORACLE = "select arquivo_nome as ARQUIVO_NOME from dbseeds order by arquivo_timestamp desc"
     static final def String LIST_DBSEEDS_POSTGRES = "select arquivo_nome as \"ARQUIVO_NOME\" from dbseeds order by arquivo_timestamp desc"
+    static final def String LIST_DBSEEDS_REDSHIFT = "select arquivo_nome as \"ARQUIVO_NOME\" from dbseeds order by arquivo_timestamp desc"
 
 
     def static getCreateTableDbchangesQuery(configFile, clientName) {
@@ -50,6 +59,9 @@ class QueryDialectHelper {
                 break;
             case RDBMS.POSTGRES:
                 return CREATE_TABLE_DBCHANGES_POSTGRES
+                break;
+            case RDBMS.REDSHIFT:
+                return CREATE_TABLE_DBCHANGES_REDSHIFT
                 break;
         }
     }
@@ -66,6 +78,9 @@ class QueryDialectHelper {
             case RDBMS.POSTGRES:
                 return INSERT_INTO_DBCHANGES_POSTGRES
                 break;
+            case RDBMS.REDSHIFT:
+                return INSERT_INTO_DBCHANGES_REDSHIFT
+                break;
         }
     }
 
@@ -80,6 +95,9 @@ class QueryDialectHelper {
                 break;
             case RDBMS.POSTGRES:
                 return DELETE_FROM_DBCHANGES_POSTGRES
+                break;
+            case RDBMS.REDSHIFT:
+                return DELETE_FROM_DBCHANGES_REDSHIFT
                 break;
         }
     }
@@ -96,6 +114,8 @@ class QueryDialectHelper {
             case RDBMS.POSTGRES:
                 return SELECT_FROM_DBCHANGES_POSTGRES
                 break;
+            case RDBMS.REDSHIFT:
+                return SELECT_FROM_DBCHANGES_REDSHIFT
         }
     }
 
@@ -110,6 +130,9 @@ class QueryDialectHelper {
                 break;
             case RDBMS.POSTGRES:
                 return CREATE_TABLE_DBSEEDS_POSTGRES
+                break;
+            case RDBMS.REDSHIFT:
+                return CREATE_TABLE_DBSEEDS_REDSHIFT
                 break;
         }
     }
@@ -126,6 +149,9 @@ class QueryDialectHelper {
             case RDBMS.POSTGRES:
                 return INSERT_INTO_DBSEEDS_POSTGRES
                 break;
+            case RDBMS.REDSHIFT:
+                return INSERT_INTO_DBSEEDS_REDSHIFT
+                break;
         }
     }
 
@@ -140,6 +166,9 @@ class QueryDialectHelper {
                 break;
             case RDBMS.POSTGRES:
                 return DELETE_FROM_DBSEEDS_POSTGRES
+                break;
+            case RDBMS.REDSHIFT:
+                return DELETE_FROM_DBSEEDS_REDSHIFT
                 break;
         }
     }
@@ -156,6 +185,9 @@ class QueryDialectHelper {
             case RDBMS.POSTGRES:
                 return SELECT_FROM_DBSEEDS_POSTGRES
                 break;
+            case RDBMS.REDSHIFT:
+                return SELECT_FROM_DBSEEDS_REDSHIFT
+                break;
         }
     }
 
@@ -171,6 +203,10 @@ class QueryDialectHelper {
             case RDBMS.POSTGRES:
                 return LIST_DBSEEDS_POSTGRES
                 break;
+            case RDBMS.REDSHIFT:
+                return LIST_DBSEEDS_REDSHIFT
+                break;
+
         }
     }
 }
