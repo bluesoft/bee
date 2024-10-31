@@ -104,8 +104,8 @@ class RedshiftDatabaseReader implements  DatabaseReader {
         select c.relname as table_name
              , a.attname as column_name
              , regexp_substr(format_type(atttypid, a.atttypmod), '[^(]*') data_type
-             , coalesce(nullif(ltrim(regexp_substr(format_type(atttypid, a.atttypmod), '\\\\([0-9]*'), '('), ''), '0')::int data_size
-             , coalesce(nullif(ltrim(rtrim(regexp_substr(format_type(atttypid, a.atttypmod), ',.*'), ')'), ','), ''), '0')::int data_scale
+             , nullif(coalesce(nullif(ltrim(regexp_substr(format_type(atttypid, a.atttypmod), '\\\\([0-9]*'), '('), ''), '0')::int, 0) data_size
+             , nullif(coalesce(nullif(ltrim(rtrim(regexp_substr(format_type(atttypid, a.atttypmod), ',.*'), ')'), ','), ''), '0')::int, 0) data_scale
              , not a.attnotnull nullable
              , false is_generated
              , ad.adsrc::information_schema.character_data data_default
@@ -125,8 +125,8 @@ class RedshiftDatabaseReader implements  DatabaseReader {
         select c.relname as table_name
              , a.attname as column_name
              , regexp_substr(format_type(atttypid, a.atttypmod), '[^(]*') data_type
-             , coalesce(nullif(ltrim(regexp_substr(format_type(atttypid, a.atttypmod), '\\\\([0-9]*'), '('), ''), '0')::int data_size
-             , coalesce(nullif(ltrim(rtrim(regexp_substr(format_type(atttypid, a.atttypmod), ',.*'), ')'), ','), ''), '0')::int data_scale
+             , nullif(coalesce(nullif(ltrim(regexp_substr(format_type(atttypid, a.atttypmod), '\\\\([0-9]*'), '('), ''), '0')::int, 0) data_size
+             , nullif(coalesce(nullif(ltrim(rtrim(regexp_substr(format_type(atttypid, a.atttypmod), ',.*'), ')'), ','), ''), '0')::int, 0) data_scale
              , not a.attnotnull nullable
              , false is_generated
              , ad.adsrc::information_schema.character_data data_default
@@ -139,7 +139,7 @@ class RedshiftDatabaseReader implements  DatabaseReader {
           and not a.attisdropped 
           and pg_table_is_visible(c.oid) 
           and n.nspname not in ('pg_catalog')
-          and c.rel_name = ?
+          and c.relname = ?
         order by c.relname, a.attnum
 	'''
 
