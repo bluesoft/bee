@@ -25,16 +25,18 @@ public class ViewTest extends spock.lang.Specification {
 
     def getCanonicalTest() {
         given:
-        def view_default = new View(name: "test", text: "default", text_oracle: "oracle", text_postgres: "postgres")
-        def view_nondefault = new View(name: "test", text_oracle: "oracle", text_postgres: "postgres")
+        def view_default = new View(name: "test", text: "default", text_oracle: "oracle", text_postgres: "postgres", text_redshift: "redshift")
+        def view_nondefault = new View(name: "test", text_oracle: "oracle", text_postgres: "postgres", text_redshift: "redshift")
 
         expect:
         view_default.getCanonical(RDBMS.ORACLE).text == "oracle"
         view_default.getCanonical(RDBMS.POSTGRES).text == "postgres"
         view_default.getCanonical(RDBMS.MYSQL).text == "default"
+        view_default.getCanonical(RDBMS.REDSHIFT).text == "redshift"
 
         view_nondefault.getCanonical(RDBMS.ORACLE).text == "oracle"
         view_nondefault.getCanonical(RDBMS.POSTGRES).text == "postgres"
         view_nondefault.getCanonical(RDBMS.MYSQL).text == null
+        view_nondefault.getCanonical(RDBMS.REDSHIFT).text == "redshift"
     }
 }

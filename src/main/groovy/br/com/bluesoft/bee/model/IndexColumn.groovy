@@ -32,7 +32,7 @@
  */
 package br.com.bluesoft.bee.model
 
-import org.codehaus.jackson.annotate.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonAutoDetect
 
 @JsonAutoDetect(isGetterVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.ANY)
 class IndexColumn {

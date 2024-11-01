@@ -29,7 +29,8 @@ class DbChangeManagerTest extends Specification {
         given:
         def mensagens = []
         def logger = ["log": { msg -> mensagens << msg }] as BeeWriter
-        def sql = [execute: { instrucao -> [] }, rows: { instrucao -> RESULT }, close: {}]
+        def sql = mockSql()
+        sql.rows(_ as String) >> { instrucao -> RESULT }
         def directoryFile = [list: {
             [
                     "abc",
@@ -56,7 +57,8 @@ class DbChangeManagerTest extends Specification {
         given:
         def mensagens = []
         def logger = ["log": { msg -> mensagens << msg }] as BeeWriter
-        def sql = [execute: { instrucao -> [] }, rows: { instrucao -> [[ARQUIVO_NOME: '234234-test.dbchange.grupo']] }, close: {}]
+        def sql = mockSql()
+        sql.rows(_ as String) >> { instrucao -> [[ARQUIVO_NOME: '234234-test.dbchange.grupo']] }
         def directoryFile = [list: {
             [
                     "abc",
@@ -108,7 +110,8 @@ class DbChangeManagerTest extends Specification {
 
     def "deve listar as instrucoes ja executadas no banco"() {
         given:
-        def sql = [execute: { instrucao -> [] }, rows: { instrucao -> RESULT }, close: {}]
+        def sql = mockSql()
+        sql.rows(_ as String) >> { instrucao -> RESULT }
         def manager = new DbChangeManager(sql: sql)
 
         when: "listar instrucoes ja executadas"
@@ -156,7 +159,7 @@ class DbChangeManagerTest extends Specification {
 
         given:
         def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/oracleTest.properties"), clientName: "test")
-        def sql = Mock(Sql)
+        def sql = mockSql()
         1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
 
         when: "criar tabela caso nao exista"
@@ -170,7 +173,7 @@ class DbChangeManagerTest extends Specification {
 
         given:
         def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/mySqlTest.properties"), clientName: "test")
-        def sql = Mock(Sql)
+        def sql = mockSql()
         def createTableQuery = QueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/mySqlTest.properties"), "test")
 
         1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
@@ -186,7 +189,7 @@ class DbChangeManagerTest extends Specification {
 
         given:
         def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: mockLogger(), configFile: getProperties("/postgresTest.properties"), clientName: "test")
-        def sql = Mock(Sql)
+        def sql = mockSql()
         def createTableQuery = QueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/postgresTest.properties"), "test")
 
         1 * sql.execute(DbChangeManager.SELECT_TABLE) >> { throw new SQLException() }
@@ -202,7 +205,7 @@ class DbChangeManagerTest extends Specification {
     def "deve retornar false caso nao consiga criar a tabela dbchanges"() {
 
         given:
-        def sql = Mock(Sql)
+        def sql = mockSql()
         def logger = Mock(BeeWriter)
         def manager = new DbChangeManager(directoryFile: mockDirectoryFile(), logger: logger, configFile: getProperties("/oracleTest.properties"), clientName: "test")
         def createTableQuery = QueryDialectHelper.getCreateTableDbchangesQuery(getProperties("/oracleTest.properties"), "test")
@@ -564,7 +567,8 @@ class DbChangeManagerTest extends Specification {
 
     def "se todos os arquivos já foram executados, não fazer nada quando rodar markAll"() {
         given:
-        def sql = [execute: { instrucao -> [] }, rows: { instrucao -> RESULT }, close: {}]
+        def sql = mockSql()
+        sql.rows(_ as String) >> { instrucao -> RESULT }
 
         def mensagens = []
         def logger = ["log": { msg -> mensagens << msg }] as BeeWriter

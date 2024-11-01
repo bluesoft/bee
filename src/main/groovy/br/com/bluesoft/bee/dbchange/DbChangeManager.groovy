@@ -259,8 +259,10 @@ class DbChangeManager {
         }
 
         try {
-            sql.execute(SELECT_TABLE)
-            tabelaDbchangesFoiCriada = true
+            sql.withTransaction {
+                sql.execute(SELECT_TABLE)
+                tabelaDbchangesFoiCriada = true
+            }
         } catch (SQLException ex) {
             def createTableQuery = QueryDialectHelper.getCreateTableDbchangesQuery(configFile, clientName)
             try {

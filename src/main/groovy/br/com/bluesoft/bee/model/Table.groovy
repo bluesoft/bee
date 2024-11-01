@@ -35,16 +35,17 @@ package br.com.bluesoft.bee.model
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
+import com.fasterxml.jackson.annotation.JsonAutoDetect
 import groovy.transform.AutoClone
-import org.codehaus.jackson.annotate.JsonAutoDetect
 
 @AutoClone
-@JsonAutoDetect(isGetterVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.ANY)
+@com.fasterxml.jackson.annotation.JsonAutoDetect(isGetterVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.ANY)
 class Table implements Validator {
 
     String name
     Boolean temporary = false
     String comment
+    String distStyle
 
     Map<String, TableColumn> columns = [:] as LinkedHashMap
     Map<String, Index> indexes = [:]

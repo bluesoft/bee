@@ -45,6 +45,7 @@ class View implements Validator {
     def text_oracle
     def text_postgres
     def text_mysql
+    def text_redshift
 
     List validateWithMetadata(metadataView) {
         if (!(metadataView instanceof View)) {
@@ -75,6 +76,9 @@ class View implements Validator {
                 break
             case RDBMS.MYSQL:
                 text = text_mysql ?: this.text
+                break
+            case RDBMS.REDSHIFT:
+                text = text_redshift ?: this.text
                 break
         }
 

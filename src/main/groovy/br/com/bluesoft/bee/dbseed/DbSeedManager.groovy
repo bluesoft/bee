@@ -204,21 +204,20 @@ class DbSeedManager {
         }
 
         try {
-            sql.execute(SELECT_TABLE)
-            tabelaDbseedsFoiCriada = true
+            sql.withTransaction() {
+                sql.execute(SELECT_TABLE)
+                tabelaDbseedsFoiCriada = true
+            }
         } catch (SQLException ex) {
             def createTableQuery = QueryDialectHelper.getCreateTableDbseedsQuery(configFile, clientName)
             try {
-                sql.execute(CREATE_TABLE_ORACLE)
-                tabelaDbseedsFoiCriada = true
-            } catch (SQLException e) {
-                try {
+                sql.withTransaction() {
                     sql.execute(createTableQuery)
                     tabelaDbseedsFoiCriada = true
-                } catch (Exception e2) {
-                    logger.log("!!!Erro: Nao foi possivel criar a tabela dbseeds")
-                    return false
                 }
+            } catch (SQLException e) {
+                logger.log("!!!Erro: Nao foi possivel criar a tabela dbseeds")
+                return false
             }
         }
         return tabelaDbseedsFoiCriada
