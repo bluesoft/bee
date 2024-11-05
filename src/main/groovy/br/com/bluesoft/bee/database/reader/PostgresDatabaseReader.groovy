@@ -35,6 +35,9 @@ package br.com.bluesoft.bee.database.reader
 import br.com.bluesoft.bee.model.Constraint
 import br.com.bluesoft.bee.model.Index
 import br.com.bluesoft.bee.model.IndexColumn
+import br.com.bluesoft.bee.model.MView
+import br.com.bluesoft.bee.model.MViewIndex
+import br.com.bluesoft.bee.model.MViewIndexColumn
 import br.com.bluesoft.bee.model.Procedure
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.model.Sequence
@@ -58,6 +61,7 @@ class PostgresDatabaseReader implements DatabaseReader {
         schema.tables = getTables(objectName, schema.databaseVersion)
         schema.sequences = getSequences(objectName)
         schema.views = getViews(objectName)
+        schema.mviews = getMViews(objectName)
         schema.procedures = getProcedures(objectName)
         schema.packages = getPackages(objectName)
         schema.triggers = getTriggers(objectName)
@@ -200,8 +204,10 @@ class PostgresDatabaseReader implements DatabaseReader {
                     join pg_namespace ns on ct.relnamespace = ns.oid
                     join pg_am am on (ci.relam = am.oid)
                     left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
+                    left join pg_matviews mv on (ns.nspname = mv.schemaname and ct.relname = mv.matviewname)
                 where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
                   and tc.constraint_name is null
+                  and mv.matviewname is null
         ) t
         order by table_name, index_name, n
 	'''
@@ -219,11 +225,13 @@ class PostgresDatabaseReader implements DatabaseReader {
                     join pg_namespace ns on ct.relnamespace = ns.oid
                     join pg_am am on (ci.relam = am.oid)
                     left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
+                    left join pg_matviews mv on (ns.nspname = mv.schemaname and ct.relname = mv.matviewname)
                 where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
                   and tc.constraint_name is null
+                  and mv.matviewname is null
                   and ct.relname = ?
         ) t
-        order by table_name, index_name, n
+        order by table_name, index_name, n        
 	'''
 
     private def fillIndexes(tables, objectName, databaseVersion) {
@@ -464,6 +472,107 @@ class PostgresDatabaseReader implements DatabaseReader {
             views[view.name] = view
         })
         return views
+    }
+
+    def getMViews(objectName) {
+        def mviews = fillMViews(objectName)
+        fillMViewsIndexes(mviews, objectName)
+        return mviews
+    }
+
+    final static def MVIEW_QUERY = "select matviewname as mview_name, definition as query from pg_matviews"
+    final static def MVIEW_QUERY_BY_NAME = "select matviewname as mview_name, definition as query from pg_matviews where matviewname = lower(?)"
+
+    private def fillMViews(objectName) {
+        def mviews = [:]
+        def rows
+        if (objectName) {
+            rows = sql.rows(MVIEW_QUERY_BY_NAME, [objectName])
+        } else {
+            rows = sql.rows(MVIEW_QUERY)
+        }
+
+        rows.each({
+            def mview = new MView()
+            mview.name = it.mview_name.toLowerCase()
+            mview.text_postgres = it.query
+            mviews[mview.name] = mview
+        })
+        return mviews
+    }
+
+    final static def MVIEW_INDEXES_QUERY = '''
+        select schemaname, table_name, index_name, uniqueness, index_type, 
+               pg_get_indexdef(coid, n, false) as column_name, pg_get_indexdef(coid, 0, false) definition,
+               case when pg_index_column_has_property(coid,n, 'asc') then 'asc' else 'desc' end as descend
+        from  (
+                select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
+                       generate_series(1, i.indnatts) n, ci.oid coid
+                from pg_index i
+                    join pg_class ct on i.indrelid = ct.oid
+                    join pg_class ci on i.indexrelid = ci.oid
+                    join pg_namespace ns on ct.relnamespace = ns.oid
+                    join pg_am am on (ci.relam = am.oid)
+                    left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
+                    join pg_matviews mv on (ns.nspname = mv.schemaname and ct.relname = mv.matviewname)
+                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
+                  and tc.constraint_name is null
+        ) t
+        order by table_name, index_name, n
+	'''
+    final static def MVIEW_INDEXES_QUERY_BY_NAME = '''
+        select schemaname, table_name, index_name, uniqueness, index_type, 
+               pg_get_indexdef(coid, n, false) as column_name, pg_get_indexdef(coid, 0, false) definition,
+               case when pg_index_column_has_property(coid,n, 'asc') then 'asc' else 'desc' end as descend
+        from  (
+                select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
+                       generate_series(1, i.indnatts) n, ci.oid coid
+                from pg_index i
+                    join pg_class ct on i.indrelid = ct.oid
+                    join pg_class ci on i.indexrelid = ci.oid
+                    join pg_namespace ns on ct.relnamespace = ns.oid
+                    join pg_am am on (ci.relam = am.oid)
+                    left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
+                    join pg_matviews mv on (ns.nspname = mv.schemaname and ct.relname = mv.matviewname)
+                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
+                  and tc.constraint_name is null
+        		  and ct.relname = lower(?)
+        ) t
+        order by table_name, index_name, n
+	'''
+
+    private def fillMViewsIndexes(mviews, objectName) {
+        def rows
+        if (objectName) {
+            rows = sql.rows(MVIEW_INDEXES_QUERY_BY_NAME, [objectName])
+        } else {
+            rows = sql.rows(MVIEW_INDEXES_QUERY)
+        }
+
+        rows.each({
+            def name = it.table_name.toLowerCase()
+            def mview = mviews[name]
+            def indexName = it.index_name.toLowerCase()
+            if (mview) {
+                def indexAlreadyExists = mview.indexes[indexName] ? true : false
+                def index = null;
+                if (indexAlreadyExists) {
+                    index = mview.indexes[indexName]
+                } else {
+                    index = new MViewIndex()
+                    index.name = indexName
+                    index.type = getIndexType(it.index_type)
+                    index.unique = it.uniqueness
+                    def parts = (it.definition as String).split('\\) WHERE ')
+                    index.where = parts.size() > 1 ? parts[1] : null
+                    mview.indexes[index.name] = index
+                }
+                def indexColumn = new MViewIndexColumn()
+                indexColumn.name = it.column_name.toLowerCase()
+                indexColumn.descend = it.descend.toLowerCase() == 'desc' ? true : false
+                index.columns << indexColumn
+            }
+        })
     }
 
     final static def PROCEDURES_NAME_QUERY = '''

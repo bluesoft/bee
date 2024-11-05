@@ -74,8 +74,15 @@ public class BeeOracleSchemaCreatorAction implements ActionRunner {
         out.println("generating procedures...")
         beeSchemaCreator.createProcedures(file, schema)
 
+        out.println("generating materialized views...")
+        beeSchemaCreator.createMViews(file, schema)
+
+        out.println("generating materialized views indexes...")
+        beeSchemaCreator.createMViewIndexes(file, schema)
+
         out.println("generating triggers...")
         beeSchemaCreator.createTriggers(file, schema)
+
 
         def env = System.getenv()
         if (env['EDITOR']) {

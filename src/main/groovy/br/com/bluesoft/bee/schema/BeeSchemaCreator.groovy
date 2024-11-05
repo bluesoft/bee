@@ -196,6 +196,23 @@ abstract class BeeSchemaCreator {
         }
     }
 
+    void createMViews(def file, def schema) {
+        schema.mviews*.value.each {
+            def view = "create materialized view ${it.name} as\n${it.getCanonical(schema.rdbms).text};\n\n"
+            file.append(view.toString(), 'utf-8')
+        }
+    }
+
+    void createMViewIndexes(def file, def schema) {
+        def mviews = schema.mviews.sort()
+        mviews.each {
+            def mview = it.value
+            mview.indexes.each { file << createIndex(mview.name, it.value) }
+        }
+
+        file << "\n"
+    }
+
     void createPackages(def file, def schema) {
         schema.packages*.value.sort().each {
             def text = "create or replace ${it.text}\n/\n\n"
