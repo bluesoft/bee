@@ -16,15 +16,6 @@ class BeeOracleSchemaCreator extends BeeSchemaCreator {
         tables.each({ file << createTable(it.value) })
     }
 
-    def createTable(def table) {
-        def columns = []
-        table.columns.each({
-            columns << createColumn(it.value)
-        })
-        def temp = table.temporary ? " global temporary" : ""
-        def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n\n"
-    }
-
     def createColumn(def column) {
         def result = "    ${column.name} ${column.type}"
 		if (column.type in ['char', 'varchar']) {

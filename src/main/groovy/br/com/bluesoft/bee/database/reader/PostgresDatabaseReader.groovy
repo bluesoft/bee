@@ -89,15 +89,17 @@ class PostgresDatabaseReader implements DatabaseReader {
     }
 
     static final def TABLES_QUERY = ''' 
-	    select t.table_name, 'N'as temporary 
-		from information_schema.tables t
-		where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
+        select t.table_name, 'N'as temporary, description 
+        from information_schema.tables t
+        left join pg_description d on d.objoid = to_regclass(t.table_name)::regclass::oid
+        where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
 		order by table_name
 	'''
     static final def TABLES_QUERY_BY_NAME = '''
-	    select t.table_name, 'N'as temporary 
-		from information_schema.tables t
-		where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
+        select t.table_name, 'N'as temporary, description 
+        from information_schema.tables t
+        left join pg_description d on d.objoid = to_regclass(t.table_name)::regclass::oid
+        where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
 		and t.table_name = ?
 		order by table_name
 	'''
@@ -113,7 +115,7 @@ class PostgresDatabaseReader implements DatabaseReader {
         rows.each({
             def name = it.table_name.toLowerCase()
             def temporary = it.temporary == 'Y' ? true : false
-            def comment = ''
+            def comment = it.description
             tables[name] = new Table(name: name, temporary: temporary, comment: comment)
         })
         return tables
@@ -130,12 +132,13 @@ class PostgresDatabaseReader implements DatabaseReader {
             else 0
         end
 		as data_size, is_generated,
-		ic.numeric_scale as data_scale, coalesce(ic.column_default, ic.generation_expression) as data_default
+		ic.numeric_scale as data_scale, coalesce(ic.column_default, ic.generation_expression) as data_default,
+		col_description(to_regclass(it.table_name)::regclass::oid, ic.ordinal_position) as comments
 		from information_schema.columns ic
 		inner join information_schema.tables it on it.table_name = ic.table_name
 		where ic.table_schema not in ('pg_catalog' , 'information_schema')
-		and it.table_type = 'BASE TABLE\'
-		order by ic.table_name, ic.ordinal_position;
+		and it.table_type = 'BASE TABLE'
+		order by ic.table_name, ic.ordinal_position
 		'''
 
     static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
@@ -148,13 +151,14 @@ class PostgresDatabaseReader implements DatabaseReader {
             else 0
         end
         as data_size, is_generated,
-        ic.numeric_scale as data_scale, coalesce(ic.column_default, ic.generation_expression) as data_default
+        ic.numeric_scale as data_scale, coalesce(ic.column_default, ic.generation_expression) as data_default,
+        col_description(to_regclass(it.table_name)::regclass::oid, ic.ordinal_position) as comments
         from information_schema.columns ic
         inner join information_schema.tables it on it.table_name = ic.table_name
         where ic.table_schema not in ('pg_catalog' , 'information_schema')
-        and it.table_type = 'BASE TABLE\'
+        and it.table_type = 'BASE TABLE'
         and ic.table_name = ?
-        order by ic.table_name, ic.ordinal_position;
+        order by ic.table_name, ic.ordinal_position
 	'''
 
     private def fillColumns(tables, objectName) {
@@ -173,6 +177,7 @@ class PostgresDatabaseReader implements DatabaseReader {
             column.scale = it.data_scale == null ? 0 : it.data_scale
             column.nullable = it.nullable == 'NO' ? false : true
             column.virtual = it.is_generated == 'ALWAYS'
+            column.comment = it.comments
             def defaultValue = it.data_default
             if (defaultValue) {
                 column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()

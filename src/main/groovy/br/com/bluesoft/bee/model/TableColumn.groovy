@@ -52,6 +52,7 @@ class TableColumn {
     Boolean nullable = false
     String defaultValue
     String autoIncrement
+    String comment
     String onUpdateCurrentTimestamp
     Boolean virtual = false
     Boolean ignore = false

@@ -87,24 +87,26 @@ class OracleDatabaseReader implements DatabaseReader {
 
 
     static final def TABLES_COLUMNS_QUERY = '''
-        select ut.table_name, column_name, data_type, nullable,
+        select ut.table_name, utc.column_name, data_type, nullable,
                coalesce(data_precision, to_number(decode(char_length, 0, data_length, char_length))) data_size,
                      data_precision, data_length, char_used as size_type,
-               coalesce(data_scale, 0) data_scale, data_default, column_id, virtual_column
+               coalesce(data_scale, 0) data_scale, data_default, column_id, virtual_column, comments
         from   user_tab_cols utc 
           join user_tables ut on utc.table_name = ut.table_name
+          left join user_col_comments ucm on utc.table_name = ucm.table_name and utc.column_name = ucm.column_name
           left join user_mviews uv on ut.table_name = uv.mview_name
         where  hidden_column = 'NO'
           and  uv.mview_name is null
         order  by table_name, column_id
 		'''
     static final def TABLES_COLUMNS_QUERY_BY_NAME = '''
-        select ut.table_name, column_name, data_type, nullable,
+        select ut.table_name, utc.column_name, data_type, nullable,
                coalesce(data_precision, to_number(decode(char_length, 0, data_length, char_length))) data_size,
                      data_precision, data_length, char_used as size_type,
-               coalesce(data_scale, 0) data_scale, data_default, column_id, virtual_column
+               coalesce(data_scale, 0) data_scale, data_default, column_id, virtual_column, comments
         from   user_tab_cols utc 
           join user_tables ut on utc.table_name = ut.table_name
+          left join user_col_comments ucm on utc.table_name = ucm.table_name and utc.column_name = ucm.column_name
           left join user_mviews uv on ut.table_name = uv.mview_name
         where  hidden_column = 'NO'
           and  uv.mview_name is null
@@ -129,6 +131,7 @@ class OracleDatabaseReader implements DatabaseReader {
             column.sizeType = getColumnSizeType(it.size_type)
             column.nullable = it.nullable == 'N' ? false : true
             column.virtual = it.virtual_column == 'YES'
+            column.comment = it.comments
             def defaultValue = it.data_default
             if (defaultValue) {
                 column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()

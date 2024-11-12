@@ -53,34 +53,38 @@ class RedshiftDatabaseReader implements  DatabaseReader {
     static final def TABLES_QUERY = ''' 
         select n.nspname as schemaname, c.relname as table_name, 
           case releffectivediststyle
-            when 0 then 'even'
-            when 1 then 'key distkey(' || max(case when distkey then "column" end) || ')'
-            when 8 then 'all'
-          end as dist_style
+            when 0 then 'even\'
+            when 1 then 'key distkey(' || max(case when distkey then "column" end) || ')\'
+            when 8 then 'all\'
+          end as dist_style,
+          cd.description as comment
         from pg_namespace n
         join pg_class c on n.oid = c.relnamespace and c.relkind = 'r'
         join pg_class_info i on c.oid = i.reloid
         join pg_table_def d on n.nspname = d.schemaname and c.relname = d.tablename
+        left join pg_description cd on cd.objoid = c.oid
         where schemaname not in ('pg_catalog', 'information_schema')
           and pg_table_is_visible(c.oid) 
-        group by n.nspname, c.relname, releffectivediststyle
+        group by n.nspname, c.relname, releffectivediststyle, cd.description
         order by n.nspname, c.relname
 	'''
     static final def TABLES_QUERY_BY_NAME = '''
         select n.nspname as schemaname, c.relname as table_name, 
           case releffectivediststyle
-            when 0 then 'even'
-            when 1 then 'key distkey(' || max(case when distkey then "column" end) || ')'
-            when 8 then 'all'
-          end as dist_style
+            when 0 then 'even\'
+            when 1 then 'key distkey(' || max(case when distkey then "column" end) || ')\'
+            when 8 then 'all\'
+          end as dist_style,
+          cd.description as comment
         from pg_namespace n
         join pg_class c on n.oid = c.relnamespace and c.relkind = 'r'
         join pg_class_info i on c.oid = i.reloid
         join pg_table_def d on n.nspname = d.schemaname and c.relname = d.tablename
+        left join pg_description cd on cd.objoid = c.oid
         where schemaname not in ('pg_catalog', 'information_schema')
           and pg_table_is_visible(c.oid) 
           and tablename = ?
-        group by n.nspname, c.relname, releffectivediststyle
+        group by n.nspname, c.relname, releffectivediststyle, cd.description
         order by n.nspname, c.relname
 	'''
 
@@ -94,7 +98,7 @@ class RedshiftDatabaseReader implements  DatabaseReader {
         }
         rows.each({
             def name = it.table_name.toLowerCase()
-            def comment = ''
+            def comment = it.comment
             tables[name] = new Table(name: name, temporary: false, comment: comment, distStyle: it.dist_style)
         })
         return tables
@@ -110,6 +114,7 @@ class RedshiftDatabaseReader implements  DatabaseReader {
              , false is_generated
              , ad.adsrc::information_schema.character_data data_default
              , a.attsortkeyord
+             , col_description(c.oid, a.attnum) as comment
         from pg_namespace n
           join pg_class c on n.oid = c.relnamespace and c.relkind = 'r'
           join pg_attribute a on c.oid = a.attrelid
@@ -131,6 +136,7 @@ class RedshiftDatabaseReader implements  DatabaseReader {
              , false is_generated
              , ad.adsrc::information_schema.character_data data_default
              , a.attsortkeyord
+             , col_description(c.oid, a.attnum) as comment
         from pg_namespace n
           join pg_class c on n.oid = c.relnamespace and c.relkind = 'r'
           join pg_attribute a on c.oid = a.attrelid
@@ -164,6 +170,7 @@ class RedshiftDatabaseReader implements  DatabaseReader {
             column.nullable = it.nullable
             column.virtual = it.is_generated
             column.sortKeyOrder = it.attsortkeyord
+            column.comment = it.comment
             def defaultValue = it.data_default
             if (defaultValue) {
                 column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()
