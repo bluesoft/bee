@@ -43,13 +43,25 @@ abstract class BeeSchemaCreator {
         return result
     }
 
+
     def createTable(def table) {
         def columns = []
         table.columns.each({
             columns << createColumn(it.value)
         })
         def temp = table.temporary ? " global temporary" : ""
-        def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n\n"
+        def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n"
+
+        if (table.comment) {
+            result += "comment on table ${table.name} is \"${table.comment}\";\n"
+        }
+
+        def comments = table.columns.findAll { it.value.comment }
+        comments*.value.each {
+            result += "comment on column ${table.name}.${it.name} is \"${it.comment}\";\n"
+        }
+
+        result += "\n"
     }
 
     void createTables(def file, def schema) {
@@ -194,6 +206,23 @@ abstract class BeeSchemaCreator {
             def view = "create or replace view ${it.name} as ${it.getCanonical(schema.rdbms).text};\n\n"
             file.append(view.toString(), 'utf-8')
         }
+    }
+
+    void createMViews(def file, def schema) {
+        schema.mviews*.value.each {
+            def view = "create materialized view ${it.name} as\n${it.getCanonical(schema.rdbms).text};\n\n"
+            file.append(view.toString(), 'utf-8')
+        }
+    }
+
+    void createMViewIndexes(def file, def schema) {
+        def mviews = schema.mviews.sort()
+        mviews.each {
+            def mview = it.value
+            mview.indexes.each { file << createIndex(mview.name, it.value) }
+        }
+
+        file << "\n"
     }
 
     void createPackages(def file, def schema) {

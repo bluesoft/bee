@@ -32,6 +32,7 @@
  */
 package br.com.bluesoft.bee.importer
 
+import br.com.bluesoft.bee.model.MView
 import br.com.bluesoft.bee.model.Package
 import br.com.bluesoft.bee.model.Procedure
 import br.com.bluesoft.bee.model.rule.Rule
@@ -58,6 +59,7 @@ class JsonImporter implements Importer {
     File packagesFolder
     File triggersFolder
     File userTypesFolder
+    File mviewsFolder
     File rulesFile
 
     JsonImporter() {
@@ -74,6 +76,7 @@ class JsonImporter implements Importer {
         this.packagesFolder = new File(mainFolder, 'packages')
         this.triggersFolder = new File(mainFolder, 'triggers')
         this.userTypesFolder = new File(mainFolder, 'usertypes')
+        this.mviewsFolder = new File(mainFolder, 'mviews')
         this.rulesFile = new File(mainFolder, "rules.json")
 
         this.mapper = JsonUtil.createMapper()
@@ -88,6 +91,7 @@ class JsonImporter implements Importer {
         schema.packages = importPackages()
         schema.triggers = importTriggers()
         schema.userTypes = importUserTypes()
+        schema.mviews = importMViews()
         schema.rules = importRules();
         return schema
     }
@@ -205,6 +209,19 @@ class JsonImporter implements Importer {
         })
 
         rules.size() > 0 ? rules : null
+    }
+
+    private def importMViews() {
+        checkIfFolderExists(mviewsFolder)
+        def mviews = [:]
+        def files = mviewsFolder.listFiles().sort { it.name }
+        files.each {
+            if (it.name.endsWith(".bee")) {
+                def mview = mapper.readValue(it, MView.class)
+                mviews[mview.name] = mview
+            }
+        }
+        return mviews
     }
 
     private def checkIfFolderExists(def directory) {

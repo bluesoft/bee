@@ -49,6 +49,7 @@ public class JsonExporter implements Exporter {
     File proceduresFolder
     File packagesFolder
     File triggersFolder
+    File mviewsFolder
     File userTypesFolder
 
     JsonExporter(Schema schema) {
@@ -83,6 +84,9 @@ public class JsonExporter implements Exporter {
         triggersFolder = new File(mainFolder, 'triggers')
         triggersFolder.mkdir()
 
+        mviewsFolder = new File(mainFolder, 'mviews')
+        mviewsFolder.mkdir()
+
         userTypesFolder = new File(mainFolder, 'usertypes')
         userTypesFolder.mkdir()
 
@@ -96,6 +100,7 @@ public class JsonExporter implements Exporter {
         createProceduresFiles(schema.getProcedures())
         createPackagesFiles(schema.getPackages())
         createTriggersFiles(schema.getTriggers())
+        createMViewFiles(schema.getMviews())
         createUserTypesFiles(schema.getUserTypes())
     }
 
@@ -132,6 +137,12 @@ public class JsonExporter implements Exporter {
     void createTriggersFiles(def triggers) {
         triggers.each { name, trigger ->
             mapper.writeValue(new File(triggersFolder, "${name}.bee"), trigger)
+        }
+    }
+
+    void createMViewFiles(def mviews) {
+        mviews.each {
+            mapper.writeValue(new File(mviewsFolder, "${it.value.name}.bee"), it.value)
         }
     }
 

@@ -88,6 +88,7 @@ class BeeSchemaGeneratorAction implements ActionRunner {
 
             applyIgnore(schemaOld, schemaNew)
             applyList(schemaOld, schemaNew, 'views')
+            applyList(schemaOld, schemaNew, 'mviews')
             applyList(schemaOld, schemaNew, 'procedures')
             applyList(schemaOld, schemaNew, 'triggers')
 
@@ -120,6 +121,7 @@ class BeeSchemaGeneratorAction implements ActionRunner {
             item.text_oracle = schemaNew[field][it.key].text_oracle ?: item.text_oracle
             item.text_postgres = schemaNew[field][it.key].text_postgres ?: item.text_postgres
             item.text_mysql = schemaNew[field][it.key].text_mysql ?: item.text_mysql
+            item.text_redshift = schemaNew[field][it.key].text_mysql ?: item.text_redshift
             schemaNew[field][it.key] = item
         }
     }
