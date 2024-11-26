@@ -53,12 +53,12 @@ abstract class BeeSchemaCreator {
         def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n"
 
         if (table.comment) {
-            result += "comment on table ${table.name} is \"${table.comment}\";\n"
+            result += "comment on table ${table.name} is '${table.comment}';\n"
         }
 
         def comments = table.columns.findAll { it.value.comment }
         comments*.value.each {
-            result += "comment on column ${table.name}.${it.name} is \"${it.comment}\";\n"
+            result += "comment on column ${table.name}.${it.name} is '${it.comment}';\n"
         }
 
         result += "\n"
