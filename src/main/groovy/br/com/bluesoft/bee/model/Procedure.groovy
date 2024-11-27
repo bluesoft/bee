@@ -45,6 +45,7 @@ class Procedure implements Validator {
     def text_oracle
     def text_postgres
     def text_mysql
+    def text_redshift
     def schema
 
     List validateWithMetadata(metadataProcedure) {
