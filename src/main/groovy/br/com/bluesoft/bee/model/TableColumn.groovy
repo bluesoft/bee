@@ -52,11 +52,13 @@ class TableColumn {
     Boolean nullable = false
     String defaultValue
     String autoIncrement
+    String comment
     String onUpdateCurrentTimestamp
     Boolean virtual = false
     Boolean ignore = false
+    Integer sortKeyOrder = 0
 
-    def messageTemplate = 'The {0} of the column {1} of the table {2} should be {3} but it is {4}'
+    static String messageTemplate = 'The {0} of the column {1} of the table {2} should be {3} but it is {4}'
 
     def validateWithMetadata(Table table, TableColumn metadataColumn) {
         def messages = []

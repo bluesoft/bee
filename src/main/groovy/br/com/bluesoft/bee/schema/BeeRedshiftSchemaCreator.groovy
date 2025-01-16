@@ -1,9 +1,31 @@
 package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.util.CsvUtil
-import br.com.bluesoft.bee.util.RDBMS
 
-class BeePostgresSchemaCreator extends BeeSchemaCreator {
+class BeeRedshiftSchemaCreator extends BeeSchemaCreator {
+
+    def createTable(def table) {
+        def columns = []
+        table.columns.each({
+            columns << createColumn(it.value)
+        })
+        def result = "create table ${table.name} (\n" + columns.join(",\n") + "\n)"
+
+        if(table.distStyle) {
+            result += " diststyle ${table.distStyle}"
+        }
+
+        def sortCols = table.columns*.value.findAll { it.sortKeyOrder != 0 }
+        sortCols = sortCols.sort { it.sortKeyOrder }
+        if(sortCols) {
+            if(sortCols[0].sortKeyOrder < 0) {
+                result += " interleaved"
+            }
+            result += " sortkey (${sortCols*.name.join(',')})"
+        }
+
+        result += ";\n\n"
+    }
 
     def createColumn(def column) {
         def result = "    ${column.name} ${column.type}"

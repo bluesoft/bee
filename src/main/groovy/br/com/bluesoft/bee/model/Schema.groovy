@@ -50,6 +50,7 @@ class Schema {
     Map procedures = [:]
     Map packages = [:]
     Map triggers = [:]
+    Map mviews = [:]
     Map userTypes = [:]
     Map<RDBMS, Rule> rules = [:]
     boolean filtered
@@ -126,6 +127,7 @@ class Schema {
         allObjects.putAll listFilter(procedures)
         allObjects.putAll packages
         allObjects.putAll listFilter(triggers)
+        allObjects.putAll listFilter(mviews)
         allObjects.putAll userTypes
         return allObjects
     }
@@ -138,6 +140,7 @@ class Schema {
         schema.procedures.putAll procedures.findAll { it.value.name == objectName }
         schema.packages.putAll packages.findAll { it.key == objectName }
         schema.triggers.putAll triggers.findAll { it.key == objectName }
+        schema.mviews.putAll mviews.findAll { it.key == objectName }
         schema.userTypes.putAll userTypes.findAll { it.key == objectName }
         schema.rules = rules
         schema.rdbms = rdbms

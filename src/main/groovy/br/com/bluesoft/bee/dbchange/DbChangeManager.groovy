@@ -247,7 +247,6 @@ class DbChangeManager {
         def result = null
         if (criarTabelaDbchangesSeNaoExistir(sql)) {
             result = sql.rows('select arquivo_nome as "ARQUIVO_NOME" from dbchanges order by arquivo_timestamp desc')
-            sql.close()
         }
         return result
     }
@@ -260,8 +259,10 @@ class DbChangeManager {
         }
 
         try {
-            sql.execute(SELECT_TABLE)
-            tabelaDbchangesFoiCriada = true
+            sql.withTransaction {
+                sql.execute(SELECT_TABLE)
+                tabelaDbchangesFoiCriada = true
+            }
         } catch (SQLException ex) {
             def createTableQuery = QueryDialectHelper.getCreateTableDbchangesQuery(configFile, clientName)
             try {
@@ -373,9 +374,9 @@ ${group ? "-- group: ${group}" : ""}
     }
 
     def getDatabaseConnection() {
-        if (sql != null) {
-            return sql
+        if (sql == null) {
+            sql = ConnectionInfo.createDatabaseConnection(configFile.absoluteFile, clientName)
         }
-        return ConnectionInfo.createDatabaseConnection(configFile.absoluteFile, clientName)
+        return sql
     }
 }

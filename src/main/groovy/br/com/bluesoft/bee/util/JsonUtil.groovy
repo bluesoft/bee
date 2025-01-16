@@ -33,7 +33,7 @@
 package br.com.bluesoft.bee.util
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.core.json.JsonReadFeature
+import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.json.JsonWriteFeature
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -43,12 +43,13 @@ import com.fasterxml.jackson.databind.json.JsonMapper
 class JsonUtil {
 
     static ObjectMapper createMapper() {
-        return JsonMapper.builder()
-            .configure(SerializationFeature.INDENT_OUTPUT, true)
-            .configure(JsonWriteFeature.QUOTE_FIELD_NAMES, false)
-            .configure(JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES, true)
-            .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
-            .serializationInclusion(JsonInclude.Include.NON_DEFAULT)
+        def mapper = JsonMapper.builder()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .disable(JsonWriteFeature.QUOTE_FIELD_NAMES)
+            .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
+            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .defaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_DEFAULT, JsonInclude.Include.NON_EMPTY))
             .build()
+        return mapper
     }
 }

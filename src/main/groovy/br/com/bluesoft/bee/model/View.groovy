@@ -45,6 +45,7 @@ class View implements Validator, WithDependencies {
     def text_oracle
     def text_postgres
     def text_mysql
+    def text_redshift
     List<String> dependencies = []
 
     List validateWithMetadata(metadataView) {
@@ -76,6 +77,9 @@ class View implements Validator, WithDependencies {
                 break
             case RDBMS.MYSQL:
                 text = text_mysql ?: this.text
+                break
+            case RDBMS.REDSHIFT:
+                text = text_redshift ?: this.text
                 break
         }
 

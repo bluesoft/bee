@@ -64,6 +64,12 @@ public class BeePostgresSchemaCreatorAction implements ActionRunner {
         out.println("generating views...")
         beeSchemaCreator.createViews(file, schema)
 
+        out.println("generating materialized views...")
+        beeSchemaCreator.createMViews(file, schema)
+
+        out.println("generating materialized views indexes...")
+        beeSchemaCreator.createMViewIndexes(file, schema)
+
         out.println("generating functions...")
         beeSchemaCreator.createProcedures(file, schema)
 

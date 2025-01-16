@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.103] - 2024-06-26
+### Changed
+- Changed schema:recreate_postgres to user copy instead of insert
+
+## [1.102] - 2024-01-11
+### Fixed
+- Connection leak on DbChangeManager
+
 ## [1.101] - 2023-01-11
 ### Fixed
 - Upgrade on version above 100
