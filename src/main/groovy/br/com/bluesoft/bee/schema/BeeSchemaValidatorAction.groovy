@@ -97,7 +97,13 @@ class BeeSchemaValidatorAction implements ActionRunner {
         out.log("--- bee found ${errors.size()} error(s)")
         messagePrinter.print(out, errors)
 
-        return errors.size() == 0
+        int errorsNum = errors.size();
+
+        if ("1" == System.getenv("FAIL_ON_WARNINGS")) {
+            errorsNum += warnings.size()
+        }
+
+        return errorsNum == 0
     }
 
     private def getImporter() {

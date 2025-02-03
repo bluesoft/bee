@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.106] - 2025-02-03
+### Added
+- FAIL_ON_WARNINIG environment variable
+
+## [1.105] - 2024-11-27
+### Fixed
+- comments on schema:recreate
+
+## [1.104] - 2024-11-18
+### Added
+- materialized view support
+
 ## [1.103] - 2024-06-26
 ### Changed
 - Changed schema:recreate_postgres to user copy instead of insert
