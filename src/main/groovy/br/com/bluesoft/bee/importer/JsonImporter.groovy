@@ -137,7 +137,7 @@ class JsonImporter implements Importer {
             if (sequenceFile.exists()) {
                 def sequencesJSON = mapper.readTree(sequenceFile.getText())
                 sequencesJSON.elements().each {
-                    def sequence = mapper.readValue(it.toString(), Sequence.class)
+                    def sequence = mapper.treeToValue(it, Sequence.class)
                     sequences[sequence.name] = sequence
                 }
             }

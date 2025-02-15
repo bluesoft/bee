@@ -46,10 +46,12 @@ import br.com.bluesoft.bee.model.TableColumn
 import br.com.bluesoft.bee.model.Trigger
 import br.com.bluesoft.bee.model.View
 import br.com.bluesoft.bee.util.VersionHelper
+import groovy.sql.GroovyRowResult
+import groovy.sql.Sql
 
 class PostgresDatabaseReader implements DatabaseReader {
 
-    def sql
+    Sql sql
 
     PostgresDatabaseReader(def sql) {
         this.sql = sql
@@ -461,19 +463,63 @@ class PostgresDatabaseReader implements DatabaseReader {
           and table_name = lower(?)
 	'''
 
+    final static def VIEW_DEPENDENCIES = '''
+        SELECT distinct dependent_ns.nspname as schema
+                      , dependent_view.relname as name
+                      , source_ns.nspname as referenced_schema
+                      , source_table.relname as referenced_name
+        FROM pg_depend
+                 JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
+                 JOIN pg_class as dependent_view ON pg_rewrite.ev_class = dependent_view.oid
+                 JOIN pg_class as source_table ON pg_depend.refobjid = source_table.oid
+                 JOIN pg_namespace dependent_ns ON dependent_ns.oid = dependent_view.relnamespace
+                 JOIN pg_namespace source_ns ON source_ns.oid = source_table.relnamespace
+        WHERE source_ns.nspname = 'public'
+          and source_table.relkind  = 'v'
+          and dependent_view.relkind  = 'v'
+          and pg_depend.deptype = 'n'
+          and source_table.relname != dependent_view.relname
+	'''
+    final static def VIEW_DEPENDENCIES_BY_NAME = '''
+        SELECT distinct dependent_ns.nspname as schema
+                      , dependent_view.relname as name
+                      , source_ns.nspname as referenced_schema
+                      , source_table.relname as referenced_name
+        FROM pg_depend
+                 JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
+                 JOIN pg_class as dependent_view ON pg_rewrite.ev_class = dependent_view.oid
+                 JOIN pg_class as source_table ON pg_depend.refobjid = source_table.oid
+                 JOIN pg_namespace dependent_ns ON dependent_ns.oid = dependent_view.relnamespace
+                 JOIN pg_namespace source_ns ON source_ns.oid = source_table.relnamespace
+        WHERE source_ns.nspname = 'public'
+          and source_table.relkind  = 'v'
+          and dependent_view.relkind  = 'v'
+          and pg_depend.deptype = 'n'
+          and source_table.relname != dependent_view.relname
+          and dependent_view.relname = lower(?)
+	'''
+
     def getViews(objectName) {
-        def views = [:]
-        def rows
+        def views = new LinkedHashMap<String, View>()
+        List<GroovyRowResult> rows
+        Map<String, List<GroovyRowResult>> dependenciesByView
         if (objectName) {
             rows = sql.rows(VIEWS_QUERY_BY_NAME, [objectName])
+            dependenciesByView = sql.rows(VIEW_DEPENDENCIES_BY_NAME, [objectName])
+                    .groupBy { (it.name as String).toLowerCase() }
         } else {
             rows = sql.rows(VIEWS_QUERY)
+            dependenciesByView = sql.rows(VIEW_DEPENDENCIES)
+                    .groupBy { (it.name as String).toLowerCase() }
         }
 
         rows.each({
             def view = new View()
             view.name = it.view_name.toLowerCase()
             view.text_postgres = it.text
+            view.dependencies = dependenciesByView[view.name as String]?.collect {
+                (it.referenced_name as String).toLowerCase()
+            } ?: []
             views[view.name] = view
         })
         return views

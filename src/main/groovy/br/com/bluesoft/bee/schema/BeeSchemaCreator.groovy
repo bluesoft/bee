@@ -1,10 +1,9 @@
 package br.com.bluesoft.bee.schema
 
+import br.com.bluesoft.bee.model.Schema
+import br.com.bluesoft.bee.service.DependencyManagement
 import br.com.bluesoft.bee.util.CsvUtil
 import br.com.bluesoft.bee.util.RDBMS
-import br.com.bluesoft.bee.util.RDBMSUtil
-
-import java.text.SimpleDateFormat
 
 abstract class BeeSchemaCreator {
 
@@ -201,8 +200,8 @@ abstract class BeeSchemaCreator {
         file << "\n"
     }
 
-    void createViews(def file, def schema) {
-        schema.views*.value.each {
+    void createViews(def file, Schema schema) {
+        DependencyManagement.topologicalSorted(schema.views.values()).each {
             def view = "create or replace view ${it.name} as ${it.getCanonical(schema.rdbms).text};\n\n"
             file.append(view.toString(), 'utf-8')
         }

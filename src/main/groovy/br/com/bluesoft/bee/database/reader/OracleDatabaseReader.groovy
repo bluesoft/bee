@@ -16,10 +16,12 @@ import br.com.bluesoft.bee.model.Trigger
 import br.com.bluesoft.bee.model.UserType
 import br.com.bluesoft.bee.model.View
 import br.com.bluesoft.bee.util.RDBMS
+import groovy.sql.GroovyRowResult
+import groovy.sql.Sql
 
 class OracleDatabaseReader implements DatabaseReader {
 
-    def sql
+    Sql sql
 
     OracleDatabaseReader(def sql) {
         this.sql = sql
@@ -395,20 +397,41 @@ class OracleDatabaseReader implements DatabaseReader {
 		where  view_name = upper(?)
 		order  by view_name
 	'''
+    final static def VIEW_DEPENDENCIES = '''
+        select name, referenced_name
+        from user_dependencies
+        where type='VIEW'
+        and referenced_type='VIEW'
+	'''
+    final static def VIEW_DEPENDENCIES_BY_NAME = '''
+        select name, referenced_name
+        from user_dependencies
+        where type='VIEW'
+        and referenced_type='VIEW'
+		and name = upper(?)
+	'''
 
     def getViews(objectName) {
-        def views = [:]
-        def rows
+        def views = new LinkedHashMap<String, View>()
+        List<GroovyRowResult> rows
+        Map<String, List<GroovyRowResult>> dependenciesByView
         if (objectName) {
             rows = sql.rows(VIEWS_QUERY_BY_NAME, [objectName])
+            dependenciesByView = sql.rows(VIEW_DEPENDENCIES_BY_NAME, [objectName])
+                    .groupBy { (it.name as String).toLowerCase() }
         } else {
             rows = sql.rows(VIEWS_QUERY)
+            dependenciesByView = sql.rows(VIEW_DEPENDENCIES)
+                    .groupBy { (it.name as String).toLowerCase() }
         }
 
         rows.each({
             def view = new View()
             view.name = it.view_name.toLowerCase()
             view.text_oracle = it.text
+            view.dependencies = dependenciesByView[view.name as String]?.collect {
+                (it.referenced_name as String).toLowerCase()
+            } ?: []
             views[view.name] = view
         })
         return views
