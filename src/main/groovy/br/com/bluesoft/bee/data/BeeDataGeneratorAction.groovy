@@ -34,7 +34,7 @@ package br.com.bluesoft.bee.data
 
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.database.reader.TableDataReader
-import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.importer.BeeImporter
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.runner.ActionRunnerMultipleParameter
 import br.com.bluesoft.bee.util.CsvUtil
@@ -84,7 +84,7 @@ public class BeeDataGeneratorAction extends ActionRunnerMultipleParameter {
 
     private Schema getSchema(path) {
         if (schema == null) {
-            schema = new JsonImporter(path).importMetaData()
+            schema = new BeeImporter(path).importMetaData()
         }
         schema
     }

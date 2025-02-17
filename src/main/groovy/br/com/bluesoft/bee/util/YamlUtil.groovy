@@ -30,57 +30,26 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
-package br.com.bluesoft.bee.model
+package br.com.bluesoft.bee.util
 
-import br.com.bluesoft.bee.model.message.Message
-import br.com.bluesoft.bee.model.message.MessageLevel
-import br.com.bluesoft.bee.model.message.MessageType
-import br.com.bluesoft.bee.util.RDBMS
-import br.com.bluesoft.bee.util.StringUtil
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.json.JsonWriteFeature
+import com.fasterxml.jackson.databind.MapperFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
+import org.yaml.snakeyaml.DumperOptions
 
-class Trigger implements Validator {
+class YamlUtil {
 
-    def name
-    def text
-    def text_oracle
-    def text_postgres
-    def text_mysql
-    def text_redshift
-
-    List validateWithMetadata(metadataPackage) {
-		if (!metadataPackage instanceof Package) {
-			return []
-		}
-
-        def messages = []
-
-        if (!StringUtil.compare(metadataPackage.text, this.text)) {
-            def message = new Message(objectName: name, level: MessageLevel.ERROR, objectType: ObjectType.TRIGGER, messageType: MessageType.TRIGGER_BODY, message: "The body of the trigger ${this.name} differs from metadata.")
-            messages << message
-        }
-
-        return messages
-    }
-
-    Trigger getCanonical(RDBMS rdbms) {
-        if(rdbms == null) {
-            return this
-        }
-
-        String text
-        switch(rdbms) {
-            case RDBMS.ORACLE:
-                text = text_oracle ?: this.text
-                break
-            case RDBMS.POSTGRES:
-                text = text_postgres ?: this.text
-                break
-            case RDBMS.MYSQL:
-                text = text_mysql ?: this.text
-                break
-        }
-
-        new Trigger(name: name, text: text)
+    static ObjectMapper createMapper() {
+        def mapper = YAMLMapper.builder()
+            .enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)
+            .defaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_DEFAULT, JsonInclude.Include.NON_EMPTY))
+            .build()
+        return mapper
     }
 }
-
