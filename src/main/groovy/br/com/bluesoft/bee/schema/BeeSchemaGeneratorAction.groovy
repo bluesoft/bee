@@ -34,8 +34,8 @@ package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.database.reader.DatabaseReaderChanger
-import br.com.bluesoft.bee.exporter.JsonExporter
-import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.exporter.BeeExporter
+import br.com.bluesoft.bee.importer.BeeImporter
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.runner.ActionRunner
@@ -92,7 +92,7 @@ class BeeSchemaGeneratorAction implements ActionRunner {
             applyList(schemaOld, schemaNew, 'procedures')
             applyList(schemaOld, schemaNew, 'triggers')
 
-            def exporter = new JsonExporter(schemaNew, options.dataDir.canonicalPath)
+            def exporter = new BeeExporter(schemaNew, options.dataDir.canonicalPath)
             exporter.export();
             return true
         } catch (e) {
@@ -135,7 +135,7 @@ class BeeSchemaGeneratorAction implements ActionRunner {
 
     private def getImporter() {
 		if (importer == null) {
-			return new JsonImporter(options.dataDir.canonicalPath)
+			return new BeeImporter(options.dataDir.canonicalPath)
 		}
         return importer
     }

@@ -36,7 +36,7 @@ import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.database.reader.DatabaseReader
 import br.com.bluesoft.bee.database.reader.TableDataReader
 import br.com.bluesoft.bee.importer.Importer
-import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.importer.BeeImporter
 import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
@@ -168,7 +168,7 @@ public class BeeDataValidatorAction implements ActionRunner {
 
     def getImporter(path) {
         if (importer == null) {
-            return new JsonImporter(path)
+            return new BeeImporter(path)
         }
         return importer
     }

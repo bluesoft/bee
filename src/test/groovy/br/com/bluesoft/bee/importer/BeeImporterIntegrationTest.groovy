@@ -6,9 +6,9 @@ import org.junit.Test
 
 import static org.junit.Assert.assertEquals;
 
-class JsonImporterIntegrationTest {
+class BeeImporterIntegrationTest {
 
-    JsonImporter importer
+    BeeImporter importer
 
     @Before
     public void beforeClass() {
@@ -63,7 +63,7 @@ class JsonImporterIntegrationTest {
 
         new File('/tmp/bee/sequences.bee') << new File(this.getClass().getResource('/sequences.bee').getFile()).getText()
         new File('/tmp/bee/rules.json') << new File(this.getClass().getResource('/rules.json').getFile()).getText()
-        importer = new JsonImporter()
+        importer = new BeeImporter()
     }
 
 
@@ -74,7 +74,7 @@ class JsonImporterIntegrationTest {
 
     @Test
     public void "it should use set the path"() {
-        importer = new JsonImporter('/tmp/carneiro')
+        importer = new BeeImporter('/tmp/carneiro')
         assertEquals importer.getPath(), '/tmp/carneiro'
     }
 

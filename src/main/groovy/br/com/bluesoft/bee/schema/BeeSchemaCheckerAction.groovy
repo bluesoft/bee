@@ -1,6 +1,6 @@
 package br.com.bluesoft.bee.schema;
 
-import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.importer.BeeImporter
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
@@ -67,7 +67,7 @@ public class BeeSchemaCheckerAction implements ActionRunner {
 
     private def getImporter() {
         if (importer == null) {
-            return new JsonImporter(options.dataDir.canonicalPath)
+            return new BeeImporter(options.dataDir.canonicalPath)
         }
         return importer
     }

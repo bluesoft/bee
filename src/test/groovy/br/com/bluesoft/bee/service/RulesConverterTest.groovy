@@ -1,6 +1,6 @@
 package br.com.bluesoft.bee.service
 
-import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.importer.BeeImporter
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.model.TableColumn
 import br.com.bluesoft.bee.model.rule.DataType
@@ -14,7 +14,7 @@ class RulesConverterTest extends Specification {
     @Rule
     public TemporaryFolder temporaryFolder
 
-    JsonImporter importer
+    BeeImporter importer
     Schema metadata
 
     def setup() {
@@ -31,7 +31,7 @@ class RulesConverterTest extends Specification {
             temporaryFolder.newFile(it) << new File(this.getClass().getResource("/${it}").getFile()).getText()
         }
 
-        importer = new JsonImporter(temporaryFolder.root.path)
+        importer = new BeeImporter(temporaryFolder.root.path)
         metadata = importer.importMetaData()
         metadata.rdbms = RDBMS.POSTGRES
     }
