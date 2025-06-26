@@ -83,7 +83,7 @@ class PostgresDatabaseReader implements DatabaseReader {
         def tables = fillTables(objectName)
         fillColumns(tables, objectName)
         fillIndexes(tables, objectName, databaseVersion)
-        fillCostraints(tables, objectName)
+        fillCostraints(tables, objectName, databaseVersion)
         fillCostraintsColumns(tables, objectName)
         return tables
     }
@@ -329,7 +329,7 @@ class PostgresDatabaseReader implements DatabaseReader {
         order by tc.table_name, tc.constraint_type, tc.constraint_name
 	'''
 
-    private def fillCostraints(tables, objectName) {
+    private def fillCostraints(tables, objectName, databaseVersion) {
         def rows
         if (objectName) {
             rows = sql.rows(CONSTRAINTS_QUERY_BY_NAME, [objectName])
@@ -351,7 +351,11 @@ class PostgresDatabaseReader implements DatabaseReader {
             constraint.status = status
             if (constraint.type == 'C') {
                 constraint.refTable = null
-                constraint.searchCondition = it.check_clause[2..-3]
+                if (databaseVersion && Float.parseFloat(databaseVersion) >= 17) {
+                    constraint.searchCondition = it.check_clause[1..-2]
+                } else {
+                    constraint.searchCondition = it.check_clause[2..-3]
+                }
             }
 
             table.constraints[constraint.name] = constraint
