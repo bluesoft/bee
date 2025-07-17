@@ -39,9 +39,13 @@ class IndexColumn {
 
     String name
     Boolean descend = false
+    /**
+     * Indicates whether the column is in the INCLUDE clause of the index
+     */
+    Boolean include = false
 
     public String toString() {
-        return name + ' ' + (descend ? 'desc' : 'asc')
+        return name + ' ' + (descend ? 'desc' : 'asc') + (include ? ' include' : '')
     }
 
     @Override
@@ -54,7 +58,9 @@ class IndexColumn {
     }
 
     boolean equals(other) {
-        this.name == other.name && this.descend == other.descend
+        this.name == other.name
+                && this.descend == other.descend
+                && this.include == other.include
     }
 
 }

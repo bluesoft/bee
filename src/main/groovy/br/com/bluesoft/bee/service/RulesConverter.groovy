@@ -61,7 +61,7 @@ class RulesConverter {
         if(source.columns*.name.intersect(indColConst.keySet()).size() > 0) {
             result = source.clone()
             result.columns = source.columns.collect({
-                new IndexColumn(name: indColConst.getOrDefault(it.name, it.name) , descend: it.descend)
+                new IndexColumn(name: indColConst.getOrDefault(it.name, it.name) , descend: it.descend, include: it.include)
             }).findAll({it.name != ''})
         }
 

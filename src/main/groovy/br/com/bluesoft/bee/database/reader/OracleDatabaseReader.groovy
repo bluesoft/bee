@@ -703,6 +703,7 @@ class OracleDatabaseReader implements DatabaseReader {
         schema.tables.each {
             it.value.indexes.each {
                 it.value.where = null
+                it.value.columns.each { it.include = false }
             }
             it.value.constraints.each {
                 it.value.onUpdate = null
