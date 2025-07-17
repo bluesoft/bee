@@ -451,6 +451,11 @@ class MySqlDatabaseReader implements DatabaseReader {
     def cleanupSchema(Schema schema) {
         schema.userTypes.clear()
         schema.packages.clear()
+        schema.tables.each {
+            it.value.indexes.each {
+                it.value.columns.each { it.include = false }
+            }
+        }
     }
 
 }

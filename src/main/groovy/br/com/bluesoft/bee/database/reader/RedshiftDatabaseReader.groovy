@@ -27,6 +27,11 @@ class RedshiftDatabaseReader implements  DatabaseReader {
         schema.userTypes.clear()
         schema.packages.clear()
         schema.tables = schema.tables.findAll { !it.value.temporary }
+        schema.tables.each {
+            it.value.indexes.each {
+                it.value.columns.each { it.include = false }
+            }
+        }
     }
 
     def getDatabaseVersion() {
