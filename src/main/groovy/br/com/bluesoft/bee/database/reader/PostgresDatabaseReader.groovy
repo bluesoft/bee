@@ -199,10 +199,7 @@ class PostgresDatabaseReader implements DatabaseReader {
     final static def INDEXES_QUERY = '''
         select schemaname, table_name, index_name, uniqueness, index_type, 
                pg_get_indexdef(coid, n, false) as column_name, pg_get_indexdef(coid, 0, false) definition,
-               case
-                   when pg_index_column_has_property(coid, n, 'asc') then 'asc'
-                   when pg_index_column_has_property(coid, n, 'desc') then 'desc'
-               end as descend,
+               case when pg_index_column_has_property(coid,n, 'desc') then 'desc' else 'asc' end as descend,
                n > indnkeyatts as column_include
         from  (
                 select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
@@ -224,10 +221,7 @@ class PostgresDatabaseReader implements DatabaseReader {
     final static def INDEXES_QUERY_BY_NAME = '''
         select schemaname, table_name, index_name, uniqueness, index_type, 
                pg_get_indexdef(coid, n, false) as column_name, pg_get_indexdef(coid, 0, false) definition,
-               case
-                   when pg_index_column_has_property(coid, n, 'asc') then 'asc'
-                   when pg_index_column_has_property(coid, n, 'desc') then 'desc'
-               end as descend,
+               case when pg_index_column_has_property(coid,n, 'desc') then 'desc' else 'asc' end as descend,
                n > indnkeyatts as column_include
         from  (
                 select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
@@ -269,7 +263,7 @@ class PostgresDatabaseReader implements DatabaseReader {
                 }
                 def indexColumn = new IndexColumn()
                 indexColumn.name = it.column_name.toLowerCase()
-                if (it.descend) indexColumn.descend = it.descend.toLowerCase() == 'desc'
+                indexColumn.descend = it.descend.toLowerCase() == 'desc'
                 indexColumn.include = it.column_include
                 index.columns << indexColumn
             }
