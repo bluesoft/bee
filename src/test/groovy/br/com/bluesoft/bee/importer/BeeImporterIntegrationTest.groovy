@@ -92,8 +92,8 @@ class BeeImporterIntegrationTest {
         assertEquals "SELECT test\n" +
                      "FROM test\n" +
                      "WHERE test.abc = 1", view.text_oracle
-        assertEquals 1, view.dependencies.size()
-        assertEquals "menus_view_dependency", view.dependencies.get(0)
+        assertEquals 1, view.dependencies_oracle.size()
+        assertEquals "menus_view_dependency", view.dependencies_oracle.get(0)
     }
 
     @Test

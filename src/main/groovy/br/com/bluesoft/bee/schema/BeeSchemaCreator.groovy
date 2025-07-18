@@ -201,7 +201,7 @@ abstract class BeeSchemaCreator {
     }
 
     void createViews(def file, Schema schema) {
-        DependencyManagement.topologicalSorted(schema.views.values()).each {
+        DependencyManagement.topologicalSorted(schema.rdbms, schema.views.values()).each {
             def view = "create or replace view ${it.name} as ${it.getCanonical(schema.rdbms).text};\n\n"
             file.append(view.toString(), 'utf-8')
         }

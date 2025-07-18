@@ -55,7 +55,7 @@ class PostgresDatabaseReaderTableTest {
         assertEquals 'aaa', views['view_menu'].text_postgres
         assertEquals 'view_users', views['view_users'].name
         assertEquals 'bbb', views['view_users'].text_postgres
-        assertEquals(['view_users'], views['view_menu'].dependencies)
+        assertEquals(['view_users'], views['view_menu'].dependencies_postgres)
     }
 
 

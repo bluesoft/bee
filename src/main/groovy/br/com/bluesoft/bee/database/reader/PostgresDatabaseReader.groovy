@@ -521,7 +521,7 @@ class PostgresDatabaseReader implements DatabaseReader {
             def view = new View()
             view.name = it.view_name.toLowerCase()
             view.text_postgres = it.text
-            view.dependencies = dependenciesByView[view.name as String]?.collect {
+            view.dependencies_postgres = dependenciesByView[view.name as String]?.collect {
                 (it.referenced_name as String).toLowerCase()
             } ?: []
             views[view.name] = view

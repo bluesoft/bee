@@ -429,7 +429,7 @@ class OracleDatabaseReader implements DatabaseReader {
             def view = new View()
             view.name = it.view_name.toLowerCase()
             view.text_oracle = it.text
-            view.dependencies = dependenciesByView[view.name as String]?.collect {
+            view.dependencies_oracle = dependenciesByView[view.name as String]?.collect {
                 (it.referenced_name as String).toLowerCase()
             } ?: []
             views[view.name] = view

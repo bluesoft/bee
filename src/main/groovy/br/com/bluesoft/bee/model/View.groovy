@@ -43,10 +43,11 @@ class View implements Validator, WithDependencies {
     String name
     def text
     def text_oracle
+    List<String> dependencies_oracle = []
     def text_postgres
+    List<String> dependencies_postgres = []
     def text_mysql
     def text_redshift
-    List<String> dependencies = []
 
     List validateWithMetadata(metadataView) {
         if (!(metadataView instanceof View)) {
@@ -84,5 +85,18 @@ class View implements Validator, WithDependencies {
         }
 
         new View(name: name, text: text)
+    }
+
+
+    @Override
+    List<String> getDependencies(RDBMS rdbms) {
+        switch (rdbms) {
+            case RDBMS.ORACLE:
+                return dependencies_oracle
+            case RDBMS.POSTGRES:
+                return dependencies_postgres
+            default:
+                return []
+        }
     }
 }

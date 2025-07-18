@@ -1,23 +1,26 @@
 package br.com.bluesoft.bee.service
 
 import br.com.bluesoft.bee.model.WithDependencies
+import br.com.bluesoft.bee.util.RDBMS
 
 class DependencyManagement {
 
     /**
      * Returns a list of objects sorted topologically by their dependencies using DFS.
      */
-    static <T extends WithDependencies> List<T> topologicalSorted(Collection<T> list) {
-        return new TopologicalSort<T>(list).sort();
+    static <T extends WithDependencies> List<T> topologicalSorted(RDBMS rdbms, Collection<T> list) {
+        return new TopologicalSort<T>(rdbms, list).sort();
     }
 
     private static final class TopologicalSort<T extends WithDependencies> {
+        private final RDBMS rdbms;
         private final LinkedHashMap<String, T> result;
         private final Collection<T> list;
         private final Map<String, T> byName;
         private final Set<String> visited;
 
-        TopologicalSort(Collection<T> list) {
+        TopologicalSort(RDBMS rdbms, Collection<T> list) {
+            this.rdbms = rdbms;
             this.list = list;
             this.byName = list.collectEntries { [it.name, it] };
             this.result = new LinkedHashMap<String, T>()
@@ -41,7 +44,7 @@ class DependencyManagement {
 
             visited.add(object.name)
 
-            object.dependencies?.each {
+            object.getDependencies(rdbms)?.each {
                 visit(byName[it])
             }
 

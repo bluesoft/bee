@@ -40,6 +40,6 @@ public class OracleDatabaseReaderViewTest {
         assertEquals 'aaa', views['view_menu'].text_oracle
         assertEquals 'view_users', views['view_users'].name
         assertEquals 'bbb', views['view_users'].text_oracle
-        assertEquals(['view_users'], views['view_menu'].dependencies)
+        assertEquals(['view_users'], views['view_menu'].dependencies_oracle)
     }
 }
