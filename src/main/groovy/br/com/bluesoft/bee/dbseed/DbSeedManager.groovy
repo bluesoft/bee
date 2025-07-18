@@ -5,7 +5,7 @@ import br.com.bluesoft.bee.database.reader.TableDataReader
 import br.com.bluesoft.bee.dbchange.SQLExecutor
 import br.com.bluesoft.bee.dbchange.SQLFileParser
 import br.com.bluesoft.bee.dbchange.UpDown
-import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.importer.BeeImporter
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.util.CsvUtil
@@ -319,7 +319,7 @@ class DbSeedManager {
 
     private Schema getSchema(path) {
         if (schema == null) {
-            schema = new JsonImporter(path).importMetaData()
+            schema = new BeeImporter(path).importMetaData()
         }
         schema
     }

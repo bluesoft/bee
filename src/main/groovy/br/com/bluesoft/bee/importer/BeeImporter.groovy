@@ -44,13 +44,15 @@ import br.com.bluesoft.bee.model.UserType
 import br.com.bluesoft.bee.model.View
 import br.com.bluesoft.bee.util.JsonUtil
 import br.com.bluesoft.bee.util.RDBMS
+import br.com.bluesoft.bee.util.YamlUtil
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 
-class JsonImporter implements Importer {
+class BeeImporter implements Importer {
 
     def path
-    ObjectMapper mapper
+    ObjectMapper jsonMapper
+    ObjectMapper yamlMapper
     File mainFolder
     File tablesFolder
     File sequencesFolder
@@ -62,11 +64,11 @@ class JsonImporter implements Importer {
     File mviewsFolder
     File rulesFile
 
-    JsonImporter() {
+    BeeImporter() {
         this(null)
     }
 
-    JsonImporter(def path) {
+    BeeImporter(def path) {
         this.path = path ?: '/tmp/bee'
         this.mainFolder = new File(this.path)
         this.tablesFolder = new File(mainFolder, 'tables')
@@ -79,7 +81,8 @@ class JsonImporter implements Importer {
         this.mviewsFolder = new File(mainFolder, 'mviews')
         this.rulesFile = new File(mainFolder, "rules.json")
 
-        this.mapper = JsonUtil.createMapper()
+        this.jsonMapper = JsonUtil.createMapper()
+        this.yamlMapper = YamlUtil.createMapper()
     }
 
     Schema importMetaData() {
@@ -96,12 +99,21 @@ class JsonImporter implements Importer {
         return schema
     }
 
+    private def readFile(File file, Class claz) {
+        def lines = file.readLines()
+        if(lines[0] == "---") {
+            return yamlMapper.readValue(file, claz)
+        } else {
+            return jsonMapper.readValue(file, claz)
+        }
+    }
+
     private def importTables() {
         checkIfFolderExists(tablesFolder)
         def tables = [:]
         tablesFolder.eachFile {
             if (it.name.endsWith(".bee")) {
-                def table = mapper.readValue(it, Table.class)
+                def table = readFile(it, Table.class)
                 tables[table.name] = table
             }
         }
@@ -114,7 +126,7 @@ class JsonImporter implements Importer {
         def files = viewsFolder.listFiles().sort { it.name }
         files.each {
             if (it.name.endsWith(".bee")) {
-                def view = mapper.readValue(it, View.class)
+                def view = readFile(it, View.class)
                 views[view.name] = view
             }
         }
@@ -128,16 +140,16 @@ class JsonImporter implements Importer {
         if (sequencesFolderExists && sequencesFolder.listFiles().size() > 0) {
             sequencesFolder.eachFile {
                 if (it.name.endsWith(".bee")) {
-                    def sequence = mapper.readValue(it, Sequence.class)
+                    def sequence = jsonMapper.readValue(it, Sequence.class)
                     sequences[sequence.name] = sequence
                 }
             }
         } else {
             File sequenceFile = new File(mainFolder, 'sequences.bee')
             if (sequenceFile.exists()) {
-                def sequencesJSON = mapper.readTree(sequenceFile.getText())
+                def sequencesJSON = jsonMapper.readTree(sequenceFile.getText())
                 sequencesJSON.elements().each {
-                    def sequence = mapper.treeToValue(it, Sequence.class)
+                    def sequence = jsonMapper.treeToValue(it, Sequence.class)
                     sequences[sequence.name] = sequence
                 }
             }
@@ -151,7 +163,7 @@ class JsonImporter implements Importer {
         def procedures = [:]
         proceduresFolder.eachFile {
             if (it.name.endsWith(".bee")) {
-                def procedure = mapper.readValue(it, Procedure.class)
+                def procedure = readFile(it, Procedure.class)
                 if(procedure.schema)
                     procedures["${procedure.schema}.${procedure.name}"] = procedure
                 else
@@ -167,7 +179,7 @@ class JsonImporter implements Importer {
         def packages = [:]
         packagesFolder.eachFile {
             if (it.name.endsWith(".bee")) {
-                def pack = mapper.readValue(it, Package.class)
+                def pack = jsonMapper.readValue(it, Package.class)
                 packages[pack.name] = pack
             }
         }
@@ -179,7 +191,7 @@ class JsonImporter implements Importer {
         def triggers = [:]
         triggersFolder.eachFile {
             if (it.name.endsWith(".bee")) {
-                def trigger = mapper.readValue(it, Trigger.class)
+                def trigger = readFile(it, Trigger.class)
                 triggers[trigger.name] = trigger
             }
         }
@@ -191,7 +203,7 @@ class JsonImporter implements Importer {
         def userTypes = [:]
         userTypesFolder.eachFile {
             if (it.name.endsWith(".bee")) {
-                def userType = mapper.readValue(it, UserType.class)
+                def userType = jsonMapper.readValue(it, UserType.class)
                 userTypes[userType.name] = userType
             }
         }
@@ -201,11 +213,11 @@ class JsonImporter implements Importer {
     private def importRules() {
         def rules = [:]
         if(!rulesFile.exists()) return
-        JsonNode tree = mapper.readTree(rulesFile)
+        JsonNode tree = jsonMapper.readTree(rulesFile)
         tree.fields().forEachRemaining({
             def rdbms = RDBMS.getByName(it.key)
             if(rdbms)
-                rules[rdbms] = mapper.treeToValue(it.value, Rule.class)
+                rules[rdbms] = jsonMapper.treeToValue(it.value, Rule.class)
         })
 
         rules.size() > 0 ? rules : null
@@ -217,7 +229,7 @@ class JsonImporter implements Importer {
         def files = mviewsFolder.listFiles().sort { it.name }
         files.each {
             if (it.name.endsWith(".bee")) {
-                def mview = mapper.readValue(it, MView.class)
+                def mview = jsonMapper.readValue(it, MView.class)
                 mviews[mview.name] = mview
             }
         }

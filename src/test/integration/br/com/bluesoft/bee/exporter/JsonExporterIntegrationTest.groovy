@@ -3,7 +3,7 @@ package br.com.bluesoft.bee.exporter
 import br.com.bluesoft.bee.database.reader.DatabaseReader
 import br.com.bluesoft.bee.database.reader.OracleDatabaseReader
 import br.com.bluesoft.bee.exporter.Exporter
-import br.com.bluesoft.bee.exporter.JsonExporter
+import br.com.bluesoft.bee.exporter.BeeExporter
 import groovy.sql.Sql
 import org.junit.After
 import org.junit.Before
@@ -28,20 +28,20 @@ class JsonExporterIntegrationTest {
 
     @Test
     void 'it should set the path of the folder to create the files'() {
-        exporter = new JsonExporter(databaseReader, '/tmp/carneiro')
+        exporter = new BeeExporter(databaseReader, '/tmp/carneiro')
         assertEquals '/tmp/carneiro', exporter.path
     }
 
     @Test
     void 'it should set the default path if no path is set'() {
-        exporter = new JsonExporter(databaseReader)
+        exporter = new BeeExporter(databaseReader)
         assertEquals '/tmp/bee', exporter.path
     }
 
     @Test
     void 'it should create the folder and subfolders if they do not exist yet'() {
         File folder = new File('/tmp/bee')
-        exporter = new JsonExporter(databaseReader, folder.getPath())
+        exporter = new BeeExporter(databaseReader, folder.getPath())
 
         folder.deleteDir()
         assertFalse folder.exists()
@@ -54,7 +54,7 @@ class JsonExporterIntegrationTest {
 
     @Test
     void itShouldCreateOneFileForEachTable() {
-        exporter = new JsonExporter(databaseReader, '/tmp/bee')
+        exporter = new BeeExporter(databaseReader, '/tmp/bee')
         exporter.export()
 
         def files = new File('/tmp/bee/tables').list().toList()
@@ -67,7 +67,7 @@ class JsonExporterIntegrationTest {
 
     @Test
     void itShouldCreateAFileWithAllTheSequences() {
-        exporter = new JsonExporter(databaseReader, '/tmp/bee')
+        exporter = new BeeExporter(databaseReader, '/tmp/bee')
         exporter.export()
 
         def file = new File('/tmp/bee/sequences.bee')
@@ -84,7 +84,7 @@ class JsonExporterIntegrationTest {
 
     @Test
     void itShouldCreateOneFileForEachView() {
-        exporter = new JsonExporter(databaseReader, '/tmp/bee')
+        exporter = new BeeExporter(databaseReader, '/tmp/bee')
         exporter.export()
 
         def files = new File('/tmp/bee/views').list().toList()

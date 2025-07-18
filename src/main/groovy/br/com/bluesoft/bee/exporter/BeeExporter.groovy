@@ -34,13 +34,15 @@ package br.com.bluesoft.bee.exporter
 
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.util.JsonUtil
+import br.com.bluesoft.bee.util.YamlUtil
 import com.fasterxml.jackson.databind.ObjectMapper
 
-public class JsonExporter implements Exporter {
+public class BeeExporter implements Exporter {
 
     String path
     Schema schema
-    ObjectMapper mapper
+    ObjectMapper jsonMapper
+    ObjectMapper yamlMapper
 
     File mainFolder
     File tablesFolder
@@ -52,14 +54,15 @@ public class JsonExporter implements Exporter {
     File mviewsFolder
     File userTypesFolder
 
-    JsonExporter(Schema schema) {
+    BeeExporter(Schema schema) {
         this(schema, null)
     }
 
-    JsonExporter(Schema schema, String path) {
+    BeeExporter(Schema schema, String path) {
         this.schema = schema
         this.path = path ?: '/tmp/bee'
-        this.mapper = JsonUtil.createMapper()
+        this.jsonMapper = JsonUtil.createMapper()
+        this.yamlMapper = YamlUtil.createMapper()
     }
 
     void createPath() {
@@ -106,49 +109,49 @@ public class JsonExporter implements Exporter {
 
     void createTableFiles(def tables) {
         tables.each {
-            mapper.writeValue(new File(tablesFolder, "${it.value.name}.bee"), it.value)
+            jsonMapper.writeValue(new File(tablesFolder, "${it.value.name}.bee"), it.value)
         }
     }
 
     void createViewFiles(def views) {
         views.each {
-            mapper.writeValue(new File(viewsFolder, "${it.value.name}.bee"), it.value)
+            yamlMapper.writeValue(new File(viewsFolder, "${it.value.name}.bee"), it.value)
         }
     }
 
     void createSequenceFiles(def sequences) {
         sequences.each {
-            mapper.writeValue(new File(sequencesFolder, "${it.value.name}.bee"), it.value)
+            jsonMapper.writeValue(new File(sequencesFolder, "${it.value.name}.bee"), it.value)
         }
     }
 
     void createProceduresFiles(def procedures) {
         procedures.each { name, procedure ->
-            mapper.writeValue(new File(proceduresFolder, "${name}.bee"), procedure)
+            yamlMapper.writeValue(new File(proceduresFolder, "${name}.bee"), procedure)
         }
     }
 
     void createPackagesFiles(def packages) {
         packages.each { name, pack ->
-            mapper.writeValue(new File(packagesFolder, "${name}.bee"), pack)
+            jsonMapper.writeValue(new File(packagesFolder, "${name}.bee"), pack)
         }
     }
 
     void createTriggersFiles(def triggers) {
         triggers.each { name, trigger ->
-            mapper.writeValue(new File(triggersFolder, "${name}.bee"), trigger)
+            yamlMapper.writeValue(new File(triggersFolder, "${name}.bee"), trigger)
         }
     }
 
     void createMViewFiles(def mviews) {
         mviews.each {
-            mapper.writeValue(new File(mviewsFolder, "${it.value.name}.bee"), it.value)
+            jsonMapper.writeValue(new File(mviewsFolder, "${it.value.name}.bee"), it.value)
         }
     }
 
     void createUserTypesFiles(def userTypes) {
         userTypes.each { name, userType ->
-            mapper.writeValue(new File(userTypesFolder, "${name}.bee"), userType)
+            jsonMapper.writeValue(new File(userTypesFolder, "${name}.bee"), userType)
         }
     }
 

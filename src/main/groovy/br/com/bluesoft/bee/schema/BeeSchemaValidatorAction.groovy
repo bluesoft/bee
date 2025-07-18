@@ -34,7 +34,7 @@ package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.database.ConnectionInfo
 import br.com.bluesoft.bee.database.reader.DatabaseReaderChanger
-import br.com.bluesoft.bee.importer.JsonImporter
+import br.com.bluesoft.bee.importer.BeeImporter
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.model.message.MessageLevel
@@ -42,7 +42,6 @@ import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.service.MessagePrinter
 import br.com.bluesoft.bee.service.RulesConverter
-import br.com.bluesoft.bee.util.RDBMS
 import br.com.bluesoft.bee.util.RDBMSUtil
 
 class BeeSchemaValidatorAction implements ActionRunner {
@@ -97,12 +96,18 @@ class BeeSchemaValidatorAction implements ActionRunner {
         out.log("--- bee found ${errors.size()} error(s)")
         messagePrinter.print(out, errors)
 
-        return errors.size() == 0
+        int errorsNum = errors.size();
+
+        if ("1" == System.getenv("FAIL_ON_WARNINGS")) {
+            errorsNum += warnings.size()
+        }
+
+        return errorsNum == 0
     }
 
     private def getImporter() {
 		if (importer == null) {
-			return new JsonImporter(options.dataDir.canonicalPath)
+			return new BeeImporter(options.dataDir.canonicalPath)
 		}
         return importer
     }
