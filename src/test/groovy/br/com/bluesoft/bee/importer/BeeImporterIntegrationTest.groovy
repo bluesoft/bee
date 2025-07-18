@@ -85,7 +85,15 @@ class BeeImporterIntegrationTest {
 
     @Test
     public void "it should create a view object for each view metadata file"() {
-        assertEquals 1, importer.importMetaData().getViews().size()
+        def views = importer.importMetaData().getViews()
+        assertEquals 1, views.size()
+
+        def view = views.get("menus_view")
+        assertEquals "SELECT test\n" +
+                     "FROM test\n" +
+                     "WHERE test.abc = 1", view.text_oracle
+        assertEquals 1, view.dependencies_oracle.size()
+        assertEquals "menus_view_dependency", view.dependencies_oracle.get(0)
     }
 
     @Test

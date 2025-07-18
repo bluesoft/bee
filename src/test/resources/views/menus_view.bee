@@ -1,3 +1,5 @@
 {
-  name : "menus_view"
+  dependencies_oracle : [ "menus_view_dependency" ],
+  name : "menus_view",
+  text_oracle : "SELECT test\nFROM test\nWHERE test.abc = 1"
 }
