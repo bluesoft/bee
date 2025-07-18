@@ -199,10 +199,11 @@ class PostgresDatabaseReader implements DatabaseReader {
     final static def INDEXES_QUERY = '''
         select schemaname, table_name, index_name, uniqueness, index_type, 
                pg_get_indexdef(coid, n, false) as column_name, pg_get_indexdef(coid, 0, false) definition,
-               case when pg_index_column_has_property(coid,n, 'asc') then 'asc' else 'desc' end as descend
+               case when pg_index_column_has_property(coid,n, 'desc') then 'desc' else 'asc' end as descend,
+               n > indnkeyatts as column_include
         from  (
                 select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
-                       generate_series(1, i.indnatts) n, ci.oid coid
+                       generate_series(1, i.indnatts) n, ci.oid coid, i.indnkeyatts
                 from pg_index i
                     join pg_class ct on i.indrelid = ct.oid
                     join pg_class ci on i.indexrelid = ci.oid
@@ -220,10 +221,11 @@ class PostgresDatabaseReader implements DatabaseReader {
     final static def INDEXES_QUERY_BY_NAME = '''
         select schemaname, table_name, index_name, uniqueness, index_type, 
                pg_get_indexdef(coid, n, false) as column_name, pg_get_indexdef(coid, 0, false) definition,
-               case when pg_index_column_has_property(coid,n, 'asc') then 'asc' else 'desc' end as descend
+               case when pg_index_column_has_property(coid,n, 'desc') then 'desc' else 'asc' end as descend,
+               n > indnkeyatts as column_include
         from  (
                 select ns.nspname schemaname, ct.relname as table_name, ci.relname as index_name, i.indisunique as uniqueness,  am.amname index_type,
-                       generate_series(1, i.indnatts) n, ci.oid coid
+                       generate_series(1, i.indnatts) n, ci.oid coid, i.indnkeyatts
                 from pg_index i
                     join pg_class ct on i.indrelid = ct.oid
                     join pg_class ci on i.indexrelid = ci.oid
@@ -261,7 +263,8 @@ class PostgresDatabaseReader implements DatabaseReader {
                 }
                 def indexColumn = new IndexColumn()
                 indexColumn.name = it.column_name.toLowerCase()
-                indexColumn.descend = it.descend.toLowerCase() == 'desc' ? true : false
+                indexColumn.descend = it.descend.toLowerCase() == 'desc'
+                indexColumn.include = it.column_include
                 index.columns << indexColumn
             }
         })
@@ -269,18 +272,10 @@ class PostgresDatabaseReader implements DatabaseReader {
 
     private queryIndexesInInformationSchema(objectName, databaseVersion) {
         def rows = null
-        if (databaseVersion != null) {
-            if (objectName) {
-                rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
-            } else {
-                rows = sql.rows(INDEXES_QUERY)
-            }
+        if (objectName) {
+            rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
         } else {
-            if (objectName) {
-                rows = sql.rows(INDEXES_QUERY_BY_NAME, [objectName])
-            } else {
-                rows = sql.rows(INDEXES_QUERY)
-            }
+            rows = sql.rows(INDEXES_QUERY)
         }
     }
 

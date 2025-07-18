@@ -1,7 +1,7 @@
 package br.com.bluesoft.bee.schema
 
+import br.com.bluesoft.bee.model.Index
 import br.com.bluesoft.bee.util.CsvUtil
-import br.com.bluesoft.bee.util.RDBMS
 
 class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
@@ -51,17 +51,22 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
         return result
     }
 
-    def createIndex(tableName, index) {
+    def createIndex(tableName, Index index) {
         def result = "create"
         def indexType = getIndexType(index.type)
         if (index.unique) {
             result += ' unique'
         }
 
-        result += " index ${index.name} on ${tableName} USING ${indexType} (" + index.columns.join(',') + ")"
+        result += " index ${index.name} on ${tableName} USING ${indexType} (" + index.columns.findAll { it -> !it.include }.join(',') + ")"
 
-        if(index.where) {
+        if (index.where) {
             result += " where ${index.where}"
+        }
+
+        def includeColumns = index.columns.findAll { it.include }.collect { it.name }.join(',')
+        if (includeColumns) {
+            result += " INCLUDE (" + includeColumns + ")"
         }
 
         result += ";\n"
