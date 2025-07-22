@@ -1,7 +1,9 @@
 package br.com.bluesoft.bee.database.reader
 
+import groovy.sql.Sql
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito
 
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
@@ -24,16 +26,13 @@ public class OracleDatabaseReaderTableTest {
         def constraints = createConstraints()
         def constraintsColumns = createConstraintsColumns()
 
-        def sql = [rows: { query ->
-            switch (query) {
-                case OracleDatabaseReader.TABLES_QUERY: return tableRows; break;
-                case OracleDatabaseReader.TABLES_COLUMNS_QUERY: return columns; break;
-                case OracleDatabaseReader.INDEXES_QUERY: return indexes; break;
-                case OracleDatabaseReader.INDEXES_COLUMNS_QUERY: return indexesColumns; break;
-                case OracleDatabaseReader.CONSTRAINTS_QUERY: return constraints; break;
-                case OracleDatabaseReader.CONSTRAINTS_COLUMNS_QUERY: return constraintsColumns; break;
-            }
-        }]
+        final def sql = Mockito.mock(Sql)
+        Mockito.when(sql.rows(OracleDatabaseReader.TABLES_QUERY)).thenReturn(tableRows)
+        Mockito.when(sql.rows(OracleDatabaseReader.TABLES_COLUMNS_QUERY)).thenReturn(columns)
+        Mockito.when(sql.rows(OracleDatabaseReader.INDEXES_QUERY)).thenReturn(indexes)
+        Mockito.when(sql.rows(OracleDatabaseReader.INDEXES_COLUMNS_QUERY)).thenReturn(indexesColumns)
+        Mockito.when(sql.rows(OracleDatabaseReader.CONSTRAINTS_QUERY)).thenReturn(constraints)
+        Mockito.when(sql.rows(OracleDatabaseReader.CONSTRAINTS_COLUMNS_QUERY)).thenReturn(constraintsColumns)
 
         reader = new OracleDatabaseReader(sql)
     }

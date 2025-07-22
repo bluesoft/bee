@@ -15,7 +15,6 @@ import br.com.bluesoft.bee.model.TableColumn
 import br.com.bluesoft.bee.model.Trigger
 import br.com.bluesoft.bee.model.UserType
 import br.com.bluesoft.bee.model.View
-import br.com.bluesoft.bee.util.RDBMS
 import groovy.sql.GroovyRowResult
 import groovy.sql.Sql
 
@@ -23,7 +22,7 @@ class OracleDatabaseReader implements DatabaseReader {
 
     Sql sql
 
-    OracleDatabaseReader(def sql) {
+    OracleDatabaseReader(Sql sql) {
         this.sql = sql
     }
 

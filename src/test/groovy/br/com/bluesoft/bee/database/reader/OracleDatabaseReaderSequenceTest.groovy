@@ -1,7 +1,9 @@
 package br.com.bluesoft.bee.database.reader
 
+import groovy.sql.Sql
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito
 
 import static org.junit.Assert.assertEquals
 
@@ -15,7 +17,9 @@ public class OracleDatabaseReaderSequenceTest {
                 [sequence_name: 'SEQ_PESSOA', min_value: 5000],
                 [sequence_name: 'SEQ_TIPO_PESSOA', min_value: 0]
         ]
-        def sql = [rows: { query -> sequences }]
+
+        final def sql = Mockito.mock(Sql)
+        Mockito.when(sql.rows(Mockito.any(String))).thenReturn(sequences)
         reader = new OracleDatabaseReader(sql)
     }
 

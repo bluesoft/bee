@@ -1,7 +1,9 @@
 package br.com.bluesoft.bee.database.reader
 
+import groovy.sql.Sql
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito
 import spock.lang.Specification
 
 import static org.junit.Assert.assertEquals
@@ -19,7 +21,9 @@ class OracleDatabaseTriggerTest extends Specification {
                 [name: 'TRIGGER2', text: 'line22\n'],
                 [name: 'TRIGGER2', text: 'line23\n']
         ]
-        final def sql = [rows: { query -> return triggers }]
+
+        final def sql = Mockito.mock(Sql)
+        Mockito.when(sql.rows(Mockito.any(String))).thenReturn(triggers)
         reader = new OracleDatabaseReader(sql)
     }
 

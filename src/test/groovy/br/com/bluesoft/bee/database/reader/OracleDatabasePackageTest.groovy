@@ -1,7 +1,9 @@
 package br.com.bluesoft.bee.database.reader
 
+import groovy.sql.Sql
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito
 
 import static org.junit.Assert.assertEquals
 
@@ -25,7 +27,8 @@ public class OracleDatabasePackageTest {
                 [name: 'PACKAGE2', type: 'PACKAGE BODY', text: 'line pack2\n'],
                 [name: 'PACKAGE2', type: 'PACKAGE BODY', text: 'line pack3\n'],
         ]
-        final def sql = [rows: { query -> return packages }]
+        final def sql = Mockito.mock(Sql)
+        Mockito.when(sql.rows(Mockito.any(String))).thenReturn(packages)
         reader = new OracleDatabaseReader(sql)
     }
 
