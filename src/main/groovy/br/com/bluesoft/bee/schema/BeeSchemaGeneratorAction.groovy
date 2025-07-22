@@ -33,6 +33,7 @@
 package br.com.bluesoft.bee.schema
 
 import br.com.bluesoft.bee.database.ConnectionInfo
+import br.com.bluesoft.bee.database.reader.DatabaseReader
 import br.com.bluesoft.bee.database.reader.DatabaseReaderChanger
 import br.com.bluesoft.bee.exporter.BeeExporter
 import br.com.bluesoft.bee.importer.BeeImporter
@@ -70,7 +71,7 @@ class BeeSchemaGeneratorAction implements ActionRunner {
 
         try {
             out.log "Extracting the metadata..."
-            def databaseReader = DatabaseReaderChanger.getDatabaseReader(options, sql)
+            def databaseReader = getDatabaseReader(sql)
             Schema schemaNew = databaseReader.getSchema(objectName)
 			if (objectName) {
 				schemaNew = schemaNew.filter(objectName)
@@ -101,6 +102,10 @@ class BeeSchemaGeneratorAction implements ActionRunner {
         }
     }
 
+    DatabaseReader getDatabaseReader(Sql sql) {
+        DatabaseReaderChanger.getDatabaseReader(options, sql)
+    }
+
     void applyIgnore(Schema schemaOld, Schema schemaNew) {
         def tableNames = schemaOld.tables.findAll { it.key in schemaNew.tables }
 
@@ -119,7 +124,9 @@ class BeeSchemaGeneratorAction implements ActionRunner {
         items.each {
             def item = it.value
             item.text_oracle = schemaNew[field][it.key].text_oracle ?: item.text_oracle
+            item.dependencies_oracle = schemaNew[field][it.key].dependencies_oracle ?: item.dependencies_oracle
             item.text_postgres = schemaNew[field][it.key].text_postgres ?: item.text_postgres
+            item.dependencies_postgres = schemaNew[field][it.key].dependencies_postgres ?: item.dependencies_postgres
             item.text_mysql = schemaNew[field][it.key].text_mysql ?: item.text_mysql
             item.text_redshift = schemaNew[field][it.key].text_redshift ?: item.text_redshift
             schemaNew[field][it.key] = item
