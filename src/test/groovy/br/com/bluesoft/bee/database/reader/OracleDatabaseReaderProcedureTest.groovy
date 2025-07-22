@@ -1,7 +1,9 @@
 package br.com.bluesoft.bee.database.reader
 
+import groovy.sql.Sql
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito
 
 import static org.junit.Assert.assertEquals
 
@@ -22,12 +24,10 @@ class OracleDatabaseReaderProcedureTest {
                 [name: 'PROCEDURE_B', text: 'bbb1'],
                 [name: 'PROCEDURE_B', text: 'bbb2']
         ]
-        def sql = [rows: { query ->
-            switch (query) {
-                case OracleDatabaseReader.PROCEDURES_NAME_QUERY: return procedures; break;
-                case OracleDatabaseReader.PROCEDURES_BODY_QUERY: return bodies; break;
-            }
-        }]
+
+        final def sql = Mockito.mock(Sql)
+        Mockito.when(sql.rows(OracleDatabaseReader.PROCEDURES_NAME_QUERY)).thenReturn(procedures)
+        Mockito.when(sql.rows(OracleDatabaseReader.PROCEDURES_BODY_QUERY)).thenReturn(bodies)
         reader = new OracleDatabaseReader(sql)
     }
 

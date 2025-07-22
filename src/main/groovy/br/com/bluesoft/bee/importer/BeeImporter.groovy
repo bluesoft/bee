@@ -149,7 +149,7 @@ class BeeImporter implements Importer {
             if (sequenceFile.exists()) {
                 def sequencesJSON = jsonMapper.readTree(sequenceFile.getText())
                 sequencesJSON.elements().each {
-                    def sequence = jsonMapper.readValue(it.toString(), Sequence.class)
+                    def sequence = jsonMapper.treeToValue(it, Sequence.class)
                     sequences[sequence.name] = sequence
                 }
             }

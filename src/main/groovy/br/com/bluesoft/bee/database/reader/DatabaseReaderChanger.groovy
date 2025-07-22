@@ -3,6 +3,7 @@ package br.com.bluesoft.bee.database.reader
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.util.RDBMS
 import br.com.bluesoft.bee.util.RDBMSUtil
+import groovy.sql.Sql
 
 import java.text.MessageFormat
 
@@ -10,7 +11,7 @@ class DatabaseReaderChanger {
 
     public static final String MENSAGEM_DE_ERRO_BANCO_NAO_SUPORTADO = "Banco de dados {0} não suportado"
 
-    public static DatabaseReader getDatabaseReader(Options options, sql) {
+    public static DatabaseReader getDatabaseReader(Options options, Sql sql) {
         def databaseReader
         RDBMS banco = RDBMSUtil.getRDBMS(options)
 
