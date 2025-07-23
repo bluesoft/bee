@@ -39,6 +39,7 @@ import br.com.bluesoft.bee.exporter.BeeExporter
 import br.com.bluesoft.bee.importer.BeeImporter
 import br.com.bluesoft.bee.model.Options
 import br.com.bluesoft.bee.model.Schema
+import br.com.bluesoft.bee.model.View
 import br.com.bluesoft.bee.runner.ActionRunner
 import br.com.bluesoft.bee.service.BeeWriter
 import br.com.bluesoft.bee.service.RulesConverter
@@ -124,11 +125,13 @@ class BeeSchemaGeneratorAction implements ActionRunner {
         items.each {
             def item = it.value
             item.text_oracle = schemaNew[field][it.key].text_oracle ?: item.text_oracle
-            item.dependencies_oracle = schemaNew[field][it.key].dependencies_oracle ?: item.dependencies_oracle
             item.text_postgres = schemaNew[field][it.key].text_postgres ?: item.text_postgres
-            item.dependencies_postgres = schemaNew[field][it.key].dependencies_postgres ?: item.dependencies_postgres
             item.text_mysql = schemaNew[field][it.key].text_mysql ?: item.text_mysql
             item.text_redshift = schemaNew[field][it.key].text_redshift ?: item.text_redshift
+            if (item instanceof View) {
+                item.dependencies_oracle = schemaNew[field][it.key].dependencies_oracle ?: item.dependencies_oracle
+                item.dependencies_postgres = schemaNew[field][it.key].dependencies_postgres ?: item.dependencies_postgres
+            }
             schemaNew[field][it.key] = item
         }
     }
