@@ -51,6 +51,9 @@ public class BeePostgresSchemaCreatorAction implements ActionRunner {
         out.println("generating core data...")
         beeSchemaCreator.createCoreData(file, schema, options.dataDir)
 
+        out.println("generating functions...")
+        beeSchemaCreator.createProcedures(file, schema)
+
         out.println("generating constraints...")
         beeSchemaCreator.createPrimaryKeys(file, schema)
         beeSchemaCreator.createUniqueKeys(file, schema)
@@ -69,9 +72,6 @@ public class BeePostgresSchemaCreatorAction implements ActionRunner {
 
         out.println("generating materialized views indexes...")
         beeSchemaCreator.createMViewIndexes(file, schema)
-
-        out.println("generating functions...")
-        beeSchemaCreator.createProcedures(file, schema)
 
         out.println("generating triggers...")
         beeSchemaCreator.createTriggers(file, schema)
