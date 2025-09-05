@@ -161,7 +161,8 @@ class BeeImporter implements Importer {
     private def importProcedures() {
         checkIfFolderExists(proceduresFolder)
         def procedures = [:]
-        proceduresFolder.eachFile {
+        def files = proceduresFolder.listFiles().sort { it.name }
+        files.each {
             if (it.name.endsWith(".bee")) {
                 def procedure = readFile(it, Procedure.class)
                 if(procedure.schema)
