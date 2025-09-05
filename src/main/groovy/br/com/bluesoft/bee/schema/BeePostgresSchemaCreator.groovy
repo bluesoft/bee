@@ -173,7 +173,7 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
 
     void createProcedures(def file, def schema) {
-        schema.procedures*.value.sort().each {
+        schema.procedures*.value.each {
             def procedure = "${it.getCanonical(schema.rdbms).text};\n\n"
             file.append(procedure.toString(), 'utf-8')
         }
