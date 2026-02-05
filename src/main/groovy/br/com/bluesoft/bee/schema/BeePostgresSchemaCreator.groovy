@@ -113,7 +113,7 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
             for (int i = 0; i < fileData.size(); i++) {
                 fileData[i].eachWithIndex { columnValue, index2 ->
-                    def fieldValue = columnValue.toString().replace('\t', '\\t').replace('\\', '\\\\')
+                    def fieldValue = columnValue.toString().replace('\t', '\\t').replace('\\', '\\\\').replace('\n', '\\n')
                     def columnType = columnTypes[index2].split(' ')[0].split('\\(')[0]
                     def columnName = columnNames[index2]
                     def isVirtual = isVirtualColumn[columnName]

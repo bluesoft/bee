@@ -99,6 +99,9 @@ public class TableDataReader {
                                 col1 = (col as Double) as String
                             }
                             break
+                        case "clob":
+                            col1 = col instanceof String ? col :  col.getCharacterStream().getText()
+                            break
                         default:
                             col1 = col as String
                     }

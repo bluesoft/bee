@@ -103,7 +103,7 @@ public class BeeDataValidatorAction implements ActionRunner {
                 files = [objectName]
             }
         } else {
-            def listFiles = dataPath.listFiles()
+            def listFiles = dataPath.listFiles().sort()
             listFiles.each {
                 if (it.name.endsWith(".csv")) {
                     def tableName = it.name[0..-5]
