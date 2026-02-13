@@ -16,7 +16,7 @@ mainClassName = "br.com.bluesoft.bee.Bee"
 
 group = 'br.com.bluesoft.bee'
 def artifact = 'bee'
-version = '1.111'
+version = '1.112'
 
 def javaVersion = JavaVersion.VERSION_1_8
 sourceCompatibility = javaVersion;
@@ -33,8 +33,8 @@ dependencies {
     implementation 'org.apache.groovy:groovy:4.0.22'
     implementation 'org.apache.groovy:groovy-sql:4.0.22'
     implementation 'org.apache.groovy:groovy-cli-commons:4.0.22'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.21.0'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.21.0'
     testImplementation "org.spockframework:spock-core:2.3-groovy-4.0"
     testImplementation 'org.spockframework:spock-junit4:2.3-groovy-4.0'
     testImplementation 'cglib:cglib-nodep:3.2.12'
