@@ -36,6 +36,7 @@ import br.com.bluesoft.bee.model.message.Message
 import br.com.bluesoft.bee.model.message.MessageLevel
 import br.com.bluesoft.bee.model.message.MessageType
 import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonInclude
 import groovy.transform.AutoClone
 
 import java.text.MessageFormat
@@ -46,7 +47,8 @@ class TableColumn {
 
     String name
     String type
-    Integer size
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    Integer size = null
     String sizeType
     Integer scale = 0
     Boolean nullable = false
