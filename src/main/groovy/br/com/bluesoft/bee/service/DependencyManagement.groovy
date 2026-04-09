@@ -35,7 +35,7 @@ class DependencyManagement {
         }
 
         private void visit(T object) {
-            if (result.containsKey(object.name)) {
+            if (object == null || result.containsKey(object.name)) {
                 return
             }
             if (visited.contains(object.name)) {
