@@ -60,13 +60,13 @@ class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
         result += " index ${index.name} on ${tableName} USING ${indexType} (" + index.columns.findAll { it -> !it.include }.join(',') + ")"
 
-        if (index.where) {
-            result += " where ${index.where}"
-        }
-
         def includeColumns = index.columns.findAll { it.include }.collect { it.name }.join(',')
         if (includeColumns) {
             result += " INCLUDE (" + includeColumns + ")"
+        }
+
+        if (index.where) {
+            result += " where ${index.where}"
         }
 
         result += ";\n"
