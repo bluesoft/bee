@@ -20,5 +20,22 @@ If you are using Fish:
 
 ## Contributing
 
-Feel free to contributing with the project. Start reading our [contributing guide](https://github.com/bluesoft/contributing)
+### Things we will merge
 
+* Bugfixes
+* Performance improvements
+* Features and components which are likely to be useful to the majority of users
+
+### Things we won't merge
+
+* Code which introduces considerable performance degrations
+* Features which are not important for most people
+* Code which comes without tests
+* Code which breaks existing tests
+
+### Workflow
+
+* Fork the repository
+* Create a new branch in your fork (feature branch)
+* Make sure all tests pass
+* Create a pull request
