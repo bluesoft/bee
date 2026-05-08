@@ -39,13 +39,15 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect
 import groovy.transform.AutoClone
 
 @AutoClone
-@com.fasterxml.jackson.annotation.JsonAutoDetect(isGetterVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonAutoDetect(isGetterVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.ANY)
 class Table implements Validator {
 
     String name
     Boolean temporary = false
     String comment
     String distStyle
+    String partitioned
+    List<TablePartition> partitions = []
 
     Map<String, TableColumn> columns = [:] as LinkedHashMap
     Map<String, Index> indexes = [:]

@@ -43,6 +43,7 @@ import br.com.bluesoft.bee.model.Schema
 import br.com.bluesoft.bee.model.Sequence
 import br.com.bluesoft.bee.model.Table
 import br.com.bluesoft.bee.model.TableColumn
+import br.com.bluesoft.bee.model.TablePartition
 import br.com.bluesoft.bee.model.Trigger
 import br.com.bluesoft.bee.model.View
 import br.com.bluesoft.bee.util.VersionHelper
@@ -87,23 +88,30 @@ class PostgresDatabaseReader implements DatabaseReader {
         fillIndexes(tables, objectName, databaseVersion)
         fillCostraints(tables, objectName, databaseVersion)
         fillCostraintsColumns(tables, objectName)
+        fillPartitions(tables, objectName)
         return tables
     }
 
     static final def TABLES_QUERY = ''' 
-        select t.table_name, 'N'as temporary, description 
+        select t.table_name, 'N'as temporary, description, 
+               pg_get_partkeydef(to_regclass(t.table_name)::regclass::oid) partitioned
         from information_schema.tables t
         left join pg_description d on d.objoid = to_regclass(t.table_name)::regclass::oid
-        where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
-		order by table_name
+        left join pg_inherits i on i.inhrelid = to_regclass(t.table_name)::regclass::oid
+        where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema') 
+          and i.inhrelid is null
+        order by table_name
 	'''
     static final def TABLES_QUERY_BY_NAME = '''
-        select t.table_name, 'N'as temporary, description 
+        select t.table_name, 'N'as temporary, description, 
+               pg_get_partkeydef(to_regclass(t.table_name)::regclass::oid) partitioned
         from information_schema.tables t
         left join pg_description d on d.objoid = to_regclass(t.table_name)::regclass::oid
-        where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
-		and t.table_name = ?
-		order by table_name
+        left join pg_inherits i on i.inhrelid = to_regclass(t.table_name)::regclass::oid
+        where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema') 
+          and i.inhrelid is null
+          and t.table_name like ?
+        order by table_name
 	'''
 
     private def fillTables(objectName) {
@@ -118,7 +126,8 @@ class PostgresDatabaseReader implements DatabaseReader {
             def name = it.table_name.toLowerCase()
             def temporary = it.temporary == 'Y' ? true : false
             def comment = it.description
-            tables[name] = new Table(name: name, temporary: temporary, comment: comment)
+            def partitioned = it.partitioned
+            tables[name] = new Table(name: name, temporary: temporary, comment: comment, partitioned: partitioned)
         })
         return tables
     }
@@ -172,19 +181,21 @@ class PostgresDatabaseReader implements DatabaseReader {
         }
         rows.each({
             def table = tables[it.table_name.toLowerCase()]
-            def column = new TableColumn()
-            column.name = it.column_name.toLowerCase()
-            column.type = getColumnType(it.data_type)
-            column.size = it.data_size
-            column.scale = it.data_scale == null ? 0 : it.data_scale
-            column.nullable = it.nullable == 'NO' ? false : true
-            column.virtual = it.is_generated == 'ALWAYS'
-            column.comment = it.comments
-            def defaultValue = it.data_default
-            if (defaultValue) {
-                column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()
+            if (table) {
+                def column = new TableColumn()
+                column.name = it.column_name.toLowerCase()
+                column.type = getColumnType(it.data_type)
+                column.size = it.data_size
+                column.scale = it.data_scale == null ? 0 : it.data_scale
+                column.nullable = it.nullable == 'NO' ? false : true
+                column.virtual = it.is_generated == 'ALWAYS'
+                column.comment = it.comments
+                def defaultValue = it.data_default
+                if (defaultValue) {
+                    column.defaultValue = defaultValue?.trim()?.toUpperCase() == 'NULL' ? null : defaultValue?.trim()
+                }
+                table.columns[column.name] = column
             }
-            table.columns[column.name] = column
         })
     }
 
@@ -417,6 +428,41 @@ class PostgresDatabaseReader implements DatabaseReader {
                 constraint.columns << it.column_name.toLowerCase()
             }
         })
+    }
+
+    final static def PARTITIONS_QUERY = '''
+        select i.inhparent::regclass::text parent, i.inhrelid::regclass::text table, 
+               pg_catalog.pg_get_expr(c.relpartbound, c.oid) partition
+        from pg_catalog.pg_inherits i
+          join pg_catalog.pg_class c on c.oid = i.inhrelid 
+        where c.relkind = 'r'
+        order by pg_catalog.pg_get_expr(c.relpartbound, c.oid) = 'default', c.oid::pg_catalog.regclass::pg_catalog.text
+    '''
+
+    final static def PARTITIONS_BY_TABLE_QUERY = '''
+        select i.inhparent::regclass::text parent, i.inhrelid::regclass::text table, 
+               pg_catalog.pg_get_expr(c.relpartbound, c.oid) partition
+        from pg_catalog.pg_inherits i
+          join pg_catalog.pg_class c on c.oid = i.inhrelid 
+        where c.relkind = 'r'
+          and i.inhparent::regclass::text = ?
+        order by pg_catalog.pg_get_expr(c.relpartbound, c.oid) = 'default', c.oid::pg_catalog.regclass::pg_catalog.text
+    '''
+
+    private def fillPartitions(tables, objectName) {
+        def rows
+        if (objectName) {
+            rows = sql.rows(PARTITIONS_BY_TABLE_QUERY, [objectName])
+        } else {
+            rows = sql.rows(PARTITIONS_QUERY)
+        }
+
+        rows.each {
+            def table = tables[it.parent.toLowerCase()]
+            if (table) {
+                table.partitions << new TablePartition(name: it.table, value: it.partition)
+            }
+        }
     }
 
     final static def SEQUENCES_QUERY = '''

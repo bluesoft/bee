@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.115] - 2026-05-8
+### Added
+- support for partitioned tables
+
+## [1.114]
+### Fixed
+- create index with include and where
+
+## [1.113]
+### Fixed
+- recreate_postgres single view with dependencies
+
+## [1.112]
+### Fixed
+- schema:generate - integer column on postgresql
+
+# [1.110]
+### Fixed
+- create procedures order
+
+# [1.109]
+### Added
+- Support index include columns
+- View creation with topological sort
+### Fixed
+- schema:recreate_postgres function order
+
 ## [1.108] - 2025-06-26
 ### Fixed
 - check constraints on postgresql 17

@@ -5,6 +5,16 @@ import br.com.bluesoft.bee.util.CsvUtil
 
 class BeePostgresSchemaCreator extends BeeSchemaCreator {
 
+    def createTablePartitions(def table) {
+        def result = ""
+
+        table.partitions.each {
+            result += "create table ${it.name} partition of ${table.name} ${it.value};\n"
+        }
+
+        return result
+    }
+
     def createColumn(def column) {
         def result = "    ${column.name} ${column.type}"
         if (column.type in ['character', 'character varying']) {

@@ -42,6 +42,8 @@ abstract class BeeSchemaCreator {
         return result
     }
 
+    def createTablePartitions(def table) {
+    }
 
     def createTable(def table) {
         def columns = []
@@ -49,7 +51,10 @@ abstract class BeeSchemaCreator {
             columns << createColumn(it.value)
         })
         def temp = table.temporary ? " global temporary" : ""
-        def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n);\n"
+        def partition = table.partitioned ? " partition by ${table.partitioned}" : ""
+        def result = "create${temp} table ${table.name} (\n" + columns.join(",\n") + "\n)${partition};\n"
+
+        result += createTablePartitions(table)
 
         if (table.comment) {
             result += "comment on table ${table.name} is '${table.comment}';\n"
