@@ -94,14 +94,14 @@ class PostgresDatabaseReader implements DatabaseReader {
         select t.table_name, 'N'as temporary, description 
         from information_schema.tables t
         left join pg_description d on d.objoid = to_regclass(t.table_name)::regclass::oid
-        where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
+        where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema', 'utl_file')
 		order by table_name
 	'''
     static final def TABLES_QUERY_BY_NAME = '''
         select t.table_name, 'N'as temporary, description 
         from information_schema.tables t
         left join pg_description d on d.objoid = to_regclass(t.table_name)::regclass::oid
-        where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema')
+        where t.table_type = 'BASE TABLE' and table_schema not in ('pg_catalog', 'information_schema', 'utl_file')
 		and lower(t.table_name) = lower(?)
 		order by table_name
 	'''
@@ -138,7 +138,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		col_description(to_regclass(it.table_name)::regclass::oid, ic.ordinal_position) as comments
 		from information_schema.columns ic
 		inner join information_schema.tables it on it.table_name = ic.table_name
-		where ic.table_schema not in ('pg_catalog' , 'information_schema')
+		where ic.table_schema not in ('pg_catalog' , 'information_schema' , 'utl_file')
 		and it.table_type = 'BASE TABLE'
 		order by ic.table_name, ic.ordinal_position
 		'''
@@ -157,7 +157,7 @@ class PostgresDatabaseReader implements DatabaseReader {
         col_description(to_regclass(it.table_name)::regclass::oid, ic.ordinal_position) as comments
         from information_schema.columns ic
         inner join information_schema.tables it on it.table_name = ic.table_name
-        where ic.table_schema not in ('pg_catalog' , 'information_schema')
+        where ic.table_schema not in ('pg_catalog' , 'information_schema' , 'utl_file')
         and it.table_type = 'BASE TABLE'
         and lower(ic.table_name) = lower(?)
         order by ic.table_name, ic.ordinal_position
@@ -213,7 +213,7 @@ class PostgresDatabaseReader implements DatabaseReader {
                     join pg_am am on (ci.relam = am.oid)
                     left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
                     left join pg_matviews mv on (ns.nspname = mv.schemaname and ct.relname = mv.matviewname)
-                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
+                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast' , 'utl_file')
                   and tc.constraint_name is null
                   and mv.matviewname is null
         ) t
@@ -235,7 +235,7 @@ class PostgresDatabaseReader implements DatabaseReader {
                     join pg_am am on (ci.relam = am.oid)
                     left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
                     left join pg_matviews mv on (ns.nspname = mv.schemaname and ct.relname = mv.matviewname)
-                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
+                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast', 'utl_file')
                   and tc.constraint_name is null
                   and mv.matviewname is null
                   and lower(ct.relname) = lower(?)
@@ -303,7 +303,7 @@ class PostgresDatabaseReader implements DatabaseReader {
              left join information_schema.referential_constraints rc on (tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name)
              left join information_schema.table_constraints tc2 on (tc2.constraint_schema = rc.unique_constraint_schema and tc2.constraint_name = rc.unique_constraint_name)
              left join information_schema.check_constraints cc on (tc.constraint_schema = cc.constraint_schema and tc.constraint_name = cc.constraint_name)
-        where tc.constraint_schema not in ('pg_catalog', 'information_schema')
+        where tc.constraint_schema not in ('pg_catalog', 'information_schema', 'utl_file')
             and (check_clause not like '%IS NOT NULL' or check_clause is null)
         order by tc.table_name, tc.constraint_type, tc.constraint_name
     '''
@@ -320,7 +320,7 @@ class PostgresDatabaseReader implements DatabaseReader {
              left join information_schema.referential_constraints rc on (tc.constraint_schema = rc.constraint_schema and tc.constraint_name = rc.constraint_name)
              left join information_schema.table_constraints tc2 on (tc2.constraint_schema = rc.unique_constraint_schema and tc2.constraint_name = rc.unique_constraint_name)
              left join information_schema.check_constraints cc on (tc.constraint_schema = cc.constraint_schema and tc.constraint_name = cc.constraint_name)
-        where tc.constraint_schema not in ('pg_catalog', 'information_schema')
+        where tc.constraint_schema not in ('pg_catalog', 'information_schema', 'utl_file')
             and (check_clause not like '%IS NOT NULL' or check_clause is null)
             and lower(tc.table_name) = lower(?)
         order by tc.table_name, tc.constraint_type, tc.constraint_name
@@ -384,7 +384,7 @@ class PostgresDatabaseReader implements DatabaseReader {
              left join information_schema.referential_constraints r on kcu.constraint_schema = r.constraint_schema and kcu.constraint_name = r.constraint_name
              left join information_schema.table_constraints t on r.unique_constraint_schema = t.constraint_schema and r.unique_constraint_name = t.constraint_name
              left join information_schema.key_column_usage kcu2 on kcu2.constraint_schema = t.constraint_schema and kcu2.constraint_name = t.constraint_name and kcu2.ordinal_position = kcu.position_in_unique_constraint
-        where kcu.constraint_schema not in ('pg_catalog', 'information_schema')
+        where kcu.constraint_schema not in ('pg_catalog', 'information_schema', 'utl_file')
         order by kcu.table_name, kcu.constraint_name, kcu.ordinal_position
 	'''
     final static def CONSTRAINTS_COLUMNS_QUERY_BY_NAME = '''
@@ -394,7 +394,7 @@ class PostgresDatabaseReader implements DatabaseReader {
              left join information_schema.referential_constraints r on kcu.constraint_schema = r.constraint_schema and kcu.constraint_name = r.constraint_name
              left join information_schema.table_constraints t on r.unique_constraint_schema = t.constraint_schema and r.unique_constraint_name = t.constraint_name
              left join information_schema.key_column_usage kcu2 on kcu2.constraint_schema = t.constraint_schema and kcu2.constraint_name = t.constraint_name and kcu2.ordinal_position = kcu.position_in_unique_constraint
-        where kcu.constraint_schema not in ('pg_catalog', 'information_schema')
+        where kcu.constraint_schema not in ('pg_catalog', 'information_schema', 'utl_file')
           and lower(kcu.table_name) = lower(?)
         order by kcu.table_name, kcu.constraint_name, kcu.ordinal_position
 	'''
@@ -452,13 +452,13 @@ class PostgresDatabaseReader implements DatabaseReader {
     final static def VIEWS_QUERY = '''
         select table_name as view_name, view_definition as text 
         from information_schema.views
-        where table_schema not in ('information_schema', 'pg_catalog')
+        where table_schema not in ('information_schema', 'pg_catalog', 'utl_file')
 		order by view_name
 	'''
     final static def VIEWS_QUERY_BY_NAME = '''
         select table_name as view_name, view_definition as text 
         from information_schema.views
-        where table_schema not in ('information_schema', 'pg_catalog')
+        where table_schema not in ('information_schema', 'pg_catalog', 'utl_file')
           and lower(table_name) = lower(?)
 	'''
 
@@ -565,7 +565,7 @@ class PostgresDatabaseReader implements DatabaseReader {
                     join pg_am am on (ci.relam = am.oid)
                     left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
                     join pg_matviews mv on (ns.nspname = mv.schemaname and ct.relname = mv.matviewname)
-                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
+                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast', 'utl_file')
                   and tc.constraint_name is null
         ) t
         order by table_name, index_name, n
@@ -584,7 +584,7 @@ class PostgresDatabaseReader implements DatabaseReader {
                     join pg_am am on (ci.relam = am.oid)
                     left join information_schema.table_constraints tc on (ns.nspname = tc.constraint_schema and ci.relname = tc.constraint_name)
                     join pg_matviews mv on (ns.nspname = mv.schemaname and ct.relname = mv.matviewname)
-                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast')
+                where ns.nspname not in ('information_schema', 'pg_catalog', 'pg_toast', 'utl_file')
                   and tc.constraint_name is null
                   and lower(ct.relname) = lower(?)
         ) t
@@ -631,7 +631,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		inner join pg_proc p on pronamespace = n.oid
 		inner join pg_type pt on (pt.oid = p.prorettype)
 		where n.nspname not like 'pg_%\'
-		and n.nspname not in ('information_schema','pg_catalog','pg_toast')
+		and n.nspname not in ('information_schema','pg_catalog','pg_toast','utl_file')
 		order by nspname, p.proname
 	'''
     final static def PROCEDURES_NAME_QUERY_BY_NAME = '''
@@ -640,7 +640,7 @@ class PostgresDatabaseReader implements DatabaseReader {
 		join pg_proc p on pronamespace = n.oid
 		inner join pg_type pt on (pt.oid = p.prorettype)
 		where n.nspname not like 'pg_%'
-		and n.nspname not in ('information_schema','pg_catalog','pg_toast')
+		and n.nspname not in ('information_schema','pg_catalog','pg_toast','utl_file')
 		and lower(p.proname) = lower(?)
 		order by nspname, p.proname
 '''
@@ -661,7 +661,7 @@ class PostgresDatabaseReader implements DatabaseReader {
             left  join pg_depend d on (pp.oid = d.objid and d.deptype = 'e')
             left  join pg_extension e on (d.refobjid = e.oid)
         where pl.lanname NOT IN ('c','internal') 
-            and pn.nspname NOT IN ('pg_catalog', 'information_schema')
+            and pn.nspname NOT IN ('pg_catalog', 'information_schema', 'utl_file')
             and e.oid is null
         order by pn.nspname, pp.proname, text
 	'''
@@ -676,7 +676,7 @@ class PostgresDatabaseReader implements DatabaseReader {
             left  join pg_depend d on (pp.oid = d.objid and d.deptype = 'e')
             left  join pg_extension e on (d.refobjid = e.oid)
         where pl.lanname NOT IN ('c','internal') 
-            and pn.nspname NOT IN ('pg_catalog', 'information_schema')
+            and pn.nspname NOT IN ('pg_catalog', 'information_schema', 'utl_file')
             and e.oid is null
 			and lower(pp.proname) = lower(?)
         order by pn.nspname, pp.proname, text
