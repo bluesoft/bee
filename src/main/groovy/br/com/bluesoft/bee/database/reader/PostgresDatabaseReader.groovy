@@ -349,14 +349,26 @@ class PostgresDatabaseReader implements DatabaseReader {
             if (constraint.type == 'C') {
                 constraint.refTable = null
                 if (databaseVersion && Float.parseFloat(databaseVersion) >= 17) {
-                    constraint.searchCondition = it.check_clause[1..-2]
+                    constraint.searchCondition = normalizeCheckClause(it.check_clause[1..-2])
                 } else {
-                    constraint.searchCondition = it.check_clause[2..-3]
+                    constraint.searchCondition = normalizeCheckClause(it.check_clause[2..-3])
                 }
             }
 
             table.constraints[constraint.name] = constraint
         })
+    }
+
+    final static def CHECK_ARRAY_CAST = ~/\(ARRAY\[((?:'(?:[^']|'')*'::character varying(?:, )?)+)\]\)::text\[\]/
+    final static def CHECK_ARRAY_ITEM = ~/'(?:[^']|'')*'::character varying/
+
+    // "col in ('A', 'B')" is stored as (ARRAY['A'::character varying, ...])::text[], but when that text is
+    // executed again postgres stores ARRAY[('A'::character varying)::text, ...]. Always use the second form,
+    // which is stable, so a recreated schema validates against the original one.
+    static String normalizeCheckClause(String checkClause) {
+        return checkClause.replaceAll(CHECK_ARRAY_CAST) { all, items ->
+            'ARRAY[' + items.replaceAll(CHECK_ARRAY_ITEM) { '(' + it + ')::text' } + ']'
+        }
     }
 
     private getConstraintType(constraint_type) {
