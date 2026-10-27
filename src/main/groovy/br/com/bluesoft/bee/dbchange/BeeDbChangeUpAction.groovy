@@ -6,15 +6,14 @@ class BeeDbChangeUpAction extends ActionRunnerParameterValidate {
 
     boolean run() {
         def clientName = options.arguments[0]
-        def migrationId = options.arguments[1]
-
+        def migrationIds = options.arguments.drop(1) as List<String>
         def manager = new DbChangeManager(configFile: options.configFile, path: options.dataDir.absolutePath, logger: out, clientName: clientName)
+        def lista = migrationIds ?: manager.listar()
+        return manager.executarVariasDbChanges(lista, UpDown.UP)
+    }
 
-		if (migrationId) {
-			return manager.executarDbChange(migrationId, UpDown.UP)
-		} else {
-			def lista = manager.listar()
-			return manager.executarVariasDbChanges(lista, UpDown.UP)
-		}
+    @Override
+    int maxParameters() {
+        return Integer.MAX_VALUE
     }
 }
