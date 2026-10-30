@@ -60,6 +60,7 @@ class DbChangeManager {
     String clientName
     String fileName
     boolean force
+    boolean quiet
     BeeWriter logger
 
     boolean executarVariasDbChanges(List<String> lista, UpDown upDown) {
@@ -111,7 +112,7 @@ class DbChangeManager {
 
             if (podeExecutar(arquivo, sql, upDown)) {
 
-                def executor = new SQLExecutor(sql: sql, logger: logger)
+                def executor = new SQLExecutor(sql: sql, logger: logger, quiet: quiet)
                 if (listaDeInstrucoes) {
                     resultado = executor.execute(listaDeInstrucoes)
                 }

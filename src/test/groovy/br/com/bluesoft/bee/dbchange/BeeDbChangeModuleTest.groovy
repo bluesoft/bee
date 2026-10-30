@@ -22,8 +22,8 @@ class BeeDbChangeModuleTest extends Specification {
 Actions:
          dbchange:create description <group> - creates a dbchange file
          dbchange:status connection <group> - lists dbchanges to run
-         dbchange:up connection <file> - runs all pending dbchange files, or one if specified
-         dbchange:down connection file - runs a dbchange rollback action
+         dbchange:up connection <file...> - runs all pending dbchange files, or the specified ones (-q: only show failures)
+         dbchange:down connection file... - runs the rollback action of the dbchange files (-q: only show failures)
          dbchange:mark connection file - mark a file as executed
          dbchange:markall connection <group> - mark all files as executed
          dbchange:unmark connection file - unmark a file as executed
