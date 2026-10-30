@@ -38,6 +38,7 @@ class SQLExecutor {
 
     def sql
     def logger
+    boolean quiet
 
     def execute(def x) {
         if (x.class in String) {
@@ -52,18 +53,27 @@ class SQLExecutor {
         for (def instrucao : list) {
             def result = ""
             try {
-                logger.log(instrucao)
+                if (!quiet) {
+                    logger.log(instrucao)
+                }
 
                 def start = System.currentTimeMillis()
                 def retorno = sql.executeUpdate(instrucao)
                 def end = System.currentTimeMillis()
 
-                result = "Time elapsed: ${(end - start) / 1000} seconds -  ${retorno} rows updated"
+                if (!quiet) {
+                    result = "Time elapsed: ${(end - start) / 1000} seconds -  ${retorno} rows updated"
+                }
             } catch (SQLException e) {
+                if (quiet) {
+                    logger.log(instrucao)
+                }
                 result = "!!!Error: ${e.message}"
                 return false
             } finally {
-                logger.log(result)
+                if (result) {
+                    logger.log(result)
+                }
             }
         }
         return true

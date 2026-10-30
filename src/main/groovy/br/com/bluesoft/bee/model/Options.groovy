@@ -38,6 +38,7 @@ public class Options {
 
     File configFile
     File dataDir
+    boolean quiet
     List<String> arguments = []
     String moduleName
     String actionName
@@ -57,6 +58,7 @@ public class Options {
         def cliBuilder = new CliBuilder(usage: 'bee <options> module:action <parameters>', header: 'Options:')
         cliBuilder.c(args: 1, argName: 'file', 'config file')
         cliBuilder.d(args: 1, argName: 'dir', 'bee files directory')
+        cliBuilder.q(longOpt: 'quiet', 'dbchange:up/down - do not print the executed statements, only the failing one')
         cliBuilder.stopAtNonOption = false
         return cliBuilder
     }
@@ -94,6 +96,8 @@ public class Options {
         } else {
             dataDir = new File("bee")
         }
+
+        quiet = cli.q as boolean
 
         arguments = cli.arguments()
         arguments.remove(0)
