@@ -48,7 +48,7 @@ class Trigger implements Validator {
     def text_redshift
 
     List validateWithMetadata(metadataPackage) {
-		if (!metadataPackage instanceof Package) {
+		if (!(metadataPackage instanceof Trigger)) {
 			return []
 		}
 
