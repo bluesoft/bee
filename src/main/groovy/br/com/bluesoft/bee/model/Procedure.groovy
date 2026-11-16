@@ -49,7 +49,7 @@ class Procedure implements Validator {
     def schema
 
     List validateWithMetadata(metadataProcedure) {
-		if (!metadataProcedure instanceof View) {
+		if (!(metadataProcedure instanceof Procedure)) {
 			return []
 		}
 

@@ -44,7 +44,7 @@ class Package implements Validator {
     def body = ''
 
     List validateWithMetadata(metadataPackage) {
-		if (!metadataPackage instanceof Package) {
+		if (!(metadataPackage instanceof Package)) {
 			return []
 		}
 

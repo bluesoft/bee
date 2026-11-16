@@ -102,7 +102,7 @@ class TableColumn {
     }
 
     def compareType(def col) {
-		if (!col instanceof TableColumn) {
+		if (!(col instanceof TableColumn)) {
 			return false
 		};
 

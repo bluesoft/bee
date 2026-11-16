@@ -56,7 +56,7 @@ class Table implements Validator {
     }
 
     List validateWithMetadata(metadataTable) {
-		if (!metadataTable instanceof Table) {
+		if (!(metadataTable instanceof Table)) {
 			return []
 		}
 
